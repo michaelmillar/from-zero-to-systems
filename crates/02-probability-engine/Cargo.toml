@@ -2,3 +2,16 @@
 name = "probability-engine"
 version = "0.1.0"
 edition = "2021"
+description = "Probability distributions and Bayesian inference toolkit"
+
+[lib]
+name = "probability_engine"
+path = "src/lib.rs"
+
+[[bin]]
+name = "probability-engine"
+path = "src/main.rs"
+
+[dependencies]
+risk-sampler = { path = "../01-risk-sampler" }
+rand = "0.8"
