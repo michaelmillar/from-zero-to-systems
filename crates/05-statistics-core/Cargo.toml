@@ -2,3 +2,19 @@
 name = "statistics-core"
 version = "0.1.0"
 edition = "2021"
+description = "Descriptive statistics for sensor and telemetry data — mean, variance, percentiles, outlier detection"
+
+[lib]
+name = "statistics_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "statistics-core"
+path = "src/main.rs"
+
+[dependencies]
+monte-carlo = { path = "../03-monte-carlo" }
+rand = "0.8"
+rand_distr = "0.4"
+thiserror = "1"
+clap = { version = "4", features = ["derive"] }

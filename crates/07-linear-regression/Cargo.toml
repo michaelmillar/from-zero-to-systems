@@ -2,3 +2,19 @@
 name = "linear-regression"
 version = "0.1.0"
 edition = "2021"
+description = "Ordinary least squares via normal equations — demand forecasting and A/B test analysis"
+
+[lib]
+name = "linear_regression"
+path = "src/lib.rs"
+
+[[bin]]
+name = "linear-regression"
+path = "src/main.rs"
+
+[dependencies]
+statistics-core = { path = "../05-statistics-core" }
+matrix-math     = { path = "../06-matrix-math" }
+rand = "0.8"
+rand_distr = "0.4"
+clap = { version = "4", features = ["derive"] }

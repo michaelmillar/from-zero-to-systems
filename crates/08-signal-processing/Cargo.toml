@@ -2,3 +2,17 @@
 name = "signal-processing"
 version = "0.1.0"
 edition = "2021"
+description = "FFT-based signal analysis — ECG, audio DSP, and vibration monitoring"
+
+[lib]
+name = "signal_processing"
+path = "src/lib.rs"
+
+[[bin]]
+name = "signal-processing"
+path = "src/main.rs"
+
+[dependencies]
+matrix-math = { path = "../06-matrix-math" }
+rustfft = "6"
+clap = { version = "4", features = ["derive"] }

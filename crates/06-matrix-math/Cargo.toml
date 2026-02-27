@@ -2,3 +2,15 @@
 name = "matrix-math"
 version = "0.1.0"
 edition = "2021"
+description = "Matrix algebra from scratch — multiply, transpose, invert, determinant; foundation for ML and robotics"
+
+[lib]
+name = "matrix_math"
+path = "src/lib.rs"
+
+[[bin]]
+name = "matrix-math"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
