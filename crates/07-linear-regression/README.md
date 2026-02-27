@@ -1,16 +1,16 @@
 # linear-regression
 
-> Ordinary least squares via normal equations — demand forecasting, A/B test analysis, and economic modelling.
+> Ordinary least squares via normal equations - demand forecasting, A/B test analysis, and economic modelling.
 
 ## ELI5
 
-Imagine you notice that ice cream sales go up when the temperature rises. Linear regression draws the best straight line through your data points — the one that minimises the total squared distance between the line and each point. Once you have that line, you can predict: "if tomorrow is 30°C, we'll probably sell about 400 ice creams." It works for one variable or many at once (temperature AND day-of-week AND price).
+Imagine you notice that ice cream sales go up when the temperature rises. Linear regression draws the best straight line through your data points - the one that minimises the total squared distance between the line and each point. Once you have that line, you can predict: "if tomorrow is 30°C, we'll probably sell about 400 ice creams." It works for one variable or many at once (temperature AND day-of-week AND price).
 
 ## For the Educated Generalist
 
 **Ordinary Least Squares (OLS)** finds the coefficient vector β that minimises the sum of squared residuals: `‖y − Xβ‖²`. Setting the gradient to zero yields the **normal equations**: `XᵀXβ = Xᵀy`, solved as `β = (XᵀX)⁻¹Xᵀy`.
 
-This is the closed-form solution — elegant but with two important caveats:
+This is the closed-form solution - elegant but with two important caveats:
 
 1. **Multicollinearity**: if any feature is a linear combination of others, `XᵀX` is singular and has no inverse. This is why the test suite verifies features are genuinely independent.
 2. **Computational cost**: inverting an (n×n) matrix is O(n³). For large feature sets (thousands of features), iterative methods like gradient descent (crate 19) are preferred over the normal equations.
@@ -25,10 +25,10 @@ Fits a multivariate OLS model using the normal equations, computes R², and expo
 
 ## Used in the wild
 
-- **Amazon demand forecasting** — linear models are the baseline against which every ML model is measured; often surprisingly competitive
-- **academic econometrics** — OLS is the workhorse of empirical economics (wage equations, price elasticity, diff-in-diff A/B tests)
-- **clinical research** — adjusted regression controls for confounders (age, sex, comorbidities) in observational studies
-- **quantitative finance** — factor models (Fama-French 3-factor) are OLS regressions of returns on risk factors
+- **Amazon demand forecasting** - linear models are the baseline against which every ML model is measured; often surprisingly competitive
+- **academic econometrics** - OLS is the workhorse of empirical economics (wage equations, price elasticity, diff-in-diff A/B tests)
+- **clinical research** - adjusted regression controls for confounders (age, sex, comorbidities) in observational studies
+- **quantitative finance** - factor models (Fama-French 3-factor) are OLS regressions of returns on risk factors
 
 ## Run it
 
@@ -50,12 +50,12 @@ println!("Prediction: {:.0}", predict(&model, &[28.0, -1.0]));
 
 ## Rust concepts covered
 
-- **Lifetimes in practice**: `fit` borrows `x` and `y` slices without copying — the borrow checker enforces that data outlives the computation
+- **Lifetimes in practice**: `fit` borrows `x` and `y` slices without copying - the borrow checker enforces that data outlives the computation
 - **Custom error enum with `Display`**: `FitError` gives callers specific, actionable error variants rather than a generic string
 - **`From` trait**: `impl From<StatsError> for FitError` enables `?` to convert between error types automatically
-- **Builder-style API**: the `LinearModel` struct bundles coefficients, R², and residuals — avoiding multiple return values
+- **Builder-style API**: the `LinearModel` struct bundles coefficients, R², and residuals - avoiding multiple return values
 
 ## Builds on
 
-- [`statistics-core`](../05-statistics-core/) — uses `mean()` for computing the y-bar needed for R² calculation
-- [`matrix-math`](../06-matrix-math/) — the normal equations are solved using `Matrix::inverse()` and `Matrix::matmul()`
+- [`statistics-core`](../05-statistics-core/) - uses `mean()` for computing the y-bar needed for R² calculation
+- [`matrix-math`](../06-matrix-math/) - the normal equations are solved using `Matrix::inverse()` and `Matrix::matmul()`
