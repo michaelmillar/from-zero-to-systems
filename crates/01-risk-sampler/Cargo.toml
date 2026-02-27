@@ -1,0 +1,17 @@
+[package]
+name = "risk-sampler"
+version = "0.1.0"
+edition = "2021"
+description = "Risk event simulation — insurance loss modelling, operational failure rates"
+
+[lib]
+name = "risk_sampler"
+path = "src/lib.rs"
+
+[[bin]]
+name = "risk-sampler"
+path = "src/main.rs"
+
+[dependencies]
+rand = "0.8"
+clap = { version = "4", features = ["derive"] }
