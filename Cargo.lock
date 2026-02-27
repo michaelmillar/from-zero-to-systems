@@ -55,6 +55,9 @@ dependencies = [
 [[package]]
 name = "attention-mechanism"
 version = "0.1.0"
+dependencies = [
+ "matrix-math",
+]
 
 [[package]]
 name = "autocfg"
@@ -222,6 +225,9 @@ checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
 [[package]]
 name = "k-means"
 version = "0.1.0"
+dependencies = [
+ "rand",
+]
 
 [[package]]
 name = "libc"
@@ -286,6 +292,9 @@ dependencies = [
 [[package]]
 name = "neural-net"
 version = "0.1.0"
+dependencies = [
+ "rand",
+]
 
 [[package]]
 name = "num-complex"

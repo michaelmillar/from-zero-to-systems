@@ -2,3 +2,14 @@
 name = "attention-mechanism"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "attention_mechanism"
+path = "src/lib.rs"
+
+[[bin]]
+name = "attention-mechanism"
+path = "src/main.rs"
+
+[dependencies]
+matrix-math = { path = "../06-matrix-math" }

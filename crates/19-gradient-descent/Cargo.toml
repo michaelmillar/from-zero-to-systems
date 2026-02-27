@@ -2,3 +2,11 @@
 name = "gradient-descent"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "gradient_descent"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gradient-descent"
+path = "src/main.rs"

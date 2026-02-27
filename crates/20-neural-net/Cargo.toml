@@ -2,3 +2,14 @@
 name = "neural-net"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "neural_net"
+path = "src/lib.rs"
+
+[[bin]]
+name = "neural-net"
+path = "src/main.rs"
+
+[dependencies]
+rand = "0.8"
