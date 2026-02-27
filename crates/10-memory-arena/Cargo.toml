@@ -2,3 +2,12 @@
 name = "memory-arena"
 version = "0.1.0"
 edition = "2021"
+description = "Bump allocator / arena — high-frequency trading pools, game entity systems, zero-GC allocation"
+
+[lib]
+name = "memory_arena"
+path = "src/lib.rs"
+
+[[bin]]
+name = "memory-arena"
+path = "src/main.rs"

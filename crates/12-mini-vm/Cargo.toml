@@ -2,3 +2,16 @@
 name = "mini-vm"
 version = "0.1.0"
 edition = "2021"
+description = "Stack-based bytecode virtual machine — smart contract execution, embedded scripting, sandboxing"
+
+[lib]
+name = "mini_vm"
+path = "src/lib.rs"
+
+[[bin]]
+name = "mini-vm"
+path = "src/main.rs"
+
+[dependencies]
+bit-manipulator = { path = "../09-bit-manipulator" }
+memory-arena    = { path = "../10-memory-arena" }
