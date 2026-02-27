@@ -1,3 +1,23 @@
+// ============================================================
+//  YOUR CHALLENGE - implement three probability distributions.
+//
+//  Exponential(lambda): models time between events.
+//    Sample via inverse CDF: -ln(U) / lambda
+//    Mean: 1 / lambda
+//
+//  Poisson(lambda): models event count in a fixed interval.
+//    Sample via Knuth's algorithm: count exponential
+//    inter-arrivals until cumulative product drops below e^(-lambda)
+//    Mean: lambda
+//
+//  Weibull(shape k, scale lambda): generalises Exponential.
+//    Sample via inverse CDF: lambda * (-ln(U))^(1/k)
+//    Mean: lambda * Gamma(1 + 1/k)  [use gamma() below]
+//
+//  Hint: use rng.gen::<f64>().max(1e-15) to avoid ln(0).
+//        gamma() is already implemented - use it for Weibull mean.
+// ============================================================
+
 use rand::Rng;
 
 /// A shared interface for continuous and discrete distributions.
@@ -9,61 +29,47 @@ pub trait Sampler {
     fn mean(&self) -> f64;
 }
 
-/// Exponential(λ) — models time between events in a Poisson process.
+/// Exponential(lambda) - models time between events in a Poisson process.
 /// Used for: request inter-arrival times, hardware failure intervals, call durations.
 pub struct Exponential {
     pub lambda: f64, // rate parameter (events per unit time)
 }
 
-/// Poisson(λ) — models the number of events in a fixed interval.
+/// Poisson(lambda) - models the number of events in a fixed interval.
 /// Used for: packet arrivals, server requests per second, defects per batch.
 pub struct Poisson {
     pub lambda: f64, // expected events per interval
 }
 
-/// Weibull(shape k, scale λ) — generalises Exponential; models component lifetimes.
+/// Weibull(shape k, scale lambda) - generalises Exponential; models component lifetimes.
 /// k < 1: decreasing failure rate (infant mortality)
 /// k = 1: constant failure rate (pure Exponential)
 /// k > 1: increasing failure rate (wear-out)
 pub struct Weibull {
     pub shape: f64,  // k
-    pub scale: f64,  // λ
+    pub scale: f64,  // lambda
 }
 
 impl Sampler for Exponential {
     fn sample(&self, rng: &mut impl Rng) -> f64 {
-        // Inverse CDF: -ln(U) / λ, where U ~ Uniform(0,1)
-        let u: f64 = rng.gen::<f64>().max(1e-15);
-        -u.ln() / self.lambda
+        todo!()
     }
-    fn mean(&self) -> f64 { 1.0 / self.lambda }
+    fn mean(&self) -> f64 { todo!() }
 }
 
 impl Sampler for Poisson {
     fn sample(&self, rng: &mut impl Rng) -> f64 {
-        // Knuth's algorithm: count exponential inter-arrivals until sum > 1
-        let threshold = (-self.lambda).exp();
-        let mut product = 1.0_f64;
-        let mut count = 0u64;
-        loop {
-            product *= rng.gen::<f64>();
-            if product <= threshold { break; }
-            count += 1;
-        }
-        count as f64
+        todo!()
     }
-    fn mean(&self) -> f64 { self.lambda }
+    fn mean(&self) -> f64 { todo!() }
 }
 
 impl Sampler for Weibull {
     fn sample(&self, rng: &mut impl Rng) -> f64 {
-        // Inverse CDF: λ · (-ln(U))^(1/k)
-        let u: f64 = rng.gen::<f64>().max(1e-15);
-        self.scale * (-u.ln()).powf(1.0 / self.shape)
+        todo!()
     }
     fn mean(&self) -> f64 {
-        // Γ(1 + 1/k) · λ  — using Lanczos approximation of Gamma
-        self.scale * gamma(1.0 + 1.0 / self.shape)
+        todo!()
     }
 }
 
@@ -96,7 +102,7 @@ pub fn gamma(z: f64) -> f64 {
 
 /// Sample N values from any Sampler and return them as a Vec
 pub fn sample_n(dist: &impl Sampler, n: usize, rng: &mut impl Rng) -> Vec<f64> {
-    (0..n).map(|_| dist.sample(rng)).collect()
+    todo!()
 }
 
 #[cfg(test)]
@@ -144,7 +150,7 @@ mod tests {
 
     #[test]
     fn weibull_shape1_is_exponential() {
-        // Weibull(k=1, λ) ≡ Exponential(1/λ)
+        // Weibull(k=1, lambda) = Exponential(1/lambda)
         let w = Weibull { shape: 1.0, scale: 2.0 };
         let e = Exponential { lambda: 0.5 };
         assert!((w.mean() - e.mean()).abs() < 1e-10);
@@ -153,7 +159,7 @@ mod tests {
     #[test]
     fn weibull_mean_matches_gamma_formula() {
         let dist = Weibull { shape: 2.0, scale: 1.0 };
-        // Γ(1.5) = √π/2 ≈ 0.8862
+        // Gamma(1.5) = sqrt(pi)/2 approximately 0.8862
         let expected = gamma(1.5);
         assert!((dist.mean() - expected).abs() < 1e-6);
     }

@@ -1,16 +1,16 @@
 // ============================================================
-//  YOUR CHALLENGE — implement a CART decision tree classifier.
+//  YOUR CHALLENGE - implement a CART decision tree classifier.
 //
 //  A decision tree recursively partitions the feature space.
 //  At each node, find the feature f and threshold t that best
-//  separates the classes — measured by information gain:
+//  separates the classes - measured by information gain:
 //
 //    Gain = Gini(parent) - weighted_avg(Gini(left), Gini(right))
 //
 //  Gini impurity:
-//    Gini(S) = 1 - Σ p_i²   (p_i = fraction of class i)
-//    Pure node  → 0.0
-//    50/50 split → 0.5
+//    Gini(S) = 1 - sum(p_i^2)   (p_i = fraction of class i)
+//    Pure node  -> 0.0
+//    50/50 split -> 0.5
 //
 //  Used in: credit scoring, fraud detection, clinical triage,
 //           churn prediction, scikit-learn's RandomForest.
@@ -35,109 +35,53 @@ impl DecisionTree {
 
     /// Fit the tree to labelled data.  `x[i]` is the feature vector for sample i.
     pub fn fit(&mut self, x: &[Vec<f64>], y: &[bool]) {
-        self.root = Some(build_node(x, y, 0, self.max_depth));
+        todo!()
     }
 
     /// Predict the label for a single sample.
     pub fn predict(&self, sample: &[f64]) -> bool {
-        predict_node(self.root.as_ref().expect("call fit() first"), sample)
+        todo!()
     }
 
     /// Predict labels for many samples.
     pub fn predict_many(&self, samples: &[Vec<f64>]) -> Vec<bool> {
-        samples.iter().map(|s| self.predict(s)).collect()
+        todo!()
     }
 }
 
 /// Gini impurity: probability that a randomly chosen label is wrong.
 pub fn gini_impurity(labels: &[bool]) -> f64 {
-    if labels.is_empty() { return 0.0; }
-    let n = labels.len() as f64;
-    let pos = labels.iter().filter(|&&l| l).count() as f64;
-    let neg = n - pos;
-    1.0 - (pos / n).powi(2) - (neg / n).powi(2)
+    todo!()
 }
 
 /// Weighted Gini reduction from splitting parent into left/right.
 pub fn information_gain(parent: &[bool], left: &[bool], right: &[bool]) -> f64 {
-    let n = parent.len() as f64;
-    gini_impurity(parent)
-        - (left.len() as f64 / n)  * gini_impurity(left)
-        - (right.len() as f64 / n) * gini_impurity(right)
+    todo!()
 }
 
-// ── private helpers ────────────────────────────────────────────────────────
+// -- private helpers ────────────────────────────────────────────────────────
 
 fn majority_class(y: &[bool]) -> bool {
-    y.iter().filter(|&&l| l).count() * 2 >= y.len()
+    todo!()
 }
 
 fn build_node(x: &[Vec<f64>], y: &[bool], depth: usize, max_depth: usize) -> Node {
-    // Base cases: pure node, single sample, or depth limit
-    if y.is_empty() || gini_impurity(y) < 1e-10 || depth >= max_depth {
-        return Node::Leaf { prediction: majority_class(y) };
-    }
-
-    if let Some((feature, threshold)) = best_split(x, y) {
-        let (left_x, left_y, right_x, right_y) = split_data(x, y, feature, threshold);
-        if left_y.is_empty() || right_y.is_empty() {
-            return Node::Leaf { prediction: majority_class(y) };
-        }
-        Node::Split {
-            feature,
-            threshold,
-            left:  Box::new(build_node(&left_x,  &left_y,  depth + 1, max_depth)),
-            right: Box::new(build_node(&right_x, &right_y, depth + 1, max_depth)),
-        }
-    } else {
-        Node::Leaf { prediction: majority_class(y) }
-    }
+    todo!()
 }
 
 fn predict_node(node: &Node, sample: &[f64]) -> bool {
-    match node {
-        Node::Leaf  { prediction }              => *prediction,
-        Node::Split { feature, threshold, left, right } =>
-            if sample[*feature] <= *threshold { predict_node(left,  sample) }
-            else                              { predict_node(right, sample) },
-    }
+    todo!()
 }
 
 /// Find the (feature, threshold) pair that maximises information gain.
 fn best_split(x: &[Vec<f64>], y: &[bool]) -> Option<(usize, f64)> {
-    let n_features = x[0].len();
-    let mut best_gain = 0.0_f64;
-    let mut best = None;
-
-    for feature in 0..n_features {
-        let mut vals: Vec<f64> = x.iter().map(|xi| xi[feature]).collect();
-        vals.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        vals.dedup();
-
-        for i in 0..vals.len().saturating_sub(1) {
-            let threshold = (vals[i] + vals[i + 1]) / 2.0;
-            let (_, ly, _, ry) = split_data(x, y, feature, threshold);
-            if ly.is_empty() || ry.is_empty() { continue; }
-            let gain = information_gain(y, &ly, &ry);
-            if gain > best_gain {
-                best_gain = gain;
-                best = Some((feature, threshold));
-            }
-        }
-    }
-    best
+    todo!()
 }
 
 fn split_data(x: &[Vec<f64>], y: &[bool], feature: usize, threshold: f64)
     -> (Vec<Vec<f64>>, Vec<bool>, Vec<Vec<f64>>, Vec<bool>)
 {
-    let mut lx = Vec::new(); let mut ly = Vec::new();
-    let mut rx = Vec::new(); let mut ry = Vec::new();
-    for (xi, &yi) in x.iter().zip(y.iter()) {
-        if xi[feature] <= threshold { lx.push(xi.clone()); ly.push(yi); }
-        else                        { rx.push(xi.clone()); ry.push(yi); }
-    }
-    (lx, ly, rx, ry)
+    todo!()
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — simulate an epidemic (gossip) protocol.
+//  YOUR CHALLENGE - simulate an epidemic (gossip) protocol.
 //
 //  Gossip works by infection: in each round, every infected
 //  node tells `fanout` randomly chosen neighbours its state.
@@ -11,11 +11,11 @@
 //    - O(log n) rounds to reach the whole cluster
 //
 //  Implement:
-//    - Cluster::new(n_nodes, fanout) — n nodes, each gossips to `fanout` peers
-//    - cluster.broadcast(origin, value) — node `origin` has new state `value`
-//    - cluster.step(rng) — one round of gossip
-//    - cluster.converged() — true if all nodes know the latest value
-//    - cluster.round_count() — how many rounds have elapsed
+//    - Cluster::new(n_nodes, fanout) - n nodes, each gossips to `fanout` peers
+//    - cluster.broadcast(origin, value) - node `origin` has new state `value`
+//    - cluster.step(rng) - one round of gossip
+//    - cluster.converged() - true if all nodes know the latest value
+//    - cluster.round_count() - how many rounds have elapsed
 // ============================================================
 
 use rand::Rng;
@@ -39,49 +39,28 @@ impl Cluster {
         Self { nodes, fanout, rounds: 0, target_value: None }
     }
 
-    /// Node `origin` receives a new value — starts the gossip cascade.
+    /// Node `origin` receives a new value - starts the gossip cascade.
     pub fn broadcast(&mut self, origin: usize, value: u64) {
-        self.target_value = Some(value);
-        self.nodes[origin].value = Some(value);
+        todo!()
     }
 
     /// One round: every informed node gossips to `fanout` random neighbours.
     pub fn step(&mut self, rng: &mut impl Rng) {
-        let n = self.nodes.len();
-        let target = self.target_value;
-        // Collect ids of currently informed nodes
-        let informed: Vec<usize> = self.nodes.iter()
-            .filter(|node| node.value == target)
-            .map(|node| node.id)
-            .collect();
-
-        for _src in informed {
-            for _ in 0..self.fanout {
-                let peer = rng.gen_range(0..n);
-                self.nodes[peer].value = target;
-            }
-        }
-        self.rounds += 1;
+        todo!()
     }
 
     /// True if every node has the target value.
     pub fn converged(&self) -> bool {
-        match self.target_value {
-            None => false,
-            Some(v) => self.nodes.iter().all(|n| n.value == Some(v)),
-        }
+        todo!()
     }
 
     pub fn round_count(&self) -> usize {
-        self.rounds
+        todo!()
     }
 
     /// Count of nodes that have received the value.
     pub fn informed_count(&self) -> usize {
-        match self.target_value {
-            None => 0,
-            Some(v) => self.nodes.iter().filter(|n| n.value == Some(v)).count(),
-        }
+        todo!()
     }
 }
 
@@ -133,7 +112,7 @@ mod tests {
             for _ in 0..10 {
                 cluster.step(&mut rng);
                 let curr = cluster.informed_count();
-                assert!(curr >= prev, "informed count went backwards: {prev} → {curr}");
+                assert!(curr >= prev, "informed count went backwards: {prev} -> {curr}");
                 prev = curr;
             }
         }

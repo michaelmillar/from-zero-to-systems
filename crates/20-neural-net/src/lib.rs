@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — implement a feedforward neural network
+//  YOUR CHALLENGE - implement a feedforward neural network
 //  with backpropagation from scratch.
 //
 //  Architecture: [input_size, ...hidden_sizes..., output_size]
@@ -7,14 +7,14 @@
 //  Loss:         binary cross-entropy (BCE) for classification
 //
 //  Forward pass:
-//    z^l = W^l · a^{l-1} + b^l
+//    z^l = W^l * a^{l-1} + b^l
 //    a^l = sigmoid(z^l)
 //
 //  Backprop (BCE + sigmoid simplifies beautifully):
-//    δ^L = a^L - y                     (output layer)
-//    δ^l = (W^{l+1})ᵀ · δ^{l+1} ⊙ sigmoid'(z^l)
-//    ΔW^l = δ^l ⊗ (a^{l-1})ᵀ
-//    Δb^l = δ^l
+//    delta^L = a^L - y                     (output layer)
+//    delta^l = (W^{l+1})^T * delta^{l+1} * sigmoid'(z^l)
+//    dW^l = delta^l x (a^{l-1})^T
+//    db^l = delta^l
 //
 //  Used in: image classifiers, fraud detection, recommendation.
 // ============================================================
@@ -35,7 +35,7 @@ pub fn relu(x: f64) -> f64 { x.max(0.0) }
 pub fn relu_deriv(x: f64) -> f64 { if x > 0.0 { 1.0 } else { 0.0 } }
 
 pub struct Network {
-    // weights[l] shape: (n[l+1], n[l]) — weights[l][j][k] = weight from neuron k in layer l to neuron j in layer l+1
+    // weights[l] shape: (n[l+1], n[l]) - weights[l][j][k] = weight from neuron k in layer l to neuron j in layer l+1
     pub weights: Vec<Vec<Vec<f64>>>,
     pub biases:  Vec<Vec<f64>>,
     pub sizes: Vec<usize>,
@@ -62,81 +62,21 @@ impl Network {
 
     /// Run a single forward pass, returning the output activations.
     pub fn forward(&self, input: &[f64]) -> Vec<f64> {
-        let mut a = input.to_vec();
-        for (w, b) in self.weights.iter().zip(self.biases.iter()) {
-            a = w.iter().zip(b.iter())
-                .map(|(row, bias)| sigmoid(row.iter().zip(a.iter()).map(|(wi, ai)| wi * ai).sum::<f64>() + bias))
-                .collect();
-        }
-        a
+        todo!()
     }
 
     /// Train on a dataset for `epochs` passes, using online gradient descent.
     pub fn train(&mut self, inputs: &[Vec<f64>], targets: &[Vec<f64>], epochs: usize, lr: f64) {
-        for _ in 0..epochs {
-            for (x, y) in inputs.iter().zip(targets.iter()) {
-                self.backprop(x, y, lr);
-            }
-        }
+        todo!()
     }
 
     fn backprop(&mut self, input: &[f64], target: &[f64], lr: f64) {
-        let n_layers = self.weights.len();
-
-        // ── forward pass, storing z and a at every layer ──────────────────
-        let mut activations: Vec<Vec<f64>> = vec![input.to_vec()];
-        let mut pre_acts:    Vec<Vec<f64>> = Vec::new();
-        let mut a = input.to_vec();
-        for (w, b) in self.weights.iter().zip(self.biases.iter()) {
-            let z: Vec<f64> = w.iter().zip(b.iter())
-                .map(|(row, bias)| row.iter().zip(a.iter()).map(|(wi, ai)| wi * ai).sum::<f64>() + bias)
-                .collect();
-            a = z.iter().map(|&zi| sigmoid(zi)).collect();
-            pre_acts.push(z);
-            activations.push(a.clone());
-        }
-
-        // ── output layer delta: BCE + sigmoid → δ = a - y (no sigmoid_deriv) ──
-        let out = &activations[n_layers];
-        let mut delta: Vec<f64> = out.iter().zip(target.iter()).map(|(a, y)| a - y).collect();
-
-        // ── backwards through layers ───────────────────────────────────────
-        for l in (0..n_layers).rev() {
-            let a_prev = activations[l].clone();
-
-            for j in 0..self.weights[l].len() {
-                for k in 0..self.weights[l][j].len() {
-                    self.weights[l][j][k] -= lr * delta[j] * a_prev[k];
-                }
-                self.biases[l][j] -= lr * delta[j];
-            }
-
-            // Propagate delta to the layer below (not needed for l=0)
-            if l > 0 {
-                let prev_size = self.weights[l][0].len();
-                let mut new_delta = vec![0.0; prev_size];
-                for k in 0..prev_size {
-                    new_delta[k] = self.weights[l].iter().zip(delta.iter())
-                        .map(|(row, d)| row[k] * d)
-                        .sum::<f64>()
-                        * sigmoid_deriv(pre_acts[l - 1][k]);
-                }
-                delta = new_delta;
-            }
-        }
+        todo!()
     }
 
     /// Fraction of samples predicted correctly (threshold = 0.5 per output).
     pub fn accuracy(&self, inputs: &[Vec<f64>], targets: &[Vec<f64>]) -> f64 {
-        let correct = inputs.iter().zip(targets.iter())
-            .filter(|(x, y)| {
-                let out  = self.forward(x);
-                let pred: Vec<bool> = out.iter().map(|&a| a > 0.5).collect();
-                let exp:  Vec<bool> = y.iter().map(|&t| t > 0.5).collect();
-                pred == exp
-            })
-            .count();
-        correct as f64 / inputs.len() as f64
+        todo!()
     }
 }
 
@@ -194,7 +134,7 @@ mod tests {
 
         #[test]
         fn learns_xor() {
-            // XOR: (0,0)→0, (0,1)→1, (1,0)→1, (1,1)→0
+            // XOR: (0,0)->0, (0,1)->1, (1,0)->1, (1,1)->0
             let inputs  = vec![vec![0.0,0.0], vec![0.0,1.0], vec![1.0,0.0], vec![1.0,1.0]];
             let targets = vec![vec![0.0],     vec![1.0],     vec![1.0],     vec![0.0]];
 

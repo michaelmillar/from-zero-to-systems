@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — implement a consistent hash ring.
+//  YOUR CHALLENGE - implement a consistent hash ring.
 //
 //  A consistent hash ring places both nodes and keys on a
 //  circular hash space [0, 2^64). To find which node owns
@@ -15,13 +15,17 @@
 //    ring.remove_node(name: &str)
 //    ring.get_node(key: &str) -> Option<&str>   // owner of `key`
 //    ring.node_count() -> usize                  // physical nodes
+//
+//  Hint: use a BTreeMap<u64, String> for the ring.
+//  Use fnv1a(name) as the base hash, then mmh3_mix(base ^ i)
+//  for each virtual node i.
 // ============================================================
 
 use std::collections::BTreeMap;
 
 pub struct HashRing {
     vnodes: usize,
-    ring: BTreeMap<u64, String>, // hash → physical node name
+    ring: BTreeMap<u64, String>, // hash -> physical node name
 }
 
 impl HashRing {
@@ -30,40 +34,23 @@ impl HashRing {
     }
 
     pub fn add_node(&mut self, name: &str) {
-        self.remove_node(name);
-        let base = fnv1a(name);
-        for i in 0..self.vnodes {
-            let key = mmh3_mix(base ^ (i as u64));
-            self.ring.insert(key, name.to_string());
-        }
+        todo!()
     }
 
     pub fn remove_node(&mut self, name: &str) {
-        let base = fnv1a(name);
-        for i in 0..self.vnodes {
-            let key = mmh3_mix(base ^ (i as u64));
-            self.ring.remove(&key);
-        }
+        todo!()
     }
 
     pub fn get_node(&self, key: &str) -> Option<&str> {
-        if self.ring.is_empty() { return None; }
-        let hash = fnv1a(key);
-        // Walk clockwise: find first node at or after hash; wrap around if needed
-        self.ring.range(hash..)
-            .next()
-            .or_else(|| self.ring.iter().next())
-            .map(|(_, v)| v.as_str())
+        todo!()
     }
 
     pub fn node_count(&self) -> usize {
-        self.ring.values()
-            .collect::<std::collections::HashSet<_>>()
-            .len()
+        todo!()
     }
 }
 
-/// MurmurHash3 64-bit finaliser — excellent avalanche for vnode placement.
+/// MurmurHash3 64-bit finaliser - excellent avalanche for vnode placement.
 pub fn mmh3_mix(mut h: u64) -> u64 {
     h ^= h >> 33;
     h = h.wrapping_mul(0xff51afd7ed558ccd);
@@ -73,7 +60,7 @@ pub fn mmh3_mix(mut h: u64) -> u64 {
     h
 }
 
-/// FNV-1a 64-bit hash — fast, good distribution, no external deps.
+/// FNV-1a 64-bit hash - fast, good distribution, no external deps.
 pub fn fnv1a(data: &str) -> u64 {
     let mut hash: u64 = 14695981039346656037;
     for byte in data.bytes() {
@@ -198,7 +185,7 @@ mod tests {
             for (_node, count) in &counts {
                 let fraction = *count as f64 / n as f64;
                 assert!(fraction > 0.20 && fraction < 0.47,
-                    "node owns {:.1}% — too skewed", fraction * 100.0);
+                    "node owns {:.1}% - too skewed", fraction * 100.0);
             }
         }
     }

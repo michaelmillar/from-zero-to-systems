@@ -1,8 +1,8 @@
 // ============================================================
-//  YOUR CHALLENGE — implement a bump allocator (arena).
+//  YOUR CHALLENGE - implement a bump allocator (arena).
 //  A bump allocator works by keeping a pointer into a block
 //  of memory and "bumping" it forward on each allocation.
-//  Deallocating individual objects is impossible — the whole
+//  Deallocating individual objects is impossible - the whole
 //  arena is freed at once. This makes it extremely fast.
 //
 //  Rules:
@@ -15,6 +15,8 @@
 //  - Arena::remaining() returns how many bytes are still free
 //
 //  You will need `unsafe` to cast raw pointers.
+//  Hint: align the offset before allocating:
+//    let aligned = (self.offset + align - 1) & !(align - 1);
 // ============================================================
 
 pub struct Arena {
@@ -32,38 +34,28 @@ impl Arena {
     /// Returns a mutable reference to uninitialised memory, or None if
     /// the arena is full.
     pub fn alloc<T>(&mut self) -> Option<&mut T> {
-        let align = std::mem::align_of::<T>();
-        let size  = std::mem::size_of::<T>();
-        let aligned = (self.offset + align - 1) & !(align - 1);
-        if aligned + size > self.buffer.len() { return None; }
-        self.offset = aligned + size;
-        // SAFETY: range is within the buffer and properly aligned;
-        // lifetime is tied to &mut self so the reference cannot outlive the arena.
-        unsafe {
-            let ptr = self.buffer.as_mut_ptr().add(aligned) as *mut T;
-            Some(&mut *ptr)
-        }
+        todo!()
     }
 
-    /// Reset the bump pointer — logically frees all allocations.
+    /// Reset the bump pointer - logically frees all allocations.
     /// The backing memory is reused on the next alloc.
     pub fn reset(&mut self) {
-        self.offset = 0;
+        todo!()
     }
 
     /// Number of bytes currently allocated.
     pub fn used(&self) -> usize {
-        self.offset
+        todo!()
     }
 
     /// Number of bytes still available.
     pub fn remaining(&self) -> usize {
-        self.buffer.len() - self.offset
+        todo!()
     }
 }
 
 // ============================================================
-//  TESTS — these ARE the specification.
+//  TESTS - these ARE the specification.
 //  Run `cargo test -p memory-arena` to see them fail.
 // ============================================================
 

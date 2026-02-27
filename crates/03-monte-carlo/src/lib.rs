@@ -1,3 +1,24 @@
+// ============================================================
+//  YOUR CHALLENGE - price options and calculate Value at Risk
+//  using Monte Carlo simulation.
+//
+//  European call option price via geometric Brownian motion:
+//    S_T = S_0 * exp((r - 0.5*sigma^2)*T + sigma*sqrt(T)*Z)
+//    payoff = max(S_T - K, 0)
+//    price  = e^(-rT) * mean(payoff)
+//
+//  Black-Scholes for validation:
+//    d1 = (ln(S/K) + (r + 0.5*sigma^2)*T) / (sigma*sqrt(T))
+//    d2 = d1 - sigma*sqrt(T)
+//    price = S*N(d1) - K*e^(-rT)*N(d2)
+//
+//  Value at Risk (VaR): sort losses, return the loss at
+//  the given confidence percentile.
+//
+//  Hint: use rayon's into_par_iter() for parallel chunks.
+//        normal_cdf is already implemented below.
+// ============================================================
+
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 use rand_distr::{Distribution, Normal};
@@ -6,10 +27,10 @@ use rayon::prelude::*;
 /// A European call option: the right (not obligation) to buy an asset at `strike`
 /// price at expiry. Priced via geometric Brownian motion.
 pub struct EuropeanCall {
-    pub spot: f64,       // current asset price (S₀)
+    pub spot: f64,       // current asset price (S0)
     pub strike: f64,     // exercise price (K)
     pub rate: f64,       // annualised risk-free rate (r)
-    pub volatility: f64, // annualised volatility (σ)
+    pub volatility: f64, // annualised volatility (sigma)
     pub expiry: f64,     // time to expiry in years (T)
 }
 
@@ -17,53 +38,19 @@ pub struct EuropeanCall {
 /// Simulates `trials` paths of geometric Brownian motion, computes payoffs,
 /// and discounts back to present value.
 pub fn price_european_call(option: &EuropeanCall, trials: u64, seed: u64) -> f64 {
-    let drift = (option.rate - 0.5 * option.volatility * option.volatility) * option.expiry;
-    let diffusion = option.volatility * option.expiry.sqrt();
-    let discount = (-option.rate * option.expiry).exp();
-
-    // Parallel over chunks, each chunk gets its own seeded RNG to avoid contention
-    let chunk_size = 10_000_u64;
-    let n_chunks = trials.div_ceil(chunk_size);
-
-    let total_payoff: f64 = (0..n_chunks)
-        .into_par_iter()
-        .map(|chunk| {
-            let mut rng = StdRng::seed_from_u64(seed.wrapping_add(chunk));
-            let normal = Normal::new(0.0, 1.0).unwrap();
-            let this_chunk = chunk_size.min(trials - chunk * chunk_size);
-            let mut payoff = 0.0_f64;
-            for _ in 0..this_chunk {
-                let z = normal.sample(&mut rng);
-                let s_t = option.spot * (drift + diffusion * z).exp();
-                payoff += (s_t - option.strike).max(0.0);
-            }
-            payoff
-        })
-        .sum();
-
-    discount * total_payoff / trials as f64
+    todo!()
 }
 
-/// Black-Scholes analytical price for a European call — used to validate MC results.
+/// Black-Scholes analytical price for a European call - used to validate MC results.
 pub fn black_scholes_call(option: &EuropeanCall) -> f64 {
-    let d1 = ((option.spot / option.strike).ln()
-        + (option.rate + 0.5 * option.volatility * option.volatility) * option.expiry)
-        / (option.volatility * option.expiry.sqrt());
-    let d2 = d1 - option.volatility * option.expiry.sqrt();
-    option.spot * normal_cdf(d1)
-        - option.strike * (-option.rate * option.expiry).exp() * normal_cdf(d2)
+    todo!()
 }
 
 /// Value at Risk at a given confidence level (e.g. 0.95 for 95th percentile).
 /// Input: a slice of per-period returns (negative = loss).
 /// Returns: the loss not exceeded in `confidence` fraction of periods.
 pub fn value_at_risk(returns: &[f64], confidence: f64) -> f64 {
-    assert!(!returns.is_empty(), "returns must not be empty");
-    assert!((0.0..=1.0).contains(&confidence), "confidence must be in [0, 1]");
-    let mut losses: Vec<f64> = returns.iter().map(|r| -r).collect();
-    losses.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let idx = (confidence * losses.len() as f64) as usize;
-    losses[idx.min(losses.len() - 1)]
+    todo!()
 }
 
 /// Abramowitz & Stegun approximation of the standard normal CDF (error < 7.5e-8)
@@ -111,7 +98,7 @@ mod tests {
     fn deep_in_money_option_approaches_intrinsic_value() {
         let opt = EuropeanCall { spot: 200.0, strike: 100.0, rate: 0.05, volatility: 0.20, expiry: 1.0 };
         let price = price_european_call(&opt, 200_000, 7);
-        // Intrinsic value lower bound: S - K·e^(-rT) ≈ 100 + discount
+        // Intrinsic value lower bound: S - K*e^(-rT) approximately 100 + discount
         assert!(price > 95.0, "deep ITM option priced at {:.2}", price);
     }
 

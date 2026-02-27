@@ -1,12 +1,30 @@
+// ============================================================
+//  YOUR CHALLENGE - implement FFT-based signal analysis.
+//
+//  hann_window: multiply each sample by the Hann window function
+//    w[i] = 0.5 * (1 - cos(2*pi*i / (N-1)))
+//    reduces spectral leakage at signal edges
+//
+//  analyse: compute FFT magnitude spectrum of a real signal
+//    - apply Hann window
+//    - run FFT using rustfft
+//    - return magnitudes for bins 0..=N/2 (positive freqs only)
+//    - find the dominant frequency bin (skip DC at bin 0)
+//
+//  sine_wave: generate pure sine wave samples
+//    s[i] = sin(2*pi*freq*i / sample_rate)
+//
+//  rms: root mean square (power metric)
+//    rms = sqrt(mean(x^2))
+//
+//  Hint: use rustfft's FftPlanner. Magnitude = c.norm() / N.
+// ============================================================
+
 use rustfft::{FftPlanner, num_complex::Complex};
 
 /// Apply a Hann window to a signal to reduce spectral leakage
 pub fn hann_window(signal: &[f64]) -> Vec<f64> {
-    let n = signal.len();
-    signal.iter().enumerate().map(|(i, &s)| {
-        let w = 0.5 * (1.0 - (2.0 * std::f64::consts::PI * i as f64 / (n - 1) as f64).cos());
-        s * w
-    }).collect()
+    todo!()
 }
 
 /// Result of an FFT analysis
@@ -24,40 +42,17 @@ pub struct SpectrumAnalysis {
 /// Compute the FFT magnitude spectrum of a real-valued signal.
 /// Returns magnitude for bins 0..=N/2 (positive frequencies only).
 pub fn analyse(signal: &[f64], sample_rate: f64) -> SpectrumAnalysis {
-    let n = signal.len();
-    let windowed = hann_window(signal);
-    let mut buffer: Vec<Complex<f64>> = windowed.iter().map(|&s| Complex::new(s, 0.0)).collect();
-
-    let mut planner = FftPlanner::new();
-    let fft = planner.plan_fft_forward(n);
-    fft.process(&mut buffer);
-
-    // Only positive frequencies (bins 0..=N/2)
-    let half = n / 2 + 1;
-    let magnitudes: Vec<f64> = buffer[..half].iter().map(|c| c.norm() / n as f64).collect();
-
-    // Find dominant bin (skip DC at bin 0)
-    let dominant_bin = magnitudes[1..].iter()
-        .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i, _)| i + 1)
-        .unwrap_or(0);
-
-    let dominant_freq_hz = dominant_bin as f64 * sample_rate / n as f64;
-
-    SpectrumAnalysis { magnitudes, dominant_freq_hz, dominant_bin, sample_rate }
+    todo!()
 }
 
 /// Generate a pure sine wave
 pub fn sine_wave(freq_hz: f64, sample_rate: f64, n_samples: usize) -> Vec<f64> {
-    (0..n_samples).map(|i| {
-        (2.0 * std::f64::consts::PI * freq_hz * i as f64 / sample_rate).sin()
-    }).collect()
+    todo!()
 }
 
-/// Compute signal RMS (root mean square) — power metric
+/// Compute signal RMS (root mean square) - power metric
 pub fn rms(signal: &[f64]) -> f64 {
-    (signal.iter().map(|x| x.powi(2)).sum::<f64>() / signal.len() as f64).sqrt()
+    todo!()
 }
 
 #[cfg(test)]

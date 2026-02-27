@@ -1,3 +1,16 @@
+// ============================================================
+//  YOUR CHALLENGE - implement core descriptive statistics.
+//
+//  Functions to implement:
+//    mean, variance (population), sample_variance (N-1),
+//    std_dev, median, percentile (linear interpolation),
+//    kurtosis (excess), skewness, z_scores, iqr_outliers,
+//    summarise
+//
+//  Return Err(StatsError) for invalid inputs.
+//  Percentile uses linear interpolation (NumPy default).
+// ============================================================
+
 use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq)]
@@ -11,89 +24,50 @@ pub enum StatsError {
 }
 
 pub fn mean(data: &[f64]) -> Result<f64, StatsError> {
-    if data.is_empty() { return Err(StatsError::Empty); }
-    Ok(data.iter().sum::<f64>() / data.len() as f64)
+    todo!()
 }
 
 /// Population variance (divides by N, not N-1)
 pub fn variance(data: &[f64]) -> Result<f64, StatsError> {
-    let m = mean(data)?;
-    Ok(data.iter().map(|x| (x - m).powi(2)).sum::<f64>() / data.len() as f64)
+    todo!()
 }
 
 /// Sample variance (divides by N-1, unbiased estimator)
 pub fn sample_variance(data: &[f64]) -> Result<f64, StatsError> {
-    if data.len() < 2 { return Err(StatsError::InsufficientData { needed: 2, got: data.len() }); }
-    let m = mean(data)?;
-    Ok(data.iter().map(|x| (x - m).powi(2)).sum::<f64>() / (data.len() - 1) as f64)
+    todo!()
 }
 
 pub fn std_dev(data: &[f64]) -> Result<f64, StatsError> {
-    Ok(variance(data)?.sqrt())
+    todo!()
 }
 
 pub fn median(data: &[f64]) -> Result<f64, StatsError> {
-    if data.is_empty() { return Err(StatsError::Empty); }
-    let mut sorted = data.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let n = sorted.len();
-    if n % 2 == 1 {
-        Ok(sorted[n / 2])
-    } else {
-        Ok((sorted[n / 2 - 1] + sorted[n / 2]) / 2.0)
-    }
+    todo!()
 }
 
 /// p in [0.0, 1.0]; uses linear interpolation (same as NumPy default)
 pub fn percentile(data: &[f64], p: f64) -> Result<f64, StatsError> {
-    if data.is_empty() { return Err(StatsError::Empty); }
-    if !(0.0..=1.0).contains(&p) { return Err(StatsError::InvalidPercentile(p)); }
-    let mut sorted = data.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let idx = p * (sorted.len() - 1) as f64;
-    let lo = idx.floor() as usize;
-    let hi = idx.ceil() as usize;
-    let frac = idx - lo as f64;
-    Ok(sorted[lo] * (1.0 - frac) + sorted[hi] * frac)
+    todo!()
 }
 
 /// Excess kurtosis (0 for normal distribution)
 pub fn kurtosis(data: &[f64]) -> Result<f64, StatsError> {
-    if data.len() < 4 { return Err(StatsError::InsufficientData { needed: 4, got: data.len() }); }
-    let m = mean(data)?;
-    let s = std_dev(data)?;
-    if s == 0.0 { return Err(StatsError::InsufficientData { needed: 2, got: 1 }); }
-    let n = data.len() as f64;
-    let kurt = data.iter().map(|x| ((x - m) / s).powi(4)).sum::<f64>() / n;
-    Ok(kurt - 3.0) // excess kurtosis
+    todo!()
 }
 
 /// Pearson's moment skewness
 pub fn skewness(data: &[f64]) -> Result<f64, StatsError> {
-    if data.len() < 3 { return Err(StatsError::InsufficientData { needed: 3, got: data.len() }); }
-    let m = mean(data)?;
-    let s = std_dev(data)?;
-    if s == 0.0 { return Ok(0.0); }
-    let n = data.len() as f64;
-    Ok(data.iter().map(|x| ((x - m) / s).powi(3)).sum::<f64>() / n)
+    todo!()
 }
 
 /// Z-score normalisation: (x - mean) / std_dev
 pub fn z_scores(data: &[f64]) -> Result<Vec<f64>, StatsError> {
-    let m = mean(data)?;
-    let s = std_dev(data)?;
-    if s == 0.0 { return Ok(vec![0.0; data.len()]); }
-    Ok(data.iter().map(|x| (x - m) / s).collect())
+    todo!()
 }
 
-/// IQR-based outlier detection. Returns the values flagged as outliers (|z| > 1.5·IQR).
+/// IQR-based outlier detection. Returns the values flagged as outliers (|z| > 1.5*IQR).
 pub fn iqr_outliers(data: &[f64]) -> Result<Vec<f64>, StatsError> {
-    let q1 = percentile(data, 0.25)?;
-    let q3 = percentile(data, 0.75)?;
-    let iqr = q3 - q1;
-    let lo = q1 - 1.5 * iqr;
-    let hi = q3 + 1.5 * iqr;
-    Ok(data.iter().copied().filter(|&x| x < lo || x > hi).collect())
+    todo!()
 }
 
 /// Summary statistics bundle
@@ -109,16 +83,7 @@ pub struct Summary {
 }
 
 pub fn summarise(data: &[f64]) -> Result<Summary, StatsError> {
-    Ok(Summary {
-        mean:      mean(data)?,
-        std_dev:   std_dev(data)?,
-        median:    median(data)?,
-        p5:        percentile(data, 0.05)?,
-        p95:       percentile(data, 0.95)?,
-        skewness:  skewness(data)?,
-        kurtosis:  kurtosis(data)?,
-        n_outliers: iqr_outliers(data)?.len(),
-    })
+    todo!()
 }
 
 #[cfg(test)]

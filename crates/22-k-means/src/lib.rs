@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — implement k-means clustering (Lloyd's algorithm).
+//  YOUR CHALLENGE - implement k-means clustering (Lloyd's algorithm).
 //
 //  Algorithm:
 //    1. Initialise k centroids by picking k random data points
@@ -15,7 +15,7 @@ use rand::Rng;
 
 /// Euclidean distance between two equal-length vectors.
 pub fn euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
-    a.iter().zip(b.iter()).map(|(x, y)| (x - y).powi(2)).sum::<f64>().sqrt()
+    todo!()
 }
 
 pub struct KMeans {
@@ -31,66 +31,17 @@ impl KMeans {
 
     /// Fit centroids to `data`.  Returns the number of iterations run.
     pub fn fit(&mut self, data: &[Vec<f64>], rng: &mut impl Rng) -> usize {
-        assert!(!data.is_empty(), "data must not be empty");
-        let k = self.k.min(data.len());
-
-        // Initialise centroids by sampling k distinct data points (without replacement).
-        let mut indices: Vec<usize> = (0..data.len()).collect();
-        for i in 0..k {
-            let j = rng.gen_range(i..data.len());
-            indices.swap(i, j);
-        }
-        self.centroids = indices[..k].iter().map(|&i| data[i].clone()).collect();
-
-        let mut iters = 0;
-        for _ in 0..self.max_iter {
-            iters += 1;
-            let assignments: Vec<usize> = data.iter().map(|p| self.predict(p)).collect();
-
-            // Recompute centroids as the mean of assigned points.
-            let mut new_centroids: Vec<Vec<f64>> = vec![vec![0.0; data[0].len()]; k];
-            let mut counts = vec![0usize; k];
-            for (point, &cluster) in data.iter().zip(assignments.iter()) {
-                for (c, &p) in new_centroids[cluster].iter_mut().zip(point.iter()) {
-                    *c += p;
-                }
-                counts[cluster] += 1;
-            }
-            for (c, &count) in new_centroids.iter_mut().zip(counts.iter()) {
-                if count > 0 {
-                    for val in c.iter_mut() { *val /= count as f64; }
-                }
-            }
-
-            // Convergence check: centroids stopped moving.
-            let converged = self.centroids.iter().zip(new_centroids.iter())
-                .all(|(old, new)| euclidean_distance(old, new) < 1e-8);
-            self.centroids = new_centroids;
-            if converged { break; }
-        }
-        iters
+        todo!()
     }
 
     /// Return the index of the nearest centroid to `point`.
     pub fn predict(&self, point: &[f64]) -> usize {
-        self.centroids.iter().enumerate()
-            .min_by(|(_, a), (_, b)| {
-                euclidean_distance(a, point)
-                    .partial_cmp(&euclidean_distance(b, point))
-                    .unwrap()
-            })
-            .map(|(i, _)| i)
-            .expect("centroids must not be empty — call fit() first")
+        todo!()
     }
 
     /// Sum of squared distances from each point to its assigned centroid.
     pub fn inertia(&self, data: &[Vec<f64>]) -> f64 {
-        data.iter()
-            .map(|p| {
-                let c = &self.centroids[self.predict(p)];
-                euclidean_distance(p, c).powi(2)
-            })
-            .sum()
+        todo!()
     }
 }
 
@@ -126,13 +77,13 @@ mod tests {
             let mut km = KMeans::new(1, 50);
             km.fit(&data, &mut rng);
             let labels: Vec<usize> = data.iter().map(|p| km.predict(p)).collect();
-            assert!(labels.iter().all(|&l| l == 0), "k=1 → all same cluster");
+            assert!(labels.iter().all(|&l| l == 0), "k=1 -> all same cluster");
         }
 
         #[test]
         fn three_well_separated_clusters_are_found() {
             let mut rng = StdRng::seed_from_u64(42);
-            // Clusters centred at (0,0), (100,0), (50,100) — far apart
+            // Clusters centred at (0,0), (100,0), (50,100) - far apart
             let mut data: Vec<Vec<f64>> = Vec::new();
             for i in 0..10 { data.push(vec![i as f64 * 0.1,    i as f64 * 0.1]); }   // near (0,0)
             for i in 0..10 { data.push(vec![100.0 + i as f64 * 0.1, i as f64 * 0.1]); } // near (100,0)

@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — dissect IEEE 754 double-precision floats.
+//  YOUR CHALLENGE - dissect IEEE 754 double-precision floats.
 //
 //  A 64-bit float is laid out in memory as:
 //    [sign: 1 bit][exponent: 11 bits][mantissa: 52 bits]
@@ -13,57 +13,47 @@
 
 /// Extract the sign bit: 0 = positive, 1 = negative.
 pub fn sign_bit(x: f64) -> u64 {
-    x.to_bits() >> 63
+    todo!()
 }
 
 /// Extract the raw 11-bit biased exponent (before subtracting bias of 1023).
 pub fn raw_exponent(x: f64) -> u64 {
-    (x.to_bits() >> 52) & 0x7FF
+    todo!()
 }
 
 /// Extract the actual (unbiased) exponent: raw_exponent - 1023.
 /// Returns None for special values (NaN, infinity, subnormals).
 pub fn actual_exponent(x: f64) -> Option<i32> {
-    let raw = raw_exponent(x);
-    if raw == 0 || raw == 0x7FF { return None; }
-    Some(raw as i32 - 1023)
+    todo!()
 }
 
 /// Extract the raw 52-bit mantissa (significand, without the implicit leading 1).
 pub fn mantissa_bits(x: f64) -> u64 {
-    x.to_bits() & ((1u64 << 52) - 1)
+    todo!()
 }
 
 /// Distance in Units in the Last Place (ULPs) between two floats.
 /// ULP distance is the number of representable floats between a and b.
 /// Useful for comparing floats with meaningful tolerance.
 pub fn ulp_distance(a: f64, b: f64) -> u64 {
-    let ai = a.to_bits() as i64;
-    let bi = b.to_bits() as i64;
-    // Convert sign-magnitude IEEE representation to linear ordering
-    let ai = if ai < 0 { i64::MIN - ai } else { ai };
-    let bi = if bi < 0 { i64::MIN - bi } else { bi };
-    (ai - bi).unsigned_abs()
+    todo!()
 }
 
 /// Return true if |a - b| < epsilon OR ulp_distance(a, b) < max_ulps.
 /// Combines absolute and relative comparison for robust float equality.
 pub fn nearly_equal(a: f64, b: f64, epsilon: f64, max_ulps: u64) -> bool {
-    if (a - b).abs() < epsilon { return true; }
-    if a.is_nan() || b.is_nan() { return false; }
-    if a.signum() != b.signum() { return false; }
-    ulp_distance(a, b) <= max_ulps
+    todo!()
 }
 
-/// Demonstrate catastrophic cancellation: compute (x+1)² - x² - 2x - 1
+/// Demonstrate catastrophic cancellation: compute (x+1)^2 - x^2 - 2x - 1
 /// which is mathematically 0 for all x, but numerically unstable for large x.
 /// Returns the numerical error.
 pub fn cancellation_error(x: f64) -> f64 {
-    (x + 1.0) * (x + 1.0) - x * x - 2.0 * x - 1.0
+    todo!()
 }
 
 // ============================================================
-//  TESTS — they ARE the spec.
+//  TESTS - they ARE the spec.
 // ============================================================
 
 #[cfg(test)]
@@ -85,7 +75,7 @@ mod tests {
 
         #[test]
         fn raw_exponent_of_1_is_bias_1023() {
-            // 1.0 = 1 × 2^0, stored exponent = 0 + 1023 = 1023
+            // 1.0 = 1 x 2^0, stored exponent = 0 + 1023 = 1023
             assert_eq!(raw_exponent(1.0), 1023);
         }
 
@@ -96,7 +86,7 @@ mod tests {
 
         #[test]
         fn actual_exponent_of_8_is_3() {
-            // 8.0 = 1 × 2^3
+            // 8.0 = 1 x 2^3
             assert_eq!(actual_exponent(8.0), Some(3));
         }
 
@@ -112,7 +102,7 @@ mod tests {
 
         #[test]
         fn mantissa_of_1_has_no_fractional_bits() {
-            // 1.0 = 1.0000...0 × 2^0, mantissa bits are all zero
+            // 1.0 = 1.0000...0 x 2^0, mantissa bits are all zero
             assert_eq!(mantissa_bits(1.0), 0);
         }
     }

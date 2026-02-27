@@ -1,19 +1,19 @@
 // ============================================================
-//  YOUR CHALLENGE — implement a stack-based bytecode VM.
+//  YOUR CHALLENGE - implement a stack-based bytecode VM.
 //
 //  The VM executes a sequence of `Instruction` values.
 //  It has a value stack (Vec<i64>) and a program counter.
 //
 //  Instructions:
-//    Push(n)  — push integer n onto the stack
-//    Pop      — discard the top of the stack
-//    Add      — pop two values, push their sum
-//    Sub      — pop two values, push (second - top)
-//    Mul      — pop two values, push their product
-//    Div      — pop two values, push (second / top); error if top is 0
-//    Dup      — duplicate the top of the stack
-//    Swap     — swap the top two values
-//    Halt     — stop execution, return the top of the stack
+//    Push(n)  - push integer n onto the stack
+//    Pop      - discard the top of the stack
+//    Add      - pop two values, push their sum
+//    Sub      - pop two values, push (second - top)
+//    Mul      - pop two values, push their product
+//    Div      - pop two values, push (second / top); error if top is 0
+//    Dup      - duplicate the top of the stack
+//    Swap     - swap the top two values
+//    Halt     - stop execution, return the top of the stack
 //
 //  Execution stops at Halt or when instructions are exhausted.
 //  Return Err(VmError) for stack underflow or division by zero.
@@ -62,44 +62,7 @@ impl Vm {
     /// Returns the value on top of the stack when Halt is reached,
     /// or when the program ends.
     pub fn run(&mut self, program: &[Instruction]) -> Result<i64, VmError> {
-        use Instruction::*;
-        self.stack.clear();
-
-        for instr in program {
-            match instr {
-                Push(n) => self.stack.push(*n),
-                Pop     => { self.pop()?; },
-                Add     => { let (a, b) = self.pop2()?; self.stack.push(b + a); },
-                Sub     => { let (a, b) = self.pop2()?; self.stack.push(b - a); },
-                Mul     => { let (a, b) = self.pop2()?; self.stack.push(b * a); },
-                Div     => {
-                    let (a, b) = self.pop2()?;
-                    if a == 0 { return Err(VmError::DivisionByZero); }
-                    self.stack.push(b / a);
-                },
-                Dup     => {
-                    let top = *self.stack.last().ok_or(VmError::StackUnderflow)?;
-                    self.stack.push(top);
-                },
-                Swap    => {
-                    let n = self.stack.len();
-                    if n < 2 { return Err(VmError::StackUnderflow); }
-                    self.stack.swap(n - 1, n - 2);
-                },
-                Halt    => return self.stack.last().copied().ok_or(VmError::EmptyStack),
-            }
-        }
-        self.stack.last().copied().ok_or(VmError::EmptyStack)
-    }
-
-    fn pop(&mut self) -> Result<i64, VmError> {
-        self.stack.pop().ok_or(VmError::StackUnderflow)
-    }
-
-    fn pop2(&mut self) -> Result<(i64, i64), VmError> {
-        let a = self.pop()?;
-        let b = self.pop()?;
-        Ok((a, b))
+        todo!()
     }
 }
 
@@ -108,7 +71,7 @@ impl Default for Vm {
 }
 
 // ============================================================
-//  TESTS — they ARE the spec. Make them all pass.
+//  TESTS - they ARE the spec. Make them all pass.
 // ============================================================
 
 #[cfg(test)]
@@ -162,13 +125,13 @@ mod tests {
 
         #[test]
         fn dup_doubles_top_of_stack() {
-            // Push 5, dup → [5, 5], add → [10]
+            // Push 5, dup -> [5, 5], add -> [10]
             assert_eq!(run(vec![Push(5), Dup, Add, Halt]), Ok(10));
         }
 
         #[test]
         fn swap_reverses_top_two_elements() {
-            // Push 1, Push 2, Swap → [2, 1], Sub → 2-1=1
+            // Push 1, Push 2, Swap -> [2, 1], Sub -> 2-1=1
             assert_eq!(run(vec![Push(1), Push(2), Swap, Sub, Halt]), Ok(1));
         }
 
@@ -198,7 +161,7 @@ mod tests {
 
         #[test]
         fn program_ending_without_halt_returns_top_of_stack() {
-            // No explicit Halt — should still return the top value
+            // No explicit Halt - should still return the top value
             assert_eq!(run(vec![Push(7), Push(8), Add]), Ok(15));
         }
     }

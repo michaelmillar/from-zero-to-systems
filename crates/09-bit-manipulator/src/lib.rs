@@ -1,92 +1,88 @@
 // ============================================================
-//  YOUR CHALLENGE — implement the functions below.
+//  YOUR CHALLENGE - implement the functions below.
 //  Run `cargo test -p bit-manipulator` to see what's failing.
 //  All functions have the correct signature; your job is to
 //  replace every `todo!()` with a working implementation.
 // ============================================================
 
 /// Extract `len` bits from `value` starting at bit position `offset` (0 = LSB).
-/// Example: extract_bits(0b10110110, offset=2, len=4) → 0b1101 (bits 2..5)
+/// Example: extract_bits(0b10110110, offset=2, len=4) -> 0b1101 (bits 2..5)
 pub fn extract_bits(value: u32, offset: u8, len: u8) -> u32 {
-    if len == 0 { return 0; }
-    if len == 32 { return value; }
-    let mask = (1u32 << len) - 1;
-    (value >> offset) & mask
+    todo!()
 }
 
 /// Set bit at position `bit` (0 = LSB) in `value`.
 pub fn set_bit(value: u32, bit: u8) -> u32 {
-    value | (1u32 << bit)
+    todo!()
 }
 
 /// Clear bit at position `bit` (0 = LSB) in `value`.
 pub fn clear_bit(value: u32, bit: u8) -> u32 {
-    value & !(1u32 << bit)
+    todo!()
 }
 
 /// Toggle bit at position `bit` (0 = LSB) in `value`.
 pub fn toggle_bit(value: u32, bit: u8) -> u32 {
-    value ^ (1u32 << bit)
+    todo!()
 }
 
 /// Return true if bit at position `bit` (0 = LSB) is set.
 pub fn is_bit_set(value: u32, bit: u8) -> bool {
-    (value >> bit) & 1 == 1
+    todo!()
 }
 
 /// Count the number of set bits (population count / Hamming weight).
 /// Hint: Rust has a built-in method for this on integers.
 pub fn count_ones(value: u32) -> u32 {
-    value.count_ones()
+    todo!()
 }
 
 /// Compute parity: true if the number of set bits is odd.
 pub fn parity(value: u32) -> bool {
-    value.count_ones() % 2 == 1
+    todo!()
 }
 
 /// Rotate bits left by `n` positions (wrapping, 32-bit).
 pub fn rotate_left(value: u32, n: u8) -> u32 {
-    value.rotate_left(n as u32)
+    todo!()
 }
 
 /// Rotate bits right by `n` positions (wrapping, 32-bit).
 pub fn rotate_right(value: u32, n: u8) -> u32 {
-    value.rotate_right(n as u32)
+    todo!()
 }
 
-/// Reverse the byte order of a u32 (big-endian ↔ little-endian swap).
+/// Reverse the byte order of a u32 (big-endian <-> little-endian swap).
 /// Hint: Rust has a built-in for this too.
 pub fn swap_bytes(value: u32) -> u32 {
-    value.swap_bytes()
+    todo!()
 }
 
 // ============================================================
-//  IPv4 header field extraction — a real protocol use case.
+//  IPv4 header field extraction - a real protocol use case.
 //  An IPv4 header byte 0 is: [version: 4 bits][IHL: 4 bits]
-//  Byte 8 is TTL; bytes 12–15 are the source IP address.
+//  Byte 8 is TTL; bytes 12-15 are the source IP address.
 // ============================================================
 
 /// Parse the IP version from byte 0 of an IPv4 header (upper 4 bits).
 pub fn ipv4_version(header_byte0: u8) -> u8 {
-    header_byte0 >> 4
+    todo!()
 }
 
 /// Parse the Internet Header Length (IHL) from byte 0 (lower 4 bits).
-/// IHL × 4 = header length in bytes.
+/// IHL x 4 = header length in bytes.
 pub fn ipv4_ihl(header_byte0: u8) -> u8 {
-    header_byte0 & 0x0F
+    todo!()
 }
 
-/// Parse a source IPv4 address from bytes 12–15 of a header slice.
+/// Parse a source IPv4 address from bytes 12-15 of a header slice.
 /// Returns (octet0, octet1, octet2, octet3).
 pub fn ipv4_src_addr(header: &[u8]) -> (u8, u8, u8, u8) {
-    assert!(header.len() >= 16, "IPv4 header must be at least 16 bytes");
-    (header[12], header[13], header[14], header[15])
+    todo!()
 }
 
 // ============================================================
-//  TESTS — written BDD-style.
+//  TESTS - written BDD-style.
 //  Read these carefully: they ARE the specification.
 //  You should also add your own tests for edge cases.
 // ============================================================
@@ -95,7 +91,7 @@ pub fn ipv4_src_addr(header: &[u8]) -> (u8, u8, u8, u8) {
 mod tests {
     use super::*;
 
-    // ── extract_bits ────────────────────────────────────────
+    // -- extract_bits ────────────────────────────────────────
     mod extracting_bits {
         use super::*;
 
@@ -115,7 +111,7 @@ mod tests {
         }
     }
 
-    // ── set / clear / toggle ────────────────────────────────
+    // -- set / clear / toggle ────────────────────────────────
     mod setting_and_clearing_bits {
         use super::*;
 
@@ -151,7 +147,7 @@ mod tests {
         }
     }
 
-    // ── is_bit_set ──────────────────────────────────────────
+    // -- is_bit_set ──────────────────────────────────────────
     mod checking_bits {
         use super::*;
 
@@ -166,7 +162,7 @@ mod tests {
         }
     }
 
-    // ── count_ones / parity ─────────────────────────────────
+    // -- count_ones / parity ─────────────────────────────────
     mod population_count_and_parity {
         use super::*;
 
@@ -187,16 +183,16 @@ mod tests {
 
         #[test]
         fn parity_of_value_with_odd_bits_set_is_true() {
-            assert!(parity(0b111)); // 3 bits set → odd
+            assert!(parity(0b111)); // 3 bits set -> odd
         }
 
         #[test]
         fn parity_of_value_with_even_bits_set_is_false() {
-            assert!(!parity(0b1111)); // 4 bits set → even
+            assert!(!parity(0b1111)); // 4 bits set -> even
         }
     }
 
-    // ── rotate ──────────────────────────────────────────────
+    // -- rotate ──────────────────────────────────────────────
     mod rotation {
         use super::*;
 
@@ -219,7 +215,7 @@ mod tests {
         }
     }
 
-    // ── byte swap ───────────────────────────────────────────
+    // -- byte swap ───────────────────────────────────────────
     mod byte_order {
         use super::*;
 
@@ -234,7 +230,7 @@ mod tests {
         }
     }
 
-    // ── IPv4 header parsing ─────────────────────────────────
+    // -- IPv4 header parsing ─────────────────────────────────
     mod ipv4_parsing {
         use super::*;
 

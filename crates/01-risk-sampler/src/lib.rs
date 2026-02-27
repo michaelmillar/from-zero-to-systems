@@ -1,3 +1,16 @@
+// ============================================================
+//  YOUR CHALLENGE - simulate risk events and calculate
+//  Value at Risk (VaR) using Monte Carlo simulation.
+//
+//  For each trial:
+//    - for each event, roll a random number against its probability
+//    - if it fires, sample a uniform loss in [0, max_loss]
+//    - accumulate the trial total loss
+//  After all trials, sort the losses and read off the 95th percentile.
+//
+//  Hint: seed a StdRng with seed_from_u64(seed) for reproducibility.
+// ============================================================
+
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 
@@ -17,40 +30,7 @@ pub struct SimulationResult {
 }
 
 pub fn simulate(events: &[RiskEvent], trials: u64, seed: u64) -> SimulationResult {
-    let mut rng = StdRng::seed_from_u64(seed);
-    let mut occurrences: u64 = 0;
-    let mut total_loss = 0.0_f64;
-    let mut max_observed = 0.0_f64;
-    let mut losses: Vec<f64> = Vec::with_capacity(trials as usize);
-
-    for _ in 0..trials {
-        let mut trial_loss = 0.0_f64;
-        for event in events {
-            if rng.gen::<f64>() < event.probability {
-                let loss = rng.gen::<f64>() * event.max_loss;
-                trial_loss += loss;
-                occurrences += 1;
-            }
-        }
-        total_loss += trial_loss;
-        if trial_loss > max_observed {
-            max_observed = trial_loss;
-        }
-        losses.push(trial_loss);
-    }
-
-    losses.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let var_95_idx = (trials as f64 * 0.95) as usize;
-    let var_95 = losses.get(var_95_idx).copied().unwrap_or(0.0);
-
-    SimulationResult {
-        trials,
-        occurrences,
-        total_loss,
-        mean_loss_per_trial: total_loss / trials as f64,
-        max_observed_loss: max_observed,
-        var_95,
-    }
+    todo!()
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — implement a Bloom filter.
+//  YOUR CHALLENGE - implement a Bloom filter.
 //
 //  A Bloom filter is a probabilistic data structure that:
 //    - NEVER has false negatives: if you inserted X, contains(X) = true
@@ -12,9 +12,10 @@
 //    - contains: check bit[hash_i(item) % m] for each i; true iff ALL are set
 //
 //  The optimal false positive rate for n items in m bits with k hashes is:
-//    p ≈ (1 - e^(-kn/m))^k
+//    p approximately (1 - e^(-kn/m))^k
 //
 //  For this exercise, use k=3 hash functions with seeds 0, 1, 2.
+//  hash_with_seed is already implemented below - use it.
 // ============================================================
 
 pub struct BloomFilter {
@@ -31,37 +32,28 @@ impl BloomFilter {
 
     /// Insert an item into the filter.
     pub fn insert(&mut self, item: &str) {
-        let m = self.bits.len();
-        for seed in 0..self.k as u64 {
-            let idx = hash_with_seed(item, seed, m);
-            self.bits[idx] = true;
-        }
-        self.n_inserted += 1;
+        todo!()
     }
 
     /// Check if an item might be in the filter.
-    /// Returns false → definitely not present.
-    /// Returns true  → probably present (may be a false positive).
+    /// Returns false -> definitely not present.
+    /// Returns true  -> probably present (may be a false positive).
     pub fn contains(&self, item: &str) -> bool {
-        let m = self.bits.len();
-        (0..self.k as u64).all(|seed| self.bits[hash_with_seed(item, seed, m)])
+        todo!()
     }
 
     /// Number of items inserted.
     pub fn len(&self) -> usize {
-        self.n_inserted
+        todo!()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        todo!()
     }
 
     /// Estimated false positive probability given current fill level.
     pub fn estimated_fpr(&self) -> f64 {
-        let m = self.bits.len() as f64;
-        let k = self.k as f64;
-        let n = self.n_inserted as f64;
-        (1.0 - (-k * n / m).exp()).powf(k)
+        todo!()
     }
 }
 
@@ -110,7 +102,7 @@ mod tests {
                 .filter(|i| bf.contains(&format!("item:{i}")))
                 .count();
             assert!(false_positives < 50,
-                "{false_positives} false positives — filter too lossy");
+                "{false_positives} false positives - filter too lossy");
         }
 
         #[test]
@@ -142,7 +134,7 @@ mod tests {
             for i in 0..200 { bf.insert(&format!("item:{i}")); }
             let fpr_full = bf.estimated_fpr();
             assert!(fpr_full > fpr_empty,
-                "FPR should increase as filter fills: {fpr_empty:.4} → {fpr_full:.4}");
+                "FPR should increase as filter fills: {fpr_empty:.4} -> {fpr_full:.4}");
         }
     }
 }
