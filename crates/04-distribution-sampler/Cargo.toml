@@ -2,3 +2,17 @@
 name = "distribution-sampler"
 version = "0.1.0"
 edition = "2021"
+description = "Continuous distribution sampler — Poisson, Exponential, Weibull for reliability and load modelling"
+
+[lib]
+name = "distribution_sampler"
+path = "src/lib.rs"
+
+[[bin]]
+name = "distribution-sampler"
+path = "src/main.rs"
+
+[dependencies]
+probability-engine = { path = "../02-probability-engine" }
+rand = "0.8"
+clap = { version = "4", features = ["derive"] }
