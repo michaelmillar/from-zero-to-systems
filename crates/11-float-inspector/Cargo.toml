@@ -2,3 +2,15 @@
 name = "float-inspector"
 version = "0.1.0"
 edition = "2021"
+description = "IEEE 754 internals — sign, exponent, mantissa, ULP distance, numerical stability auditing"
+
+[lib]
+name = "float_inspector"
+path = "src/lib.rs"
+
+[[bin]]
+name = "float-inspector"
+path = "src/main.rs"
+
+[dependencies]
+linear-regression = { path = "../07-linear-regression" }
