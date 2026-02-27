@@ -2,3 +2,15 @@
 name = "gossip-protocol"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "gossip_protocol"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gossip-protocol"
+path = "src/main.rs"
+
+[dependencies]
+rate-limiter = { path = "../15-rate-limiter" }
+rand = "0.8"

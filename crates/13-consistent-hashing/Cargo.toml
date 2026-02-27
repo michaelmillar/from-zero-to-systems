@@ -2,3 +2,11 @@
 name = "consistent-hashing"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "consistent_hashing"
+path = "src/lib.rs"
+
+[[bin]]
+name = "consistent-hashing"
+path = "src/main.rs"
