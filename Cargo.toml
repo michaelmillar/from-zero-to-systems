@@ -1,0 +1,28 @@
+[workspace]
+members = [
+    "crates/01-risk-sampler",
+    "crates/02-probability-engine",
+    "crates/03-monte-carlo",
+    "crates/04-distribution-sampler",
+    "crates/05-statistics-core",
+    "crates/06-matrix-math",
+    "crates/07-linear-regression",
+    "crates/08-signal-processing",
+    "crates/09-bit-manipulator",
+    "crates/10-memory-arena",
+    "crates/11-float-inspector",
+    "crates/12-mini-vm",
+    "crates/13-consistent-hashing",
+    "crates/14-bloom-filter",
+    "crates/15-rate-limiter",
+    "crates/16-merkle-tree",
+    "crates/17-gossip-protocol",
+    "crates/18-raft-consensus",
+    "crates/19-gradient-descent",
+    "crates/20-neural-net",
+    "crates/21-decision-tree",
+    "crates/22-k-means",
+    "crates/23-attention-mechanism",
+    "crates/24-bpe-tokeniser",
+]
+resolver = "2"
