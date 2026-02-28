@@ -2,3 +2,14 @@
 name = "merkle-tree"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "merkle_tree"
+path = "src/lib.rs"
+
+[[bin]]
+name = "merkle-tree"
+path = "src/main.rs"
+
+[dependencies]
+bloom-filter = { path = "../14-bloom-filter" }

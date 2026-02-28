@@ -2,3 +2,15 @@
 name = "raft-consensus"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "raft_consensus"
+path = "src/lib.rs"
+
+[[bin]]
+name = "raft-consensus"
+path = "src/main.rs"
+
+[dependencies]
+gossip-protocol = { path = "../17-gossip-protocol" }
+rand = "0.8"
