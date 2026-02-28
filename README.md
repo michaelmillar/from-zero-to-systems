@@ -55,11 +55,11 @@ cargo run -p monte-carlo -- --trials 1000000
 
 | Tier | Crates | Domain |
 |------|--------|--------|
-| 1 | 01–04 | Simulation & Probability |
-| 2 | 05–08 | Maths & Statistics |
-| 3 | 09–12 | Low-Level Systems |
-| 4 | 13–18 | Distributed Systems |
-| 5 | 19–24 | AI & Machine Learning |
+| 1 | 01-04 | Simulation & Probability |
+| 2 | 05-08 | Maths & Statistics |
+| 3 | 09-12 | Low-Level Systems |
+| 4 | 13-18 | Distributed Systems |
+| 5 | 19-24 | AI & Machine Learning |
 
 ## Licence
 
