@@ -142,8 +142,8 @@ fn render_context(frame: &mut Frame, app: &App, area: Rect) {
         PanelMode::Idle => (
             " Info ".to_string(),
             format!(
-                "Crate: {}\n\nCompleted: {}/{}\n\n[r] run tests\n[h] next hint\n[d] docs\n[c] concepts\n[jk / ↑↓] select test\n[np / ←→] prev / next crate\n[q] quit",
-                meta.display,
+                "{}\n\nCompleted: {}/{}\n\nPress [r] to run tests, [h] for hints,\n[d] for docs, [c] for concepts.",
+                meta.intro,
                 app.progress.completed.len(),
                 CRATES.len(),
             ),

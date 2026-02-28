@@ -13,6 +13,7 @@ pub struct TestHints {
 pub struct CrateMeta {
     pub package:  &'static str,
     pub display:  &'static str,
+    pub intro:    &'static str,
     pub concepts: &'static [&'static str],
     pub docs:     &'static [DocLink],
     pub tests:    &'static [TestHints],
@@ -22,6 +23,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "risk-sampler", display: "01 · risk-sampler",
+        intro: "Simulate risk events across thousands of trials to calculate Value at Risk (VaR). Each trial rolls random events and accumulates losses; the 95th-percentile trial loss is your VaR 95 — the figure used by banks and insurers to size capital reserves.",
         concepts: &[
             "Monte Carlo simulation",
             "Loss distribution sampling",
@@ -70,6 +72,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "probability-engine", display: "02 · probability-engine",
+        intro: "Build the probability primitives behind Bayesian reasoning. You implement Bernoulli and Beta distributions, then apply Bayes' theorem to update beliefs as new data arrives — the maths inside spam filters, A/B testing, and fraud detection.",
         concepts: &[
             "Bernoulli distribution: single yes/no trial",
             "Beta distribution: conjugate prior for Bernoulli",
@@ -115,6 +118,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "monte-carlo", display: "03 · monte-carlo",
+        intro: "Price a European call option using geometric Brownian motion. You simulate thousands of stock price paths, compute the average discounted payoff, then validate against the analytical Black-Scholes formula — the same approach used by every quantitative trading desk.",
         concepts: &[
             "European call option pricing",
             "Geometric Brownian motion: S_T = S_0 * exp((r-0.5σ²)T + σ√T·Z)",
@@ -164,6 +168,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "distribution-sampler", display: "04 · distribution-sampler",
+        intro: "Implement Exponential, Poisson, and Weibull samplers from first principles. Each uses a different mathematical strategy — inverse CDF, Knuth's product algorithm, power transforms — and models a different real-world phenomenon like queue arrivals and hardware wear-out.",
         concepts: &[
             "Exponential: inverse CDF sampling (-ln(U)/lambda)",
             "Poisson: Knuth's algorithm (product of uniforms)",
@@ -207,6 +212,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "statistics-core", display: "05 · statistics-core",
+        intro: "Build descriptive statistics from scratch over raw slices. Mean, variance, median, percentiles, z-scores, skewness, kurtosis, and IQR outlier detection — the exact functions every data science library exposes, written without dependencies.",
         concepts: &[
             "Mean, variance (population N), sample variance (N-1)",
             "Median (sort + midpoint), percentile (linear interpolation)",
@@ -266,6 +272,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "matrix-math", display: "06 · matrix-math",
+        intro: "Implement matrix algebra from the ground up. Multiply, transpose, and Gaussian elimination with partial pivoting give you inverses and determinants — the numerical core powering regression, neural networks, and graphics transforms in every later crate.",
         concepts: &[
             "Row-major matrix storage: element (r,c) at index r*cols+c",
             "Transpose: swap rows and columns",
@@ -316,6 +323,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "linear-regression", display: "07 · linear-regression",
+        intro: "Fit a multi-feature linear regression model using the normal equations. You build the design matrix, solve β = (XᵀX)⁻¹Xᵀy using your matrix crate, then compute R² — exactly how NumPy's lstsq and scikit-learn's LinearRegression work under the hood.",
         concepts: &[
             "Ordinary Least Squares via normal equations: β = (X'X)⁻¹X'y",
             "Design matrix: prepend a column of 1s for the intercept",
@@ -354,6 +362,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "signal-processing", display: "08 · signal-processing",
+        intro: "Analyse signals in the frequency domain using the Fast Fourier Transform. You apply a Hann window to reduce spectral leakage, run the FFT, find dominant frequency bins, and compute RMS — the processing chain used in audio codecs, radar, and vibration monitoring.",
         concepts: &[
             "Fast Fourier Transform (FFT) via rustfft",
             "Hann window: reduces spectral leakage at signal edges",
@@ -398,6 +407,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "bit-manipulator", display: "09 · bit-manipulator",
+        intro: "Master low-level bit operations and apply them to real packet parsing. You extract, set, clear, and toggle individual bits using masks and shifts, then decode version, IHL, and source address fields from a raw IPv4 header byte array.",
         concepts: &[
             "Bit masks: (1u32 << n) - 1 creates n ones",
             "Extract bits: (value >> offset) & mask",
@@ -447,6 +457,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "memory-arena", display: "10 · memory-arena",
+        intro: "Build a bump allocator that never calls malloc. You manage a fixed byte buffer, handle alignment for any type T, and hand out typed mutable references — the same technique used by game engines, OS kernels, and WebAssembly runtimes to eliminate heap overhead.",
         concepts: &[
             "Bump allocator: advance a pointer, never free individually",
             "Alignment: pad offset to next multiple of T's alignment",
@@ -487,6 +498,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "float-inspector", display: "11 · float-inspector",
+        intro: "Decode the raw bit layout of IEEE 754 doubles. You extract sign, biased exponent, and mantissa using integer masks and shifts, then compute ULP distance and demonstrate catastrophic cancellation — the practical foundation for numerical stability analysis.",
         concepts: &[
             "IEEE 754 double: [sign:1][exponent:11][mantissa:52]",
             "Exponent bias: stored value = actual + 1023",
@@ -531,6 +543,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "mini-vm", display: "12 · mini-vm",
+        intro: "Implement a stack-based bytecode interpreter. You execute Push, Add, Sub, Mul, Div, and Halt over a value stack — the execution model used by the JVM, CPython, WASM, and the Lua VM, bringing together bit ops from crate 09 and arena allocation from crate 10.",
         concepts: &[
             "Stack machine: all operands live on a value stack",
             "Program counter: iterate through instructions in order",
@@ -570,6 +583,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "consistent-hashing", display: "13 · consistent-hashing",
+        intro: "Build a consistent hash ring for distributed key routing. Virtual nodes spread load evenly across physical nodes; BTreeMap gives O(log n) clockwise lookup. When a node joins or leaves, only keys on that arc need rehashing — the technique behind DynamoDB and Cassandra.",
         concepts: &[
             "Consistent hash ring: nodes and keys share a circular u64 space",
             "Virtual nodes (vnodes): each physical node gets multiple ring positions",
@@ -605,6 +619,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "bloom-filter", display: "14 · bloom-filter",
+        intro: "Build a Bloom filter: a probabilistic membership structure with zero false negatives. k hash functions each set and check one bit; a missing bit means definitely absent, all bits set means probably present. Used in Chrome Safe Browsing, CDN caches, and database planners.",
         concepts: &[
             "Probabilistic membership: never false negative, may false positive",
             "k hash functions set/check k bits per item",
@@ -634,6 +649,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "rate-limiter", display: "15 · rate-limiter",
+        intro: "Implement two classic rate limiting algorithms. The token bucket refills at a constant rate and allows bursting up to capacity. The sliding window counts requests in a rolling time window. These exact mechanisms power AWS API Gateway, Nginx, and Stripe.",
         concepts: &[
             "Token bucket: capacity cap, refilled at rate tokens/sec",
             "Lazy refill: compute elapsed since last_refill on each try_acquire call",
@@ -672,6 +688,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "merkle-tree", display: "16 · merkle-tree",
+        intro: "Build a Merkle tree for tamper-evident data integrity. Each parent node is the hash of its two children; any changed leaf corrupts the root. You generate O(log n) inclusion proofs and verify them — the data structure behind Bitcoin, git objects, and certificate transparency.",
         concepts: &[
             "Binary hash tree: parent = hash(left_child || right_child)",
             "Root summarises ALL data - changing any leaf changes the root",
@@ -713,6 +730,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "gossip-protocol", display: "17 · gossip-protocol",
+        intro: "Simulate epidemic information spreading across a cluster. Each informed node fans out to random neighbours every round; convergence is guaranteed in O(log n) rounds regardless of cluster size. This eventual consistency mechanism underlies Cassandra, Consul, and blockchain peer discovery.",
         concepts: &[
             "Epidemic protocol: informed nodes infect random neighbours each round",
             "Convergence in O(log n) rounds with fanout >= 2",
@@ -748,6 +766,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "raft-consensus", display: "18 · raft-consensus",
+        intro: "Implement the Raft distributed consensus algorithm. Term-based leader election requires a majority vote; log replication requires majority acknowledgement before committing. This is the algorithm powering etcd, CockroachDB, TiKV, and distributed databases at every major cloud provider.",
         concepts: &[
             "Raft: understandable consensus algorithm (simpler than Paxos)",
             "Term: logical clock that increases with each election",
@@ -783,6 +802,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "gradient-descent", display: "19 · gradient-descent",
+        intro: "Implement SGD with momentum and the Adam optimiser. Adam tracks per-parameter first and second moment estimates with bias correction, giving adaptive learning rates that work well without per-weight tuning — the default optimiser for training every major deep learning model.",
         concepts: &[
             "SGD: velocity = beta*v + (1-beta)*grad; params -= lr * velocity",
             "Adam: adaptive per-parameter learning rates using moment estimates",
@@ -823,6 +843,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "neural-net", display: "20 · neural-net",
+        intro: "Build a feedforward neural network from scratch. You implement forward pass with sigmoid activations, backpropagation via the chain rule, and weight updates. The network learns to solve XOR — the classic proof that a single hidden layer can represent any non-linear function.",
         concepts: &[
             "Forward pass: z = W*a + b, a = sigmoid(z) for each layer",
             "Backprop output delta: a_L - y (BCE + sigmoid simplifies beautifully)",
@@ -857,6 +878,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "decision-tree", display: "21 · decision-tree",
+        intro: "Build a CART decision tree classifier. You compute Gini impurity, calculate information gain for candidate splits, and recursively partition the data until pure or at max depth. Decision trees are the base learner inside random forests, XGBoost, and LightGBM.",
         concepts: &[
             "CART: Classification And Regression Trees",
             "Gini impurity: 1 - Σ p_i². Pure node=0, 50/50 split=0.5",
@@ -895,6 +917,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "k-means", display: "22 · k-means",
+        intro: "Implement Lloyd's k-means clustering algorithm. Assign each point to its nearest centroid, recompute centroids as cluster means, and iterate to convergence. Used in image quantisation, customer segmentation, vector database indexing, and as a preprocessing step in larger ML pipelines.",
         concepts: &[
             "Lloyd's algorithm: assign -> update centroids -> repeat",
             "Euclidean distance: sqrt(Σ (a_i - b_i)²)",
@@ -933,6 +956,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "attention-mechanism", display: "23 · attention-mechanism",
+        intro: "Implement scaled dot-product attention: softmax(QKᵀ / sqrt(d_k)) V. You add a causal mask that prevents each position attending to future tokens. This is the exact operation executed billions of times per forward pass in GPT, BERT, LLaMA, Whisper, and Claude.",
         concepts: &[
             "Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) V",
             "Scaling by 1/sqrt(d_k) prevents vanishing gradients in deep networks",
@@ -973,6 +997,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "bpe-tokeniser", display: "24 · bpe-tokeniser",
+        intro: "Implement Byte-Pair Encoding tokenisation from scratch. You start with individual characters, count adjacent pair frequencies, merge the most frequent pair into a new token, and repeat until the vocabulary reaches its target size. This is how GPT-2/3/4, LLaMA, and Claude tokenise text.",
         concepts: &[
             "BPE: start from characters, greedily merge the most frequent adjacent pair",
             "Each merge creates a new token and reduces the total sequence length",
@@ -1022,6 +1047,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "mmio-registers", display: "25 · mmio-registers",
+        intro: "Simulate memory-mapped I/O register access in safe Rust. You implement volatile reads and writes, per-register permission enforcement, and bitfield extraction — the exact pattern used by every embedded HAL (embedded-hal, embassy) and Linux device driver to touch hardware.",
         concepts: &[
             "Memory-mapped I/O: hardware registers as fixed memory addresses",
             "volatile reads/writes: why the compiler must not cache hardware values",
@@ -1071,6 +1097,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "char-device-driver", display: "26 · char-device-driver",
+        intro: "Simulate a Linux character device driver in userspace. You implement the file_operations table: exclusive open, FIFO read/write, and ioctl command dispatch. This is the universal hardware interface behind /dev/tty, /dev/input, serial ports, and most kernel drivers.",
         concepts: &[
             "file_operations table (fops): drivers are just function pointers",
             "Character devices: open/read/write/ioctl as the universal hardware API",
@@ -1119,6 +1146,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "process-scheduler", display: "27 · process-scheduler",
+        intro: "Implement a Multi-Level Feedback Queue scheduler. New processes enter the top-priority queue; CPU-bound ones demote when they exhaust their time quantum; I/O-bound ones promote on early yield; starved processes are aged back to priority 0. This design preceded Linux's CFS.",
         concepts: &[
             "MLFQ: multi-level feedback queue approximates optimal without clairvoyance",
             "Time quantum and preemption: why slices prevent CPU monopolisation",
@@ -1168,6 +1196,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "raw-socket", display: "28 · raw-socket",
+        intro: "Parse raw network packets from a byte buffer. You decode Ethernet, IPv4, and TCP headers using RFC-defined field offsets, validate the IPv4 checksum with one's-complement arithmetic, and track unique connections by their 4-tuple. The foundation of packet sniffers, firewalls, and XDP programs.",
         concepts: &[
             "Wire format: reading RFC-defined byte layouts without a library",
             "Ethernet / IPv4 / TCP header structures and field offsets",
@@ -1213,6 +1242,7 @@ pub const CRATES: &[CrateMeta] = &[
     // ------------------------------------------------------------------
     CrateMeta {
         package: "ebpf-probe", display: "29 · ebpf-probe",
+        intro: "Write the userspace half of an eBPF observability tool using the aya crate. You load a pre-compiled BPF ELF, attach kprobes and XDP hooks to kernel entry points, and read structured results from BPF maps — the observable layer of modern Linux production systems.",
         concepts: &[
             "BPF bytecode and the in-kernel verifier: safety without a language runtime",
             "BPF maps: shared key-value memory between kernel programs and userspace",
