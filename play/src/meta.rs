@@ -991,4 +991,234 @@ pub const CRATES: &[CrateMeta] = &[
             },
         ],
     },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "mmio-registers", display: "25 · mmio-registers",
+        concepts: &[
+            "Memory-mapped I/O: hardware registers as fixed memory addresses",
+            "volatile reads/writes: why the compiler must not cache hardware values",
+            "Bitfield extraction and insertion (extends 09-bit-manipulator)",
+            "HAL: hardware abstraction layer pattern (embedded-hal, embassy)",
+        ],
+        docs: &[
+            DocLink { label: "core::ptr::read_volatile", url: "https://doc.rust-lang.org/core/ptr/fn.read_volatile.html" },
+            DocLink { label: "embedded-hal traits", url: "https://docs.rs/embedded-hal/latest/embedded_hal/" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "write_then_read",
+                hints: &[
+                    "Use unsafe { std::ptr::read_volatile(self.buffer.as_ptr().add(index)) } to read.",
+                    "Use unsafe { std::ptr::write_volatile(self.buffer.as_mut_ptr().add(index), value) } to write.",
+                ],
+            },
+            TestHints {
+                test_name: "out_of_bounds",
+                hints: &[
+                    "Check index < self.buffer.len() first. Return Err(RegError::OutOfBounds) if not.",
+                ],
+            },
+            TestHints {
+                test_name: "readonly_register",
+                hints: &[
+                    "Check self.perms[index] before writing. Permission::ReadOnly -> Err(RegError::PermissionDenied).",
+                ],
+            },
+            TestHints {
+                test_name: "read_field",
+                hints: &[
+                    "Call read32(index)?, then apply: (value >> bit_offset) & ((1u64 << len) - 1) as u32.",
+                    "Use u64 for the mask to avoid overflow when len == 32: ((1u64 << len) - 1) as u32.",
+                ],
+            },
+            TestHints {
+                test_name: "write_field",
+                hints: &[
+                    "Build mask: ((1u64 << len) - 1) as u32) << bit_offset. Read current, clear field, OR new bits.",
+                    "let current = read32(index)?; let cleared = current & !mask; write32(index, cleared | ((value << bit_offset) & mask))",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "char-device-driver", display: "26 · char-device-driver",
+        concepts: &[
+            "file_operations table (fops): drivers are just function pointers",
+            "Character devices: open/read/write/ioctl as the universal hardware API",
+            "Exclusive access: why hardware resources need locking (EBUSY)",
+            "ioctl: structured escape hatch for device-specific commands",
+        ],
+        docs: &[
+            DocLink { label: "Linux char device driver guide", url: "https://www.kernel.org/doc/html/latest/driver-api/basics.html" },
+            DocLink { label: "POSIX ioctl(2)", url: "https://man7.org/linux/man-pages/man2/ioctl.2.html" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "open_succeeds",
+                hints: &[
+                    "SimpleDevice::new() should return Self { is_open: false, buffer: vec![], mode: 0 }.",
+                    "open(): if self.is_open { Err(Busy) } else { self.is_open = true; Ok(()) }",
+                ],
+            },
+            TestHints {
+                test_name: "second_open_returns_busy",
+                hints: &[
+                    "Check self.is_open at the top of open(). Return Err(DeviceError::Busy) if true.",
+                ],
+            },
+            TestHints {
+                test_name: "write_then_read",
+                hints: &[
+                    "write(): check is_open, then self.buffer.extend_from_slice(buf). Return Ok(buf.len()).",
+                    "read(): check is_open, let n = buf.len().min(self.buffer.len()); buf[..n].copy_from_slice(&self.buffer[..n]); self.buffer.drain(..n); Ok(n)",
+                ],
+            },
+            TestHints {
+                test_name: "reset_clears",
+                hints: &[
+                    "ioctl cmd::RESET: self.buffer.clear(); Ok(0)",
+                ],
+            },
+            TestHints {
+                test_name: "unknown_command",
+                hints: &[
+                    "The match on cmd needs a wildcard arm: _ => Err(DeviceError::InvalidCommand)",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "process-scheduler", display: "27 · process-scheduler",
+        concepts: &[
+            "MLFQ: multi-level feedback queue approximates optimal without clairvoyance",
+            "Time quantum and preemption: why slices prevent CPU monopolisation",
+            "I/O vs CPU-bound: how usage patterns drive priority demotion / promotion",
+            "Starvation and ageing: boosting long-waiting processes for fairness",
+        ],
+        docs: &[
+            DocLink { label: "OSTEP: MLFQ (ch. 8)", url: "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf" },
+            DocLink { label: "Linux EEVDF scheduler", url: "https://lwn.net/Articles/925371/" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "empty_scheduler",
+                hints: &[
+                    "new(): queues = std::array::from_fn(|_| VecDeque::new()), processes: HashMap::new(), tick: 0, next_pid: 1.",
+                    "next_process(): for queue in &mut self.queues { if let Some(pid) = queue.pop_front() { return Some(pid); } } None",
+                ],
+            },
+            TestHints {
+                test_name: "higher_priority",
+                hints: &[
+                    "spawn(): create Pcb { pid, name, state: Ready, queue: 0, ... }. Insert into processes map. Push pid to queues[0].",
+                ],
+            },
+            TestHints {
+                test_name: "cpu_bound_process_demotes",
+                hints: &[
+                    "In tick(): pcb.ticks_this_quantum += 1; pcb.total_cpu_ticks += 1. If ticks_this_quantum >= QUANTA[queue]: pcb.queue = (queue + 1).min(NUM_QUEUES - 1); pcb.ticks_this_quantum = 0.",
+                    "After updating queue, push pid back onto queues[pcb.queue].",
+                ],
+            },
+            TestHints {
+                test_name: "io_bound_process_is_promoted",
+                hints: &[
+                    "If yielded_early: pcb.queue = queue.saturating_sub(1); pcb.ticks_this_quantum = 0. Push back to new queue.",
+                ],
+            },
+            TestHints {
+                test_name: "starved_process_is_aged",
+                hints: &[
+                    "age_processes(): for each pid in processes where state==Ready and wait_ticks >= AGE_THRESHOLD: remove from current queue, set queue=0, reset wait_ticks, push to queues[0].",
+                    "Call age_processes() in tick() when self.tick % AGE_THRESHOLD == 0.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "raw-socket", display: "28 · raw-socket",
+        concepts: &[
+            "Wire format: reading RFC-defined byte layouts without a library",
+            "Ethernet / IPv4 / TCP header structures and field offsets",
+            "IPv4 one's-complement checksum validation",
+            "Connection tracking: identifying repeated flows by 4-tuple",
+        ],
+        docs: &[
+            DocLink { label: "RFC 791 (IPv4)", url: "https://www.rfc-editor.org/rfc/rfc791" },
+            DocLink { label: "RFC 793 (TCP)", url: "https://www.rfc-editor.org/rfc/rfc793" },
+            DocLink { label: "XDP tutorial", url: "https://github.com/xdp-project/xdp-tutorial" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "ethertype_is_parsed",
+                hints: &[
+                    "Ethernet: bytes 0-5 = dst MAC, 6-11 = src MAC, 12-13 = EtherType (big-endian u16).",
+                    "let ethertype = u16::from_be_bytes([buf[12], buf[13]]); check for ETHERTYPE_IPV4 or ETHERTYPE_ARP.",
+                ],
+            },
+            TestHints {
+                test_name: "ipv4_checksum_validates",
+                hints: &[
+                    "Sum all 16-bit big-endian words in the header as u32. Fold carry: while sum >> 16 != 0 { sum = (sum & 0xFFFF) + (sum >> 16) }",
+                    "One's complement: let result = !sum as u16. A valid header gives 0xFFFF.",
+                ],
+            },
+            TestHints {
+                test_name: "tcp_flags",
+                hints: &[
+                    "TCP flags are in byte 13 of the TCP header (0-indexed from TCP payload start).",
+                    "SYN = bit 1 (0x02), ACK = bit 4 (0x10), FIN = bit 0 (0x01), RST = bit 2 (0x04).",
+                ],
+            },
+            TestHints {
+                test_name: "connection_tracking",
+                hints: &[
+                    "Encode 4-tuple: (u32::from_be_bytes(ip.src), u32::from_be_bytes(ip.dst), tcp.src_port, tcp.dst_port)",
+                    "!self.seen.insert(key) returns true if already present (HashSet::insert returns false on duplicate).",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "ebpf-probe", display: "29 · ebpf-probe",
+        concepts: &[
+            "BPF bytecode and the in-kernel verifier: safety without a language runtime",
+            "BPF maps: shared key-value memory between kernel programs and userspace",
+            "kprobes and tracepoints: attaching to kernel function entry/exit points",
+            "XDP: processing packets before the kernel network stack (line-rate filtering)",
+            "CO-RE (Compile Once Run Everywhere) and BTF type information",
+        ],
+        docs: &[
+            DocLink { label: "aya book", url: "https://aya-rs.dev/book/" },
+            DocLink { label: "Brendan Gregg BPF Performance Tools", url: "https://www.brendangregg.com/bpf-performance-tools-book.html" },
+            DocLink { label: "XDP tutorial", url: "https://github.com/xdp-project/xdp-tutorial" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "load_execve_probe",
+                hints: &[
+                    "let elf = include_bytes!(\"../bpf/execve_probe.bpf.o\"); let mut bpf = aya::Bpf::load(elf)?;",
+                    "let prog: &mut KProbe = bpf.program_mut(\"execve_probe\").unwrap().try_into()?; prog.load()?; prog.attach(\"sys_execve\", 0)?;",
+                ],
+            },
+            TestHints {
+                test_name: "read_exec_events",
+                hints: &[
+                    "let map = aya::maps::HashMap::<_, u32, [u8; 16]>::try_from(bpf.map(\"exec_events\").unwrap())?;",
+                    "for result in map.iter() { let (pid, comm) = result?; let name = String::from_utf8_lossy(&comm).trim_end_matches('\\0').to_string(); }",
+                ],
+            },
+            TestHints {
+                test_name: "protocol_classifier",
+                hints: &[
+                    "Unit tests in the tests module are already passing - they test the inline classify_protocol helper.",
+                    "For the real eBPF functions, you need Linux >= 5.15 with BTF. Check /sys/kernel/btf/vmlinux exists.",
+                ],
+            },
+        ],
+    },
 ];

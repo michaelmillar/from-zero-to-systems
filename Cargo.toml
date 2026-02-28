@@ -24,6 +24,11 @@ members = [
     "crates/22-k-means",
     "crates/23-attention-mechanism",
     "crates/24-bpe-tokeniser",
+    "crates/25-mmio-registers",
+    "crates/26-char-device-driver",
+    "crates/27-process-scheduler",
+    "crates/28-raw-socket",
+    "crates/29-ebpf-probe",
     "play",
 ]
 resolver = "2"

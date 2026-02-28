@@ -1,0 +1,13 @@
+[package]
+name = "char-device-driver"
+version = "0.1.0"
+edition = "2021"
+description = "Character device driver — Linux /dev interface, file_operations table, ioctl dispatch"
+
+[lib]
+name = "char_device_driver"
+path = "src/lib.rs"
+
+[[bin]]
+name = "char-device-driver"
+path = "src/main.rs"

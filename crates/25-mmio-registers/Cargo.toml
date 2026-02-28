@@ -1,0 +1,13 @@
+[package]
+name = "mmio-registers"
+version = "0.1.0"
+edition = "2021"
+description = "Memory-mapped register block — firmware HAL, embedded drivers, microcontroller peripherals"
+
+[lib]
+name = "mmio_registers"
+path = "src/lib.rs"
+
+[[bin]]
+name = "mmio-registers"
+path = "src/main.rs"

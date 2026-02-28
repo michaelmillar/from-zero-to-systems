@@ -1,0 +1,19 @@
+[package]
+name = "ebpf-probe"
+version = "0.1.0"
+edition = "2021"
+description = "eBPF userspace loader — Cilium, Falco, Pixie, Cloudflare DDoS mitigation"
+
+[lib]
+name = "ebpf_probe"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ebpf-probe"
+path = "src/main.rs"
+
+[dependencies]
+aya = "0.13"
+aya-log = "0.2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+bytes = "1"

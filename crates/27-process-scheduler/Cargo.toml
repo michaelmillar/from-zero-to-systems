@@ -1,0 +1,13 @@
+[package]
+name = "process-scheduler"
+version = "0.1.0"
+edition = "2021"
+description = "Multi-level feedback queue scheduler — Linux CFS, FreeRTOS, game engine job systems"
+
+[lib]
+name = "process_scheduler"
+path = "src/lib.rs"
+
+[[bin]]
+name = "process-scheduler"
+path = "src/main.rs"
