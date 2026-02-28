@@ -2,13 +2,47 @@
 //  YOUR CHALLENGE - simulate risk events and calculate
 //  Value at Risk (VaR) using Monte Carlo simulation.
 //
-//  For each trial:
-//    - for each event, roll a random number against its probability
-//    - if it fires, sample a uniform loss in [0, max_loss]
-//    - accumulate the trial total loss
-//  After all trials, sort the losses and read off the 95th percentile.
+//  WHAT YOU ARE BUILDING
+//  ---------------------
+//  A risk model used by insurance companies, banks, and trading
+//  desks to answer: "In the worst 5% of years, how much do we lose?"
+//  That figure is the 95th-percentile VaR.
 //
-//  Hint: seed a StdRng with seed_from_u64(seed) for reproducibility.
+//  THE ALGORITHM (plain English)
+//  ------------------------------
+//  Repeat `trials` times:
+//    For each RiskEvent:
+//      Roll a number between 0 and 1.
+//      If that number < event.probability -> the event fires.
+//      When it fires, pick a random loss between 0 and event.max_loss.
+//    Record the total loss for this trial.
+//
+//  After all trials:
+//    Sort the per-trial losses low -> high.
+//    The value 95% of the way through that sorted list is your VaR 95%.
+//
+//  RESULT FIELDS
+//  -------------
+//  trials            — same as the input, echoed back
+//  occurrences       — total number of times ANY event fired across ALL trials
+//  total_loss        — sum of every individual event loss across ALL trials
+//  mean_loss_per_trial — total_loss / trials  (average per run)
+//  max_observed_loss — highest single-trial total loss seen
+//  var_95            — the 95th-percentile trial loss (sorted_losses[0.95 * trials])
+//
+//  RUST SYNTAX NOTES
+//  -----------------
+//  Create the RNG:
+//    let mut rng = StdRng::seed_from_u64(seed);
+//
+//  Generate a random f64 in [0.0, 1.0):
+//    rng.gen::<f64>()      <- the ::<f64> "turbofish" picks the output type
+//
+//  Sort a Vec<f64> (f64 has no Ord, so you must use partial_cmp):
+//    losses.sort_by(|a, b| a.partial_cmp(b).unwrap());
+//
+//  Maximum of a Vec<f64>:
+//    losses.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
 // ============================================================
 
 use rand::{Rng, SeedableRng};
@@ -21,11 +55,17 @@ pub struct RiskEvent {
 }
 
 pub struct SimulationResult {
+    /// Same as the `trials` argument passed in.
     pub trials: u64,
+    /// Total number of event firings across all trials and all events.
     pub occurrences: u64,
+    /// Sum of all losses across all trials.
     pub total_loss: f64,
+    /// total_loss / trials.
     pub mean_loss_per_trial: f64,
+    /// Largest single-trial loss observed.
     pub max_observed_loss: f64,
+    /// 95th-percentile trial loss (Value at Risk).
     pub var_95: f64,
 }
 

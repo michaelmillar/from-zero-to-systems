@@ -36,30 +36,33 @@ pub const CRATES: &[CrateMeta] = &[
             TestHints {
                 test_name: "zero_probability",
                 hints: &[
-                    "If probability == 0.0, the event never fires. Return result with zero occurrences and zero total_loss.",
-                    "Loop over events: if rng.gen::<f64>() < event.probability the event fires. With prob=0, it never will.",
+                    "Start here: `let mut rng = StdRng::seed_from_u64(seed);` then loop `for _ in 0..trials { }`. Inside that loop, iterate over events.",
+                    "For each event: `if rng.gen::<f64>() < event.probability { /* fires */ }`. With probability=0.0, this condition is never true, so occurrences stays 0.",
+                    "Return `SimulationResult { trials, occurrences: 0, total_loss: 0.0, mean_loss_per_trial: 0.0, max_observed_loss: 0.0, var_95: 0.0 }` — fill in the real values once the loop works.",
                 ],
             },
             TestHints {
                 test_name: "certain_event",
                 hints: &[
-                    "If probability == 1.0, every trial fires. occurrences should equal trials.",
-                    "Each firing samples a uniform loss in [0, max_loss]: rng.gen::<f64>() * max_loss.",
-                    "Accumulate total_loss across trials. mean_loss = total_loss / trials as f64.",
+                    "Inside the event-fires branch: `occurrences += 1;` and sample a loss: `let loss = rng.gen::<f64>() * event.max_loss;`",
+                    "Accumulate into two places: `trial_total += loss;` (local to this trial) and `total_loss += loss;` (running total across all trials).",
+                    "After all trials: `mean_loss_per_trial = total_loss / trials as f64`. With probability=1.0, occurrences == trials.",
                 ],
             },
             TestHints {
                 test_name: "var_95",
                 hints: &[
-                    "Collect all per-trial loss totals, sort them, then read the 95th percentile.",
-                    "var_95 = sorted_losses[(0.95 * trials as f64) as usize]. var_95 <= max possible loss.",
+                    "Collect each trial's total into a Vec: after the inner event loop, push trial_total: `trial_losses.push(trial_total);`",
+                    "Sort it after all trials: `trial_losses.sort_by(|a, b| a.partial_cmp(b).unwrap());` — f64 needs partial_cmp, not cmp.",
+                    "`var_95 = trial_losses[(0.95 * trials as f64) as usize];` — this is the loss at the 95th percentile index.",
                 ],
             },
             TestHints {
                 test_name: "mean_loss",
                 hints: &[
-                    "Expected loss per trial = prob * max_loss / 2 (uniform distribution mean).",
-                    "mean_loss_per_trial = total_loss / trials as f64. With enough trials it converges.",
+                    "`max_observed_loss` is the largest single trial_total you saw: `trial_losses.iter().cloned().fold(f64::NEG_INFINITY, f64::max)`",
+                    "The test checks that `mean_loss_per_trial` converges to `prob * max_loss / 2.0` (uniform distribution mean) within 5%. With 500k trials it will.",
+                    "Make sure `mean_loss_per_trial = total_loss / trials as f64` — divide by ALL trials, not just the ones where the event fired.",
                 ],
             },
         ],
@@ -126,34 +129,34 @@ pub const CRATES: &[CrateMeta] = &[
             TestHints {
                 test_name: "mc_option_price",
                 hints: &[
-                    "Simulate: S_T = spot * exp((rate - 0.5*vol²)*expiry + vol*sqrt(expiry)*Z) where Z ~ N(0,1).",
-                    "Payoff = (S_T - strike).max(0.0). Price = exp(-rate*expiry) * mean(payoffs).",
-                    "Use rand_distr::Normal::new(0.0, 1.0) and rayon's into_par_iter() for parallelism.",
+                    "Split trials into chunks, run each in a rayon parallel thread: `(0..trials).into_par_iter().map_init(|| StdRng::seed_from_u64(seed ^ id), |rng, _| { /* simulate one path */ }).sum::<f64>() / trials as f64`",
+                    "One path: sample Z ~ N(0,1) with `Normal::new(0.0,1.0).unwrap().sample(rng)`. Then: `let s_t = spot * ((rate - 0.5*vol*vol)*expiry + vol*expiry.sqrt()*z).exp(); (s_t - strike).max(0.0)`",
+                    "Discount back to present value: `price = mean_payoff * (-rate * expiry).exp()`. Black-Scholes: `d1 = (ln(S/K) + (r+0.5σ²)T) / (σ√T); d2 = d1 - σ√T; price = S*N(d1) - K*e^(-rT)*N(d2)`",
                 ],
             },
             TestHints {
                 test_name: "deep_out_of_money",
                 hints: &[
-                    "With strike=200, spot=100: S_T rarely exceeds 200. Payoff = max(S_T-200, 0) is near zero.",
+                    "With strike=200 and spot=100, S_T almost never exceeds 200. Payoff = max(S_T-200, 0) ≈ 0. If your price is not near zero, check the GBM formula — a common mistake is forgetting the -0.5*σ² drift correction.",
                 ],
             },
             TestHints {
                 test_name: "deep_in_money",
                 hints: &[
-                    "With spot=200, strike=100: payoff = max(S_T-100, 0) is almost always large (>95).",
+                    "With spot=200, strike=100: the payoff max(S_T-100, 0) is almost always large. If it's not > 95, check you are discounting with exp(-rate*expiry) not dividing by (1+rate).",
                 ],
             },
             TestHints {
                 test_name: "var_95_is_less",
                 hints: &[
-                    "Sort returns. VaR at confidence c = -(return at (1-c) percentile). VaR_99 > VaR_95.",
-                    "value_at_risk: sort the slice, return -sorted[(1-confidence) * n index] or similar.",
+                    "VaR measures loss, so sort returns ascending and take the low end. `let mut sorted = returns.to_vec(); sorted.sort_by(|a,b| a.partial_cmp(b).unwrap());`",
+                    "At confidence c, the loss is: `-sorted[((1.0 - confidence) * n as f64) as usize]`. VaR_99 cuts deeper into the tail than VaR_95 so VaR_99 > VaR_95.",
                 ],
             },
             TestHints {
                 test_name: "var_of_all_gains",
                 hints: &[
-                    "If all returns are positive, the 95th percentile loss is zero or negative. VaR <= 0.",
+                    "If every return is positive, sorted[low_index] is still positive, so -sorted[low_index] <= 0. VaR represents loss, so a profitable portfolio has VaR <= 0.",
                 ],
             },
         ],
@@ -217,34 +220,45 @@ pub const CRATES: &[CrateMeta] = &[
         tests: &[
             TestHints {
                 test_name: "mean_of_known",
-                hints: &["Return Err(StatsError::Empty) if data is empty. Otherwise sum / len."],
+                hints: &[
+                    "Check if data is empty first: `if data.is_empty() { return Err(StatsError::Empty); }`",
+                    "Mean = sum / count: `data.iter().sum::<f64>() / data.len() as f64`",
+                ],
             },
             TestHints {
                 test_name: "variance_of_constant",
-                hints: &["Population variance = mean of (x - mean)^2. All equal -> all deviations=0."],
+                hints: &[
+                    "Population variance = average of squared deviations from the mean.",
+                    "`let m = mean(data)?; data.iter().map(|x| (x - m).powi(2)).sum::<f64>() / data.len() as f64`",
+                ],
             },
             TestHints {
                 test_name: "median_even",
                 hints: &[
-                    "Sort a copy of data. For even length: (sorted[n/2-1] + sorted[n/2]) / 2.0.",
+                    "Sort a copy: `let mut s = data.to_vec(); s.sort_by(|a,b| a.partial_cmp(b).unwrap());`",
+                    "Even length: `(s[n/2 - 1] + s[n/2]) / 2.0`. Odd length: `s[n/2]`.",
                 ],
             },
             TestHints {
                 test_name: "percentile_0",
                 hints: &[
-                    "Sort data. index = p * (n-1) as f64. lower = floor(index). frac = index - lower.",
-                    "result = sorted[lower] + frac * (sorted[lower+1] - sorted[lower]). p=0 -> sorted[0], p=1 -> sorted[n-1].",
+                    "Sort data. Compute a fractional index: `let idx = p * (n - 1) as f64;`",
+                    "Interpolate: `let lo = idx.floor() as usize; let frac = idx - lo as f64; sorted[lo] + frac * (sorted[lo+1] - sorted[lo])`",
+                    "Edge cases: p=0.0 returns sorted[0], p=1.0 returns sorted[n-1]. Guard against lo+1 >= n.",
                 ],
             },
             TestHints {
                 test_name: "z_scores",
-                hints: &["z[i] = (x[i] - mean) / std_dev. Result has mean ~0 and population variance ~1."],
+                hints: &[
+                    "z_score[i] = (x[i] - mean) / std_dev, where std_dev = variance.sqrt().",
+                    "`data.iter().map(|x| (x - m) / std).collect()`",
+                ],
             },
             TestHints {
                 test_name: "iqr_outliers",
                 hints: &[
-                    "IQR = Q3 - Q1. Lower fence = Q1 - 1.5*IQR. Upper fence = Q3 + 1.5*IQR.",
-                    "Outliers are values where x < lower_fence || x > upper_fence.",
+                    "Q1 = percentile(data, 0.25), Q3 = percentile(data, 0.75). IQR = Q3 - Q1.",
+                    "Fences: lower = Q1 - 1.5*IQR, upper = Q3 + 1.5*IQR. Outliers: `data.iter().filter(|&&x| x < lower || x > upper)`",
                 ],
             },
         ],
@@ -266,29 +280,35 @@ pub const CRATES: &[CrateMeta] = &[
             TestHints {
                 test_name: "identity_times_matrix",
                 hints: &[
-                    "matmul: return None if self.cols != rhs.rows. result[(i,j)] = sum over k of self[(i,k)] * rhs[(k,j)].",
+                    "Access element (row r, col c): `self.data[r * self.cols + c]`. Return None if self.cols != rhs.rows.",
+                    "`result[(i,j)] = (0..self.cols).map(|k| self[(i,k)] * rhs[(k,j)]).sum::<f64>()`",
                 ],
             },
             TestHints {
                 test_name: "transpose_twice",
-                hints: &["transpose: result[(j,i)] = self[(i,j)]. New shape is (self.cols x self.rows)."],
+                hints: &[
+                    "New matrix has shape (self.cols x self.rows). Set `result[(j,i)] = self[(i,r)]` for all i,r.",
+                    "Transpose twice == identity: `m.transpose().transpose().data == m.data`.",
+                ],
             },
             TestHints {
                 test_name: "inverse_of_identity",
                 hints: &[
-                    "Build augmented matrix [A | I]. Row-reduce to [I | A^-1] using partial pivoting.",
-                    "At each step, swap the row with the largest absolute value in the pivot column.",
-                    "Track sign from row swaps; determinant = product of pivots (negated per swap).",
+                    "Build an n x 2n augmented matrix: left half = A, right half = identity. Row-reduce the left half to identity; the right half becomes A^-1.",
+                    "Partial pivoting: for column k, find the row below k with the largest |value| and swap it to position k before eliminating.",
+                    "Eliminate below and above the pivot: for each other row r, subtract (row[r][k] / pivot) * pivot_row from row r.",
                 ],
             },
             TestHints {
                 test_name: "determinant_of_singular",
-                hints: &["If any pivot becomes exactly zero (or near-zero), the matrix is singular. Return None."],
+                hints: &[
+                    "During elimination, if the best pivot found is ~0 (abs < 1e-10), the matrix is singular. Return None for both inverse and determinant.",
+                ],
             },
             TestHints {
                 test_name: "mul_vec",
                 hints: &[
-                    "mul_vec: result[i] = sum over k of self[(i,k)] * v[k]. Return None if self.cols != v.len().",
+                    "Return None if self.cols != v.len(). Then: `(0..self.rows).map(|i| (0..self.cols).map(|k| self[(i,k)] * v[k]).sum()).collect()`",
                 ],
             },
         ],
@@ -310,21 +330,23 @@ pub const CRATES: &[CrateMeta] = &[
             TestHints {
                 test_name: "perfect_linear_fit",
                 hints: &[
-                    "Step 1: build X by prepending a 1.0 column. Each row becomes [1.0, x[0], x[1], ...].",
-                    "Step 2: compute X_t*X and X_t*y using matrix_math matmul. Invert X_t*X.",
-                    "Step 3: beta = inv * X_t*y. Use mul_vec to get the coefficient vector.",
+                    "Build design matrix X: each row is [1.0, feature0, feature1, ...]. The leading 1 gives you the intercept term.",
+                    "Normal equations: β = (Xᵀ·X)⁻¹ · Xᵀ·y. Compute X_t = X.transpose(), then X_t.matmul(&x)?.inverse()?, then .mul_vec(&x_t.mul_vec(&y_vec)?)?",
+                    "coefficients[0] is the intercept (the weight on the leading 1). coefficients[1..] are the slopes for each feature.",
                 ],
             },
             TestHints {
                 test_name: "predict_matches",
                 hints: &[
-                    "predict: dot product of [1.0, x[0], x[1], ...] with model.coefficients.",
+                    "predict: prepend 1.0 to the feature vector, then dot-product with self.coefficients.",
+                    "`[1.0].iter().chain(features).zip(&self.coefficients).map(|(x, c)| x * c).sum()`",
                 ],
             },
             TestHints {
                 test_name: "multi_feature",
                 hints: &[
-                    "R^2 = 1 - sum(residuals^2) / sum((y - mean_y)^2). Residuals = y - predicted.",
+                    "R² = 1 - SS_res / SS_tot. SS_res = Σ(y_actual - y_predicted)². SS_tot = Σ(y_actual - mean_y)².",
+                    "R²=1.0 means a perfect fit. R²=0.0 means the model is no better than predicting the mean.",
                 ],
             },
         ],
@@ -346,24 +368,30 @@ pub const CRATES: &[CrateMeta] = &[
             TestHints {
                 test_name: "fft_of_pure_sine",
                 hints: &[
-                    "Pipeline: apply hann_window, convert to Vec<Complex<f64>> with im=0, run FFT, compute magnitudes.",
-                    "FftPlanner::new().plan_fft_forward(N).process(&mut buf). magnitude[k] = buf[k].norm() / N as f64.",
-                    "dominant_bin = (1..magnitudes.len()).max_by(|a,b| magnitudes[a].partial_cmp(&magnitudes[b])).",
+                    "Pipeline: hann_window(signal) -> Vec<Complex<f64>> (im=0) -> FFT -> magnitudes. The dominant bin should match the input frequency.",
+                    "`let mut planner = FftPlanner::new(); let fft = planner.plan_fft_forward(n); fft.process(&mut buf);` then `buf[k].norm() / n as f64` for each bin.",
+                    "Dominant bin index k corresponds to frequency `k * sample_rate / N` Hz. Find it with: `(1..n/2).max_by(|&a,&b| mags[a].partial_cmp(&mags[b]).unwrap())`",
                 ],
             },
             TestHints {
                 test_name: "hann_window",
                 hints: &[
-                    "w[i] = 0.5 * (1.0 - (2.0 * PI * i as f64 / (N-1) as f64).cos()). Multiply signal[i] * w[i].",
+                    "Hann window reduces spectral leakage by tapering the signal edges to zero.",
+                    "`w[i] = 0.5 * (1.0 - (2.0 * PI * i as f64 / (n - 1) as f64).cos()); signal[i] * w[i]`",
                 ],
             },
             TestHints {
                 test_name: "sine_wave",
-                hints: &["s[i] = (2.0 * PI * freq_hz * i as f64 / sample_rate).sin()"],
+                hints: &[
+                    "`s[i] = (2.0 * PI * freq_hz * i as f64 / sample_rate as f64).sin()`",
+                ],
             },
             TestHints {
                 test_name: "rms_of_unit_sine",
-                hints: &["rms = (signal.iter().map(|x| x*x).sum::<f64>() / N as f64).sqrt()"],
+                hints: &[
+                    "`(signal.iter().map(|x| x * x).sum::<f64>() / signal.len() as f64).sqrt()`",
+                    "For a unit sine wave (amplitude 1), RMS = 1/√2 ≈ 0.707. This is why AC voltages are quoted as RMS.",
+                ],
             },
         ],
     },
