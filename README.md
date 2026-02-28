@@ -27,16 +27,34 @@ That last command opens the interactive learning runner. Everything you need is 
 
 `cargo run -p play` launches a full-screen TUI. Run it in a terminal alongside your editor.
 
+When you first open a crate the right panel shows what it is about:
+
 ```
  01  02  03  04  05  06  07  08  09  10  11  12 ...
   ·   ·   ·   ·   ·   ·   ·   ·   ·   ·   ·   ·
-┌─ Tests ─────────────────┐ ┌─ Hints ─────────────────────────────────┐
-│ ○ zero_probability_...  │ │                                         │
-│ ○ certain_event_...     │ │  Press [h] to reveal the first hint     │
-│ ○ var_95_is_not_...     │ │  for the selected test.                 │
-│ ○ mean_loss_is_...      │ │                                         │
-└─────────────────────────┘ └─────────────────────────────────────────┘
-  r run   h hint   d docs   c concepts   n/p next/prev   j/k up/down   q quit
+┌─ 01 · risk-sampler ──────────┐ ┌─ Info ────────────────────────────────┐
+│                               │ │ Simulate risk events across thousands │
+│  Press [r] to run tests       │ │ of trials to calculate Value at Risk. │
+│                               │ │ The 95th-percentile trial loss is     │
+│                               │ │ your VaR 95 — the figure used by      │
+│                               │ │ banks and insurers to size capital.   │
+│                               │ │                                       │
+│                               │ │ Completed: 0/29                       │
+└───────────────────────────────┘ └───────────────────────────────────────┘
+  [r]un  [h]int  [d]ocs  [c]oncepts  [←/p]prev  [→/n]next  [q]uit
+```
+
+After pressing `r` to run tests and `h` on a failing test:
+
+```
+┌─ 01 · risk-sampler ──────────┐ ┌─ Hint 1/3 ────────────────────────────┐
+│ ✗ zero_probability_event_... │ │ Test: zero_probability_event_never_.. │
+│ ✗ certain_event_always_...   │ │                                       │
+│ ✗ var_95_is_not_greater_...  │ │ Start here: let mut rng =             │
+│ ✗ mean_loss_is_consistent... │ │ StdRng::seed_from_u64(seed); then     │
+│                               │ │ loop for _ in 0..trials { }.         │
+└───────────────────────────────┘ └───────────────────────────────────────┘
+  [r]un  [h]int  [d]ocs  [c]oncepts  [←/p]prev  [→/n]next  [q]uit
 ```
 
 ### Keys
