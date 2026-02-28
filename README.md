@@ -6,15 +6,112 @@
 
 Developers coming from Python, Go, TypeScript, or another language who already understand programming fundamentals and want to learn Rust by building real things. No toy exercises. Every crate is a working application with a genuine use case.
 
-## How it works
+---
 
-Each numbered crate under `crates/` is:
+## Quickstart
 
-- **Independently runnable:** `cargo run -p <crate-name>`
-- **A reusable library:** later crates import earlier ones as dependencies
-- **Self-documenting:** each README has an ELI5, an educated-generalist explanation, real-world "used in the wild" callouts, and Rust concepts covered
+```bash
+git clone https://github.com/michaelmillar/from-zero-to-systems
+cd from-zero-to-systems
+cargo build
+cargo run -p play
+```
 
-## Dependency Graph
+That last command opens the interactive learning runner. Everything you need is in there.
+
+---
+
+## How to play
+
+### The interactive runner
+
+`cargo run -p play` launches a full-screen TUI. Run it in a terminal alongside your editor.
+
+```
+ 01  02  03  04  05  06  07  08  09  10  11  12 ...
+  ·   ·   ·   ·   ·   ·   ·   ·   ·   ·   ·   ·
+┌─ Tests ─────────────────┐ ┌─ Hints ─────────────────────────────────┐
+│ ○ zero_probability_...  │ │                                         │
+│ ○ certain_event_...     │ │  Press [h] to reveal the first hint     │
+│ ○ var_95_is_not_...     │ │  for the selected test.                 │
+│ ○ mean_loss_is_...      │ │                                         │
+└─────────────────────────┘ └─────────────────────────────────────────┘
+  r run   h hint   d docs   c concepts   n/p next/prev   j/k up/down   q quit
+```
+
+### Keys
+
+| Key | Action |
+|-----|--------|
+| `r` | Run all tests for the current crate (`cargo test -p <name>`) |
+| `h` | Reveal the next hint for the selected test (up to 3 per test) |
+| `d` | Show documentation links for the current crate |
+| `c` | Show the Rust and systems concepts this crate teaches |
+| `n` / `→` | Move to the next crate |
+| `p` / `←` | Move to the previous crate |
+| `j` / `↓` | Select the next test in the list |
+| `k` / `↑` | Select the previous test in the list |
+| `Esc` | Close the hint/docs/concepts panel |
+| `q` | Quit |
+
+The top strip shows all crates at a glance. Green `✓` means all tests pass. Red `✗` means failures. `·` means not yet run.
+
+### Your workflow
+
+1. **Open the runner** alongside your editor.
+2. **Navigate** to crate `01-risk-sampler` with `n`/`p`.
+3. **Press `r`** to run the tests. They will all fail — that is expected.
+4. **Select a failing test** with `j`/`k` and read its name carefully. The test name IS the spec.
+5. **Open `crates/01-risk-sampler/src/lib.rs`** in your editor and implement the function.
+6. **Press `r` again** to re-run. Fix, repeat until that test goes green.
+7. **Move to the next test.** Tackle them one at a time.
+8. **Press `h`** if you are stuck. Hints are revealed one at a time — try to use as few as possible.
+9. Once all tests pass, the runner marks the crate complete and your progress is saved.
+10. **Move to the next crate** with `n`.
+
+### If you are completely stuck
+
+Press `h` up to three times on the selected test:
+
+- **Hint 1** explains the structure — what shape the code should take.
+- **Hint 2** explains the algorithm — what to compute.
+- **Hint 3** gives exact Rust syntax — a near-complete code snippet.
+
+Press `c` to see the Rust concepts this crate teaches. Press `d` to open documentation links.
+
+### Without the runner
+
+You can work entirely from the command line if you prefer:
+
+```bash
+# Run all tests for one crate
+cargo test -p risk-sampler
+
+# Run a specific test by name
+cargo test -p risk-sampler zero_probability
+
+# Run the binary to see what it does once you have it working
+cargo run -p risk-sampler
+```
+
+---
+
+## Tiers
+
+| Tier | Crates | Domain |
+|------|--------|--------|
+| 1 | 01-04 | Simulation and Probability |
+| 2 | 05-08 | Maths and Statistics |
+| 3 | 09-12 | Low-Level Systems |
+| 4 | 13-18 | Distributed Systems |
+| 5 | 19-24 | AI and Machine Learning |
+| 6 | 25-29 | Systems and Kernel |
+
+---
+
+## Dependency graph
+
+Later crates import earlier ones — completing them in order keeps the dependency graph working.
 
 ```
 01-risk-sampler ──────────────────────────────────────────────── standalone
@@ -41,25 +138,22 @@ Each numbered crate under `crates/` is:
 22-k-means ─────────────── depends on ──► 05, 06
 23-attention-mechanism ─── depends on ──► 06, 19
 24-bpe-tokeniser ───────── depends on ──► 09
+25-mmio-registers ──────────────────────────────────────────────── standalone
+26-char-device-driver ─────────────────────────────────────────── standalone
+27-process-scheduler ───────────────────────────────────────────── standalone
+28-raw-socket ──────────────────────────────────────────────────── standalone
+29-ebpf-probe ──────────────────────────────────────────────────── standalone
 ```
 
-## Running a crate
+---
 
-```bash
-cargo run -p risk-sampler
-cargo run -p probability-engine
-cargo run -p monte-carlo -- --trials 1000000
-```
+## Each crate contains
 
-## Tiers
+- `src/lib.rs` — the challenge: function stubs with `todo!()` and BDD-style tests that define the spec
+- `src/main.rs` — a runnable binary showing the library working in a real scenario
+- `README.md` — plain-English explanation, Rust concepts covered, and real-world "used by X" callouts
 
-| Tier | Crates | Domain |
-|------|--------|--------|
-| 1 | 01-04 | Simulation & Probability |
-| 2 | 05-08 | Maths & Statistics |
-| 3 | 09-12 | Low-Level Systems |
-| 4 | 13-18 | Distributed Systems |
-| 5 | 19-24 | AI & Machine Learning |
+---
 
 ## Licence
 
