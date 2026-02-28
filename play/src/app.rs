@@ -57,7 +57,7 @@ impl App {
             current:       0,
             selected_test: 0,
             panel:         PanelMode::Idle,
-            states:        (0..24).map(|_| CrateState::new()).collect(),
+            states:        (0..CRATES.len()).map(|_| CrateState::new()).collect(),
             tick_count:    0,
             workspace,
             progress,
@@ -149,7 +149,7 @@ impl App {
     }
 
     pub fn go_next(&mut self) {
-        if self.current < 23 {
+        if self.current + 1 < CRATES.len() {
             self.current       += 1;
             self.selected_test  = 0;
             self.panel          = PanelMode::Idle;
