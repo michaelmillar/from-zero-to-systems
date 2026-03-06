@@ -1,16 +1,15 @@
 [package]
-name = "float-inspector"
+name = "hash-table"
 version = "0.1.0"
 edition = "2021"
-description = "IEEE 754 internals — sign, exponent, mantissa, ULP distance, numerical stability auditing"
+description = "Hash table from scratch -- open addressing, Robin Hood probing, resize"
 
 [lib]
-name = "float_inspector"
+name = "hash_table"
 path = "src/lib.rs"
 
 [[bin]]
-name = "float-inspector"
+name = "hash-table"
 path = "src/main.rs"
 
 [dependencies]
-linear-regression = { path = "../07-linear-regression" }

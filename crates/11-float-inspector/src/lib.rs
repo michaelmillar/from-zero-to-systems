@@ -1,165 +1,289 @@
-// ============================================================
-//  YOUR CHALLENGE — dissect IEEE 754 double-precision floats.
-//
-//  A 64-bit float is laid out in memory as:
-//    [sign: 1 bit][exponent: 11 bits][mantissa: 52 bits]
-//
-//  The exponent is stored with a bias of 1023 (so stored 1023 = actual 0).
-//  The mantissa has an implicit leading 1 bit (except for subnormals).
-//
-//  Hint: use `f64::to_bits()` / `f64::from_bits()` to get the raw u64.
-//  Use `transmute` only if you need to inspect the byte pattern directly.
-// ============================================================
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
-/// Extract the sign bit: 0 = positive, 1 = negative.
-pub fn sign_bit(x: f64) -> u64 {
-    x.to_bits() >> 63
+const INITIAL_CAP: usize = 16;
+const MAX_LOAD: f64 = 0.70;
+
+#[derive(Clone)]
+enum Slot<K, V> {
+    Empty,
+    Occupied { key: K, value: V, dist: usize }, // dist = probe distance from ideal slot
 }
 
-/// Extract the raw 11-bit biased exponent (before subtracting bias of 1023).
-pub fn raw_exponent(x: f64) -> u64 {
-    (x.to_bits() >> 52) & 0x7FF
+pub struct HashMap<K, V> {
+    slots: Vec<Slot<K, V>>,
+    len: usize,
 }
 
-/// Extract the actual (unbiased) exponent: raw_exponent - 1023.
-/// Returns None for special values (NaN, infinity, subnormals).
-pub fn actual_exponent(x: f64) -> Option<i32> {
-    let raw = raw_exponent(x);
-    if raw == 0 || raw == 0x7FF { return None; }
-    Some(raw as i32 - 1023)
+impl<K: Eq + Hash + Clone, V: Clone> HashMap<K, V> {
+    pub fn new() -> Self {
+        Self { slots: vec![Slot::Empty; INITIAL_CAP], len: 0 }
+    }
+
+    pub fn len(&self) -> usize { self.len }
+    pub fn is_empty(&self) -> bool { self.len == 0 }
+
+    pub fn load_factor(&self) -> f64 {
+        self.len as f64 / self.slots.len() as f64
+    }
+
+    fn hash_index(&self, key: &K) -> usize {
+        let mut h = DefaultHasher::new();
+        key.hash(&mut h);
+        h.finish() as usize % self.slots.len()
+    }
+
+    /// Insert or update. Returns the old value if the key already existed.
+    pub fn insert(&mut self, key: K, value: V) -> Option<V> {
+        if self.load_factor() >= MAX_LOAD {
+            self.resize();
+        }
+        self.insert_inner(key, value)
+    }
+
+    fn insert_inner(&mut self, mut key: K, mut value: V) -> Option<V> {
+        let cap = self.slots.len();
+        let mut idx = self.hash_index(&key);
+        let mut dist = 0usize;
+
+        loop {
+            // Take ownership of the current slot to avoid borrow conflicts
+            let current = std::mem::replace(&mut self.slots[idx], Slot::Empty);
+
+            // Destructure in a guard-free match, then decide what to do with the data
+            let (k, v, d) = match current {
+                Slot::Empty => {
+                    self.slots[idx] = Slot::Occupied { key, value, dist };
+                    self.len += 1;
+                    return None;
+                }
+                Slot::Occupied { key: k, value: v, dist: d } => (k, v, d),
+            };
+
+            if k == key {
+                // Update existing key
+                self.slots[idx] = Slot::Occupied { key: k, value, dist: d };
+                return Some(v);
+            } else if dist > d {
+                // Robin Hood: place our entry here, continue inserting the displaced entry
+                self.slots[idx] = Slot::Occupied { key, value, dist };
+                key = k;
+                value = v;
+                dist = d + 1;
+            } else {
+                // Keep the existing entry and advance
+                self.slots[idx] = Slot::Occupied { key: k, value: v, dist: d };
+                dist += 1;
+            }
+
+            idx = (idx + 1) % cap;
+        }
+    }
+
+    pub fn get(&self, key: &K) -> Option<&V> {
+        let cap = self.slots.len();
+        let mut idx = self.hash_index(key);
+        let mut dist = 0;
+        loop {
+            match &self.slots[idx] {
+                Slot::Empty => return None,
+                Slot::Occupied { dist: occ_dist, .. } if dist > *occ_dist => {
+                    // Robin Hood invariant: if we've probed further than the occupant,
+                    // the key cannot be here
+                    return None;
+                }
+                Slot::Occupied { key: k, value: v, .. } if k == key => return Some(v),
+                _ => {}
+            }
+            dist += 1;
+            idx = (idx + 1) % cap;
+        }
+    }
+
+    pub fn contains_key(&self, key: &K) -> bool {
+        self.get(key).is_some()
+    }
+
+    /// Remove a key, using backward-shift deletion to maintain Robin Hood invariant.
+    pub fn remove(&mut self, key: &K) -> Option<V> {
+        let cap = self.slots.len();
+        let mut idx = self.hash_index(key);
+        let mut dist = 0;
+
+        // Find the slot
+        let found_idx = loop {
+            match &self.slots[idx] {
+                Slot::Empty => return None,
+                Slot::Occupied { dist: occ_dist, .. } if dist > *occ_dist => return None,
+                Slot::Occupied { key: k, .. } if k == key => break idx,
+                _ => {}
+            }
+            dist += 1;
+            idx = (idx + 1) % cap;
+        };
+
+        let removed = if let Slot::Occupied { value, .. } =
+            std::mem::replace(&mut self.slots[found_idx], Slot::Empty)
+        {
+            value
+        } else {
+            unreachable!()
+        };
+        self.len -= 1;
+
+        // Backward shift: pull subsequent entries one position back
+        let mut current = found_idx;
+        loop {
+            let next = (current + 1) % cap;
+            match &self.slots[next] {
+                Slot::Empty => break,
+                Slot::Occupied { dist: 0, .. } => break, // at ideal slot, can't move back
+                _ => {}
+            }
+            // Move next into current, update its dist
+            let mut entry = std::mem::replace(&mut self.slots[next], Slot::Empty);
+            if let Slot::Occupied { dist, .. } = &mut entry {
+                *dist -= 1;
+            }
+            self.slots[current] = entry;
+            current = next;
+        }
+
+        Some(removed)
+    }
+
+    fn resize(&mut self) {
+        let new_cap = self.slots.len() * 2;
+        let old_slots = std::mem::replace(&mut self.slots, vec![Slot::Empty; new_cap]);
+        self.len = 0;
+        for slot in old_slots {
+            if let Slot::Occupied { key, value, .. } = slot {
+                self.insert_inner(key, value);
+            }
+        }
+    }
 }
 
-/// Extract the raw 52-bit mantissa (significand, without the implicit leading 1).
-pub fn mantissa_bits(x: f64) -> u64 {
-    x.to_bits() & ((1u64 << 52) - 1)
+impl<K: Eq + Hash + Clone, V: Clone> Default for HashMap<K, V> {
+    fn default() -> Self { Self::new() }
 }
-
-/// Distance in Units in the Last Place (ULPs) between two floats.
-/// ULP distance is the number of representable floats between a and b.
-/// Useful for comparing floats with meaningful tolerance.
-pub fn ulp_distance(a: f64, b: f64) -> u64 {
-    let ai = a.to_bits() as i64;
-    let bi = b.to_bits() as i64;
-    // Convert sign-magnitude IEEE representation to linear ordering
-    let ai = if ai < 0 { i64::MIN - ai } else { ai };
-    let bi = if bi < 0 { i64::MIN - bi } else { bi };
-    (ai - bi).unsigned_abs()
-}
-
-/// Return true if |a - b| < epsilon OR ulp_distance(a, b) < max_ulps.
-/// Combines absolute and relative comparison for robust float equality.
-pub fn nearly_equal(a: f64, b: f64, epsilon: f64, max_ulps: u64) -> bool {
-    if (a - b).abs() < epsilon { return true; }
-    if a.is_nan() || b.is_nan() { return false; }
-    if a.signum() != b.signum() { return false; }
-    ulp_distance(a, b) <= max_ulps
-}
-
-/// Demonstrate catastrophic cancellation: compute (x+1)² - x² - 2x - 1
-/// which is mathematically 0 for all x, but numerically unstable for large x.
-/// Returns the numerical error.
-pub fn cancellation_error(x: f64) -> f64 {
-    (x + 1.0) * (x + 1.0) - x * x - 2.0 * x - 1.0
-}
-
-// ============================================================
-//  TESTS — they ARE the spec.
-// ============================================================
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    mod ieee754_structure {
+    mod basic {
         use super::*;
 
         #[test]
-        fn sign_bit_of_positive_number_is_0() {
-            assert_eq!(sign_bit(1.0), 0);
+        fn insert_and_get() {
+            let mut m: HashMap<&str, i32> = HashMap::new();
+            m.insert("hello", 42);
+            assert_eq!(m.get(&"hello"), Some(&42));
         }
 
         #[test]
-        fn sign_bit_of_negative_number_is_1() {
-            assert_eq!(sign_bit(-1.0), 1);
+        fn get_missing_key_returns_none() {
+            let m: HashMap<&str, i32> = HashMap::new();
+            assert_eq!(m.get(&"missing"), None);
         }
 
         #[test]
-        fn raw_exponent_of_1_is_bias_1023() {
-            // 1.0 = 1 × 2^0, stored exponent = 0 + 1023 = 1023
-            assert_eq!(raw_exponent(1.0), 1023);
+        fn update_existing_key_returns_old_value() {
+            let mut m: HashMap<&str, i32> = HashMap::new();
+            m.insert("k", 1);
+            let old = m.insert("k", 2);
+            assert_eq!(old, Some(1));
+            assert_eq!(m.get(&"k"), Some(&2));
         }
 
         #[test]
-        fn actual_exponent_of_1_is_zero() {
-            assert_eq!(actual_exponent(1.0), Some(0));
+        fn len_tracks_insertions() {
+            let mut m: HashMap<i32, i32> = HashMap::new();
+            m.insert(1, 10);
+            m.insert(2, 20);
+            assert_eq!(m.len(), 2);
         }
 
         #[test]
-        fn actual_exponent_of_8_is_3() {
-            // 8.0 = 1 × 2^3
-            assert_eq!(actual_exponent(8.0), Some(3));
-        }
-
-        #[test]
-        fn actual_exponent_of_nan_is_none() {
-            assert_eq!(actual_exponent(f64::NAN), None);
-        }
-
-        #[test]
-        fn actual_exponent_of_infinity_is_none() {
-            assert_eq!(actual_exponent(f64::INFINITY), None);
-        }
-
-        #[test]
-        fn mantissa_of_1_has_no_fractional_bits() {
-            // 1.0 = 1.0000...0 × 2^0, mantissa bits are all zero
-            assert_eq!(mantissa_bits(1.0), 0);
+        fn update_does_not_increase_len() {
+            let mut m: HashMap<i32, i32> = HashMap::new();
+            m.insert(1, 10);
+            m.insert(1, 20);
+            assert_eq!(m.len(), 1);
         }
     }
 
-    mod ulp_comparison {
+    mod remove {
         use super::*;
 
         #[test]
-        fn ulp_distance_of_identical_values_is_zero() {
-            assert_eq!(ulp_distance(1.0, 1.0), 0);
+        fn remove_existing_key_returns_value() {
+            let mut m: HashMap<&str, i32> = HashMap::new();
+            m.insert("x", 99);
+            assert_eq!(m.remove(&"x"), Some(99));
         }
 
         #[test]
-        fn ulp_distance_of_adjacent_floats_is_one() {
-            let a = 1.0_f64;
-            let b = f64::from_bits(a.to_bits() + 1);
-            assert_eq!(ulp_distance(a, b), 1);
+        fn remove_missing_key_returns_none() {
+            let mut m: HashMap<&str, i32> = HashMap::new();
+            assert_eq!(m.remove(&"x"), None);
         }
 
         #[test]
-        fn nearly_equal_detects_close_values() {
-            let a = 0.1 + 0.2;
-            let b = 0.3;
-            // Not bitwise equal but should be nearly equal
-            assert!(nearly_equal(a, b, 1e-10, 4));
+        fn removed_key_is_no_longer_found() {
+            let mut m: HashMap<&str, i32> = HashMap::new();
+            m.insert("x", 1);
+            m.remove(&"x");
+            assert_eq!(m.get(&"x"), None);
         }
 
         #[test]
-        fn nearly_equal_rejects_distant_values() {
-            assert!(!nearly_equal(1.0, 2.0, 1e-10, 4));
+        fn remove_decrements_len() {
+            let mut m: HashMap<i32, i32> = HashMap::new();
+            m.insert(1, 1);
+            m.remove(&1);
+            assert_eq!(m.len(), 0);
         }
     }
 
-    mod numerical_stability {
+    mod resize {
         use super::*;
 
         #[test]
-        fn cancellation_error_grows_with_magnitude() {
-            let small = cancellation_error(1.0).abs();
-            let large = cancellation_error(1e10).abs();
-            assert!(large > small,
-                "error at 1e10 ({large:e}) should exceed error at 1.0 ({small:e})");
+        fn all_entries_survive_resize() {
+            let mut m: HashMap<i32, i32> = HashMap::new();
+            for i in 0..50 {
+                m.insert(i, i * 10);
+            }
+            for i in 0..50 {
+                assert_eq!(m.get(&i), Some(&(i * 10)), "missing key {i}");
+            }
         }
 
         #[test]
-        fn cancellation_error_of_small_x_is_near_zero() {
-            assert!(cancellation_error(1.0).abs() < 1e-10);
+        fn load_factor_stays_below_max_after_resize() {
+            let mut m: HashMap<i32, i32> = HashMap::new();
+            for i in 0..100 {
+                m.insert(i, i);
+            }
+            assert!(m.load_factor() < 0.75);
+        }
+    }
+
+    mod collisions {
+        use super::*;
+
+        #[test]
+        fn many_colliding_keys_all_retrievable() {
+            // Insert many numeric keys which will have different hash slots
+            let mut m: HashMap<u64, u64> = HashMap::new();
+            for i in 0..200u64 {
+                m.insert(i, i * 2);
+            }
+            for i in 0..200u64 {
+                assert_eq!(m.get(&i), Some(&(i * 2)));
+            }
         }
     }
 }
