@@ -1,34 +1,29 @@
-use float_inspector::*;
-
-fn print_float(label: &str, x: f64) {
-    let bits = x.to_bits();
-    let sign = sign_bit(x);
-    let raw_exp = raw_exponent(x);
-    let mant = mantissa_bits(x);
-    let actual = actual_exponent(x).map(|e| format!("{e}")).unwrap_or("special".into());
-    println!("  {label:<20} = {x:>14}");
-    println!("    bits:     {bits:064b}");
-    println!("    sign={sign}  raw_exp={raw_exp:<4} (actual={actual})  mantissa={mant:052b}");
-    println!();
-}
+use hash_table::HashMap;
 
 fn main() {
-    println!("=== IEEE 754 Float Inspector ===\n");
+    println!("=== Hash Table Demo ===\n");
 
-    print_float("1.0",       1.0_f64);
-    print_float("0.1 + 0.2", 0.1_f64 + 0.2);
-    print_float("0.3",       0.3_f64);
-
-    println!("  0.1 + 0.2 == 0.3?  {}", 0.1_f64 + 0.2 == 0.3);
-    println!("  nearly_equal?      {}", nearly_equal(0.1 + 0.2, 0.3, 1e-10, 4));
-    println!("  ULP distance:      {}", ulp_distance(0.1 + 0.2, 0.3));
-
-    println!("\n=== Catastrophic Cancellation ===\n");
-    println!("  (x+1)² - x² - 2x - 1  should always equal 0:\n");
-    for x in [1.0, 1e6, 1e10, 1e14, 1e15] {
-        let err = cancellation_error(x);
-        println!("    x = {x:>10.0e}  →  error = {err:>12e}");
+    let mut word_count: HashMap<&str, usize> = HashMap::new();
+    let text = "the quick brown fox jumps over the lazy dog the fox";
+    for word in text.split_whitespace() {
+        let count = word_count.get(&word).copied().unwrap_or(0);
+        word_count.insert(word, count + 1);
     }
-    println!("\n  At x=1e15, the error is larger than 1 — the result is completely wrong.");
-    println!("  This is how subtle floating-point bugs enter GPS, financial, and physics code.");
+
+    let mut words = ["the", "fox", "quick", "dog"];
+    words.sort();
+    println!("Word frequencies:");
+    for word in &words {
+        println!("  {:8} => {}", word, word_count.get(word).unwrap_or(&0));
+    }
+
+    println!("\nLoad factor after {} entries: {:.2}", word_count.len(), word_count.load_factor());
+
+    println!("\n=== Robin Hood probing keeps max probe distance low ===");
+    let mut m: HashMap<i32, i32> = HashMap::new();
+    for i in 0..500 {
+        m.insert(i, i);
+    }
+    println!("500 entries inserted, load factor: {:.2}", m.load_factor());
+    println!("All 500 entries retrievable: {}", (0..500).all(|i| m.get(&i) == Some(&i)));
 }
