@@ -1,38 +1,47 @@
-use signal_processing::{analyse, rms, sine_wave};
+use graph::Graph;
 
 fn main() {
-    let sample_rate = 1000.0_f64; // 1 kHz
-    let n = 2048;
+    println!("=== Graph Algorithms Demo ===\n");
 
-    println!("=== Signal Processing: ECG-like Spectrum Analysis ===\n");
+    // Package dependency graph (like cargo)
+    // tokio -> mio, bytes
+    // hyper -> tokio, bytes
+    // axum  -> hyper, tokio
+    let nodes = ["mio", "bytes", "tokio", "hyper", "axum"];
+    let mut g = Graph::new(nodes.len());
+    g.add_edge(2, 0, 1); // tokio -> mio
+    g.add_edge(2, 1, 1); // tokio -> bytes
+    g.add_edge(3, 2, 1); // hyper -> tokio
+    g.add_edge(3, 1, 1); // hyper -> bytes
+    g.add_edge(4, 3, 1); // axum  -> hyper
+    g.add_edge(4, 2, 1); // axum  -> tokio
 
-    // Simulate a simplified ECG: dominant heartbeat at 1.2 Hz (72 bpm)
-    // + respiration artefact at 0.25 Hz + high-frequency noise component
-    let heartbeat  = sine_wave(1.2,  sample_rate, n);
-    let respiration = sine_wave(0.25, sample_rate, n);
-    let hf_noise   = sine_wave(50.0, sample_rate, n); // 50 Hz mains interference
+    println!("Dependency graph: axum -> hyper -> tokio -> mio/bytes\n");
+    let topo = g.topological_sort().unwrap();
+    print!("Build order (topo sort): ");
+    println!("{}", topo.iter().map(|&i| nodes[i]).collect::<Vec<_>>().join(" -> "));
 
-    let signal: Vec<f64> = heartbeat.iter()
-        .zip(&respiration)
-        .zip(&hf_noise)
-        .map(|((h, r), n)| h + 0.3 * r + 0.1 * n)
-        .collect();
+    println!("\n=== Dijkstra: City Road Network ===\n");
+    //        2
+    //   A ------- B
+    //   |       / |
+    // 4 |    3/   | 1
+    //   |  /      |
+    //   C -------- D
+    //        5
+    let cities = ["A", "B", "C", "D"];
+    let mut road = Graph::new(4);
+    road.add_undirected_edge(0, 1, 2); // A-B: 2
+    road.add_undirected_edge(0, 2, 4); // A-C: 4
+    road.add_undirected_edge(1, 2, 3); // B-C: 3
+    road.add_undirected_edge(1, 3, 1); // B-D: 1
+    road.add_undirected_edge(2, 3, 5); // C-D: 5
 
-    println!("  Signal components:");
-    println!("    Heartbeat:          1.20 Hz  (72 bpm)    amplitude 1.0");
-    println!("    Respiration:        0.25 Hz               amplitude 0.3");
-    println!("    Mains interference: 50.0 Hz               amplitude 0.1");
-    println!("  Sample rate: {} Hz,  N = {} samples\n", sample_rate, n);
-
-    let result = analyse(&signal, sample_rate);
-    println!("  Dominant frequency detected: {:.3} Hz", result.dominant_freq_hz);
-    println!("  Signal RMS: {:.4}", rms(&signal));
-
-    println!("\n  Top 5 frequency bins by magnitude:");
-    let mut indexed: Vec<(usize, f64)> = result.magnitudes.iter().copied().enumerate().collect();
-    indexed.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-    for (bin, mag) in indexed.iter().take(5) {
-        let freq = *bin as f64 * sample_rate / n as f64;
-        println!("    bin {:>4} → {:>8.4} Hz   magnitude {:.6}", bin, freq, mag);
+    let dist = road.dijkstra(0); // from A
+    println!("Shortest distances from {}:", cities[0]);
+    let mut sorted: Vec<_> = dist.iter().collect();
+    sorted.sort_by_key(|(&n, _)| n);
+    for (node, cost) in sorted {
+        println!("  {} -> {}: {}", cities[0], cities[*node], cost);
     }
 }

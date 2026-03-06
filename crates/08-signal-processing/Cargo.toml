@@ -1,18 +1,15 @@
 [package]
-name = "signal-processing"
+name = "graph"
 version = "0.1.0"
 edition = "2021"
-description = "FFT-based signal analysis — ECG, audio DSP, and vibration monitoring"
+description = "Graph algorithms -- BFS, DFS, Dijkstra shortest paths, topological sort"
 
 [lib]
-name = "signal_processing"
+name = "graph"
 path = "src/lib.rs"
 
 [[bin]]
-name = "signal-processing"
+name = "graph"
 path = "src/main.rs"
 
 [dependencies]
-matrix-math = { path = "../06-matrix-math" }
-rustfft = "6"
-clap = { version = "4", features = ["derive"] }
