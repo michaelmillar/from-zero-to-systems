@@ -1,4 +1,5 @@
 [workspace]
+rust-version = "1.82"
 members = [
     "crates/01-risk-sampler",
     "crates/02-probability-engine",
@@ -24,5 +25,10 @@ members = [
     "crates/22-k-means",
     "crates/23-attention-mechanism",
     "crates/24-bpe-tokeniser",
+    "crates/25-slotted-page",
+    "crates/26-b-tree",
+    "crates/27-buffer-pool",
+    "crates/28-sstable",
+    "crates/29-skip-list",
 ]
 resolver = "2"
