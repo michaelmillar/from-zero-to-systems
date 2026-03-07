@@ -1,10 +1,19 @@
-use std::{path::PathBuf, sync::mpsc::{self, Receiver}};
+use std::{
+    path::PathBuf,
+    sync::mpsc::{self, Receiver},
+};
 
 use crate::{
     meta::CRATES,
     progress::Progress,
-    runner::{RunnerMsg, TestStatus},
+    runner::{CancelToken, RunnerMsg, TestStatus},
 };
+
+// Process at most this many channel messages per tick so we never
+// spin the CPU hogging the main thread during a flood of results.
+const MAX_MSGS_PER_TICK: usize = 50;
+// Hard cap on stored test entries to bound memory regardless of crate size.
+const MAX_TESTS: usize = 200;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PanelMode {
@@ -48,6 +57,7 @@ pub struct App {
     pub workspace:     PathBuf,
     pub progress:      Progress,
     rx:                Option<Receiver<RunnerMsg>>,
+    cancel_token:      Option<CancelToken>,
     running_crate:     Option<usize>,
 }
 
@@ -62,6 +72,7 @@ impl App {
             workspace,
             progress,
             rx:            None,
+            cancel_token:  None,
             running_crate: None,
         }
     }
@@ -79,13 +90,13 @@ impl App {
 
         let mut done = false;
         if let Some(rx) = &self.rx {
-            loop {
+            for _ in 0..MAX_MSGS_PER_TICK {
                 match rx.try_recv() {
                     Ok(RunnerMsg::TestResult { name, status }) => {
                         let state = &mut self.states[crate_idx];
                         if let Some(entry) = state.tests.iter_mut().find(|t| t.name == name) {
                             entry.status = status;
-                        } else {
+                        } else if state.tests.len() < MAX_TESTS {
                             state.tests.push(TestEntry { name, status });
                         }
                     }
@@ -119,10 +130,19 @@ impl App {
         self.selected_test = 0;
 
         let (tx, rx) = mpsc::channel();
-        self.rx           = Some(rx);
+        self.rx            = Some(rx);
         self.running_crate = Some(self.current);
 
-        crate::runner::spawn(CRATES[self.current].package, &self.workspace, tx);
+        let token = crate::runner::spawn(CRATES[self.current].package, &self.workspace, tx);
+        self.cancel_token = Some(token);
+    }
+
+    /// Signal the running cargo process to terminate immediately.
+    pub fn cancel(&mut self) {
+        if let Some(token) = &self.cancel_token {
+            token.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
+        self.cancel_token = None;
     }
 
     pub fn next_hint(&mut self) {

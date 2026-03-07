@@ -4,7 +4,7 @@ mod progress;
 mod runner;
 mod ui;
 
-use std::{io, time::Duration};
+use std::{io, time::{Duration, Instant}};
 
 use app::{App, PanelMode};
 use crossterm::{
@@ -13,6 +13,9 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
+
+// Tick at 10 Hz for smooth spinner animation without hammering the CPU.
+const TICK_RATE: Duration = Duration::from_millis(100);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = std::env::current_dir()?;
@@ -28,6 +31,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut app    = App::new(workspace, prog);
     let result     = event_loop(&mut term, &mut app);
 
+    // Kill any in-flight cargo process before tearing down the terminal.
+    app.cancel();
+
     disable_raw_mode()?;
     execute!(term.backend_mut(), LeaveAlternateScreen)?;
     term.show_cursor()?;
@@ -39,29 +45,41 @@ fn event_loop<B: ratatui::backend::Backend>(
     term: &mut Terminal<B>,
     app:  &mut App,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let mut last_tick = Instant::now();
+
     loop {
-        app.on_tick();
-        term.draw(|f| ui::render(f, app))?;
+        // Wait for an event, but no longer than the remaining tick interval.
+        let timeout = TICK_RATE.saturating_sub(last_tick.elapsed());
 
-        if event::poll(Duration::from_millis(250))? {
+        if event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
-                if key.kind != KeyEventKind::Press { continue; }
-
-                match key.code {
-                    KeyCode::Char('q') | KeyCode::Char('Q') => break,
-                    KeyCode::Char('r') | KeyCode::Char('R') => app.run_tests(),
-                    KeyCode::Char('h') | KeyCode::Char('H') => app.next_hint(),
-                    KeyCode::Char('d') | KeyCode::Char('D') => app.panel = PanelMode::Docs,
-                    KeyCode::Char('c') | KeyCode::Char('C') => app.panel = PanelMode::Concepts,
-                    KeyCode::Char('n') | KeyCode::Right      => app.go_next(),
-                    KeyCode::Char('p') | KeyCode::Left       => app.go_prev(),
-                    KeyCode::Char('j') | KeyCode::Down       => app.select_down(),
-                    KeyCode::Char('k') | KeyCode::Up         => app.select_up(),
-                    KeyCode::Esc                             => app.panel = PanelMode::Idle,
-                    _                                        => {}
+                if key.kind == KeyEventKind::Press {
+                    match key.code {
+                        KeyCode::Char('q') | KeyCode::Char('Q') => break,
+                        KeyCode::Char('r') | KeyCode::Char('R') => app.run_tests(),
+                        KeyCode::Char('h') | KeyCode::Char('H') => app.next_hint(),
+                        KeyCode::Char('d') | KeyCode::Char('D') => app.panel = PanelMode::Docs,
+                        KeyCode::Char('c') | KeyCode::Char('C') => app.panel = PanelMode::Concepts,
+                        KeyCode::Char('n') | KeyCode::Right      => app.go_next(),
+                        KeyCode::Char('p') | KeyCode::Left       => app.go_prev(),
+                        KeyCode::Char('j') | KeyCode::Down       => app.select_down(),
+                        KeyCode::Char('k') | KeyCode::Up         => app.select_up(),
+                        KeyCode::Esc                             => app.panel = PanelMode::Idle,
+                        _                                        => {}
+                    }
                 }
             }
+            // Redraw immediately on any user input for responsiveness.
+            term.draw(|f| ui::render(f, app))?;
+        }
+
+        // Tick at a fixed rate regardless of how many events arrived.
+        if last_tick.elapsed() >= TICK_RATE {
+            app.on_tick();
+            term.draw(|f| ui::render(f, app))?;
+            last_tick = Instant::now();
         }
     }
+
     Ok(())
 }
