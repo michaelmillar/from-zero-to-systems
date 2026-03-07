@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="920" height="790" viewBox="0 0 920 790">
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="810" viewBox="0 0 920 810">
 
   <!-- background -->
-  <rect width="920" height="790" fill="#0d1117"/>
+  <rect width="920" height="810" fill="#0d1117"/>
 
   <!-- ───────────────────────────────────────────────────── -->
   <!-- REPO LOGO                                             -->
@@ -32,259 +32,261 @@
   <line x1="22" y1="39" x2="70" y2="39" stroke="#4493f8" stroke-width="0.5" opacity="0.4"/>
   <line x1="46" y1="15" x2="46" y2="63" stroke="#4493f8" stroke-width="0.5" opacity="0.4"/>
   <circle cx="46" cy="39" r="5" fill="none" stroke="#79c0ff" stroke-width="0.8"/>
-  <text x="46" y="33" text-anchor="middle" fill="#4493f8"  font-family="'Courier New',monospace" font-size="9" font-weight="bold">0 →</text>
-  <text x="46" y="53" text-anchor="middle" fill="#79c0ff" font-family="'Courier New',monospace" font-size="9" font-weight="bold">SYS</text>
+  <text x="46" y="33" text-anchor="middle" fill="#79b4ff" font-family="'Courier New',monospace" font-size="9" font-weight="bold">0 →</text>
+  <text x="46" y="53" text-anchor="middle" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="9" font-weight="bold">SYS</text>
 
   <!-- title -->
-  <text x="103" y="37" fill="#ffffff" font-family="'Courier New',monospace" font-size="21" font-weight="bold" letter-spacing="1.5">FROM ZERO TO SYSTEMS</text>
-  <text x="103" y="58" fill="#8b949e" font-family="'Courier New',monospace" font-size="11">29 crates  ·  Rust  ·  systems programming  ·  learn by building real things</text>
+  <text x="103" y="38" fill="#ffffff" font-family="'Courier New',monospace" font-size="23" font-weight="bold" letter-spacing="1.5">FROM ZERO TO SYSTEMS</text>
+  <text x="103" y="60" fill="#adbac7" font-family="'Courier New',monospace" font-size="11" font-weight="bold">29 crates  ·  Rust  ·  systems programming  ·  learn by building real things</text>
 
-  <line x1="15" y1="84" x2="905" y2="84" stroke="#21262d" stroke-width="1"/>
+  <line x1="15" y1="84" x2="905" y2="84" stroke="#30363d" stroke-width="1"/>
 
   <!-- ───────────────────────────────────────────────────── -->
-  <!-- T1  SIMULATION &amp; PROBABILITY  (01–04)             -->
+  <!-- T1  PROBABILITY &amp; STATISTICS  (01–05)             -->
+  <!-- 5 cards · start_x=115 · dx=140                       -->
   <!-- ───────────────────────────────────────────────────── -->
-  <rect x="15" y="92" width="890" height="20" fill="#4493f8" opacity="0.08"/>
-  <rect x="15" y="92" width="4"   height="20" fill="#4493f8"/>
-  <text x="26" y="107" fill="#4493f8" font-family="'Courier New',monospace" font-size="11" font-weight="bold" letter-spacing="3">T1  SIMULATION &amp; PROBABILITY</text>
-  <text x="362" y="107" fill="#4493f8" font-family="'Courier New',monospace" font-size="9" opacity="0.6">  ·  sampling  ·  random variables  ·  Monte Carlo  ·  distributions</text>
+  <rect x="15" y="92" width="890" height="22" fill="#4493f8" opacity="0.10"/>
+  <rect x="15" y="92" width="5"   height="22" fill="#4493f8"/>
+  <text x="27" y="109" fill="#79b4ff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T1  PROBABILITY &amp; STATISTICS</text>
+  <text x="392" y="109" fill="#79b4ff" font-family="'Courier New',monospace" font-size="9" opacity="0.7">  ·  sampling  ·  distributions  ·  Monte Carlo  ·  Bayesian inference  ·  descriptive stats</text>
 
-  <!-- 01 risk-sampler -->
-  <rect x="185" y="118" width="130" height="72" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
-  <text x="193" y="131" fill="#6ea8fe" font-family="'Courier New',monospace" font-size="10" font-weight="bold">01</text>
-  <text x="250" y="163" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">Δ</text>
-  <text x="250" y="182" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">risk-sampler</text>
+  <!-- 01 risk-sampler  Δ = change / risk exposure -->
+  <rect x="115" y="120" width="130" height="74" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
+  <text x="124" y="135" fill="#79b4ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">01</text>
+  <text x="180" y="170" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">Δ</text>
+  <text x="180" y="187" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">risk-sampler</text>
 
-  <!-- 02 probability-engine -->
-  <rect x="325" y="118" width="130" height="72" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
-  <text x="333" y="131" fill="#6ea8fe" font-family="'Courier New',monospace" font-size="10" font-weight="bold">02</text>
-  <text x="390" y="163" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">Ω</text>
-  <text x="390" y="182" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">prob-engine</text>
+  <!-- 02 probability-engine  Ω = probability space -->
+  <rect x="255" y="120" width="130" height="74" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
+  <text x="264" y="135" fill="#79b4ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">02</text>
+  <text x="320" y="170" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">Ω</text>
+  <text x="320" y="187" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">prob-engine</text>
 
-  <!-- 03 monte-carlo -->
-  <rect x="465" y="118" width="130" height="72" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
-  <text x="473" y="131" fill="#6ea8fe" font-family="'Courier New',monospace" font-size="10" font-weight="bold">03</text>
-  <text x="530" y="163" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">∴</text>
-  <text x="530" y="182" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">monte-carlo</text>
+  <!-- 03 monte-carlo  ∴ = therefore / logical simulation -->
+  <rect x="395" y="120" width="130" height="74" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
+  <text x="404" y="135" fill="#79b4ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">03</text>
+  <text x="460" y="170" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">∴</text>
+  <text x="460" y="187" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">monte-carlo</text>
 
-  <!-- 04 distribution-sampler -->
-  <rect x="605" y="118" width="130" height="72" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
-  <text x="613" y="131" fill="#6ea8fe" font-family="'Courier New',monospace" font-size="10" font-weight="bold">04</text>
-  <text x="670" y="163" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">∿</text>
-  <text x="670" y="182" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">distribution</text>
+  <!-- 04 distribution-sampler  ∿ = wavy / distribution curve -->
+  <rect x="535" y="120" width="130" height="74" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
+  <text x="544" y="135" fill="#79b4ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">04</text>
+  <text x="600" y="170" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">∿</text>
+  <text x="600" y="187" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">distribution</text>
+
+  <!-- 05 statistics-core  Σ = sigma / summation -->
+  <rect x="675" y="120" width="130" height="74" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
+  <text x="684" y="135" fill="#79b4ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">05</text>
+  <text x="740" y="170" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">Σ</text>
+  <text x="740" y="187" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">statistics-core</text>
 
   <!-- flow arrow -->
-  <line x1="908" y1="190" x2="908" y2="200" stroke="#444d56" stroke-width="1"/>
-  <polygon points="905,199 908,204 911,199" fill="#444d56"/>
+  <line x1="908" y1="194" x2="908" y2="206" stroke="#444d56" stroke-width="1.5"/>
+  <polygon points="904,204 908,210 912,204" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
-  <!-- T2  MATHS &amp; STATISTICS  (05–08)                   -->
+  <!-- T2  LINEAR ALGEBRA  (06–08)                           -->
+  <!-- 3 cards · start_x=255 · dx=140                       -->
   <!-- ───────────────────────────────────────────────────── -->
-  <rect x="15" y="208" width="890" height="20" fill="#3fb950" opacity="0.08"/>
-  <rect x="15" y="208" width="4"   height="20" fill="#3fb950"/>
-  <text x="26" y="223" fill="#3fb950" font-family="'Courier New',monospace" font-size="11" font-weight="bold" letter-spacing="3">T2  MATHS &amp; STATISTICS</text>
-  <text x="278" y="223" fill="#3fb950" font-family="'Courier New',monospace" font-size="9" opacity="0.6">  ·  descriptive stats  ·  matrix ops  ·  regression  ·  signal processing</text>
+  <rect x="15" y="214" width="890" height="22" fill="#3fb950" opacity="0.10"/>
+  <rect x="15" y="214" width="5"   height="22" fill="#3fb950"/>
+  <text x="27" y="231" fill="#56d364" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T2  LINEAR ALGEBRA</text>
+  <text x="231" y="231" fill="#56d364" font-family="'Courier New',monospace" font-size="9" opacity="0.7">  ·  matrix operations  ·  regression via normal equations  ·  signal &amp; graph algorithms</text>
 
-  <!-- 05 statistics-core -->
-  <rect x="185" y="234" width="130" height="72" fill="#0a1e12" stroke="#3fb950" stroke-width="1" rx="5"/>
-  <text x="193" y="247" fill="#56d364" font-family="'Courier New',monospace" font-size="10" font-weight="bold">05</text>
-  <text x="250" y="279" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">Σ</text>
-  <text x="250" y="298" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">statistics-core</text>
+  <!-- 06 matrix-math  ⊠ = squared-times / matrix element -->
+  <rect x="255" y="242" width="130" height="74" fill="#0a1e12" stroke="#3fb950" stroke-width="1" rx="5"/>
+  <text x="264" y="257" fill="#56d364" font-family="'Courier New',monospace" font-size="11" font-weight="bold">06</text>
+  <text x="320" y="292" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊠</text>
+  <text x="320" y="309" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">matrix-math</text>
 
-  <!-- 06 matrix-math -->
-  <rect x="325" y="234" width="130" height="72" fill="#0a1e12" stroke="#3fb950" stroke-width="1" rx="5"/>
-  <text x="333" y="247" fill="#56d364" font-family="'Courier New',monospace" font-size="10" font-weight="bold">06</text>
-  <text x="390" y="279" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊠</text>
-  <text x="390" y="298" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">matrix-math</text>
+  <!-- 07 linear-regression  ↗ = upward trend line -->
+  <rect x="395" y="242" width="130" height="74" fill="#0a1e12" stroke="#3fb950" stroke-width="1" rx="5"/>
+  <text x="404" y="257" fill="#56d364" font-family="'Courier New',monospace" font-size="11" font-weight="bold">07</text>
+  <text x="460" y="292" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">↗</text>
+  <text x="460" y="309" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">lin-regression</text>
 
-  <!-- 07 linear-regression -->
-  <rect x="465" y="234" width="130" height="72" fill="#0a1e12" stroke="#3fb950" stroke-width="1" rx="5"/>
-  <text x="473" y="247" fill="#56d364" font-family="'Courier New',monospace" font-size="10" font-weight="bold">07</text>
-  <text x="530" y="279" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">↗</text>
-  <text x="530" y="298" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">lin-regression</text>
-
-  <!-- 08 signal-processing -->
-  <rect x="605" y="234" width="130" height="72" fill="#0a1e12" stroke="#3fb950" stroke-width="1" rx="5"/>
-  <text x="613" y="247" fill="#56d364" font-family="'Courier New',monospace" font-size="10" font-weight="bold">08</text>
-  <text x="670" y="279" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">∫</text>
-  <text x="670" y="298" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">signal-proc</text>
+  <!-- 08 signal-processing  ∫ = integral / continuous signal -->
+  <rect x="535" y="242" width="130" height="74" fill="#0a1e12" stroke="#3fb950" stroke-width="1" rx="5"/>
+  <text x="544" y="257" fill="#56d364" font-family="'Courier New',monospace" font-size="11" font-weight="bold">08</text>
+  <text x="600" y="292" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">∫</text>
+  <text x="600" y="309" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">signal-proc</text>
 
   <!-- flow arrow -->
-  <line x1="908" y1="306" x2="908" y2="316" stroke="#444d56" stroke-width="1"/>
-  <polygon points="905,315 908,320 911,315" fill="#444d56"/>
+  <line x1="908" y1="316" x2="908" y2="328" stroke="#444d56" stroke-width="1.5"/>
+  <polygon points="904,326 908,332 912,326" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
   <!-- T3  LOW-LEVEL SYSTEMS  (09–12)                        -->
+  <!-- 4 cards · start_x=185 · dx=140                       -->
   <!-- ───────────────────────────────────────────────────── -->
-  <rect x="15" y="324" width="890" height="20" fill="#ff7b72" opacity="0.08"/>
-  <rect x="15" y="324" width="4"   height="20" fill="#ff7b72"/>
-  <text x="26" y="339" fill="#ff7b72" font-family="'Courier New',monospace" font-size="11" font-weight="bold" letter-spacing="3">T3  LOW-LEVEL SYSTEMS</text>
-  <text x="268" y="339" fill="#ff7b72" font-family="'Courier New',monospace" font-size="9" opacity="0.6">  ·  bit manipulation  ·  arena allocation  ·  IEEE 754  ·  bytecode VM</text>
+  <rect x="15" y="336" width="890" height="22" fill="#ff7b72" opacity="0.10"/>
+  <rect x="15" y="336" width="5"   height="22" fill="#ff7b72"/>
+  <text x="27" y="353" fill="#ff9492" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T3  LOW-LEVEL SYSTEMS</text>
+  <text x="275" y="353" fill="#ff9492" font-family="'Courier New',monospace" font-size="9" opacity="0.7">  ·  bit manipulation  ·  arena allocation  ·  IEEE 754  ·  bytecode VM</text>
 
-  <!-- 09 bit-manipulator -->
-  <rect x="185" y="350" width="130" height="72" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
-  <text x="193" y="363" fill="#ff9492" font-family="'Courier New',monospace" font-size="10" font-weight="bold">09</text>
-  <text x="250" y="395" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊕</text>
-  <text x="250" y="414" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">bit-manip</text>
+  <!-- 09 bit-manipulator  ⊕ = XOR / bit operation -->
+  <rect x="185" y="364" width="130" height="74" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
+  <text x="194" y="379" fill="#ff9492" font-family="'Courier New',monospace" font-size="11" font-weight="bold">09</text>
+  <text x="250" y="414" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊕</text>
+  <text x="250" y="431" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">bit-manip</text>
 
-  <!-- 10 memory-arena -->
-  <rect x="325" y="350" width="130" height="72" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
-  <text x="333" y="363" fill="#ff9492" font-family="'Courier New',monospace" font-size="10" font-weight="bold">10</text>
-  <text x="390" y="395" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊟</text>
-  <text x="390" y="414" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">memory-arena</text>
+  <!-- 10 memory-arena  ⊟ = squared-minus / block allocation -->
+  <rect x="325" y="364" width="130" height="74" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
+  <text x="334" y="379" fill="#ff9492" font-family="'Courier New',monospace" font-size="11" font-weight="bold">10</text>
+  <text x="390" y="414" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊟</text>
+  <text x="390" y="431" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">memory-arena</text>
 
-  <!-- 11 float-inspector -->
-  <rect x="465" y="350" width="130" height="72" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
-  <text x="473" y="363" fill="#ff9492" font-family="'Courier New',monospace" font-size="10" font-weight="bold">11</text>
-  <text x="530" y="395" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">≈</text>
-  <text x="530" y="414" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">float-insp</text>
+  <!-- 11 float-inspector  ≈ = approximately / float imprecision -->
+  <rect x="465" y="364" width="130" height="74" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
+  <text x="474" y="379" fill="#ff9492" font-family="'Courier New',monospace" font-size="11" font-weight="bold">11</text>
+  <text x="530" y="414" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">≈</text>
+  <text x="530" y="431" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">float-insp</text>
 
-  <!-- 12 mini-vm -->
-  <rect x="605" y="350" width="130" height="72" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
-  <text x="613" y="363" fill="#ff9492" font-family="'Courier New',monospace" font-size="10" font-weight="bold">12</text>
-  <text x="670" y="395" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⚙</text>
-  <text x="670" y="414" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">mini-vm</text>
+  <!-- 12 mini-vm  ⚙ = gear / execution engine -->
+  <rect x="605" y="364" width="130" height="74" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
+  <text x="614" y="379" fill="#ff9492" font-family="'Courier New',monospace" font-size="11" font-weight="bold">12</text>
+  <text x="670" y="414" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⚙</text>
+  <text x="670" y="431" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">mini-vm</text>
 
   <!-- flow arrow -->
-  <line x1="908" y1="422" x2="908" y2="432" stroke="#444d56" stroke-width="1"/>
-  <polygon points="905,431 908,436 911,431" fill="#444d56"/>
+  <line x1="908" y1="438" x2="908" y2="450" stroke="#444d56" stroke-width="1.5"/>
+  <polygon points="904,448 908,454 912,448" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
   <!-- T4  STORAGE INTERNALS  (13–17)                        -->
+  <!-- 5 cards · start_x=115 · dx=140                       -->
   <!-- ───────────────────────────────────────────────────── -->
-  <rect x="15" y="440" width="890" height="20" fill="#79c0ff" opacity="0.08"/>
-  <rect x="15" y="440" width="4"   height="20" fill="#79c0ff"/>
-  <text x="26" y="455" fill="#79c0ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold" letter-spacing="3">T4  STORAGE INTERNALS</text>
-  <text x="254" y="455" fill="#79c0ff" font-family="'Courier New',monospace" font-size="9" opacity="0.6">  ·  slotted pages  ·  B-tree  ·  buffer pool  ·  SSTable  ·  skip-list / LSM</text>
+  <rect x="15" y="458" width="890" height="22" fill="#79c0ff" opacity="0.10"/>
+  <rect x="15" y="458" width="5"   height="22" fill="#79c0ff"/>
+  <text x="27" y="475" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T4  STORAGE INTERNALS</text>
+  <text x="265" y="475" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="9" opacity="0.7">  ·  slotted pages  ·  B-tree index  ·  buffer pool  ·  SSTable  ·  skip-list / LSM</text>
 
-  <!-- 13 slotted-page -->
-  <rect x="185" y="466" width="130" height="72" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
-  <text x="193" y="479" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">13</text>
-  <text x="250" y="511" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊞</text>
-  <text x="250" y="530" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">slotted-page</text>
+  <!-- 13 slotted-page  ⊞ = squared-plus / slots in a page -->
+  <rect x="115" y="486" width="130" height="74" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
+  <text x="124" y="501" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">13</text>
+  <text x="180" y="536" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊞</text>
+  <text x="180" y="553" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">slotted-page</text>
 
-  <!-- 14 b-tree -->
-  <rect x="325" y="466" width="130" height="72" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
-  <text x="333" y="479" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">14</text>
-  <text x="390" y="511" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⋈</text>
-  <text x="390" y="530" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">b-tree</text>
+  <!-- 14 b-tree  ⋈ = bowtie / balanced join tree -->
+  <rect x="255" y="486" width="130" height="74" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
+  <text x="264" y="501" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">14</text>
+  <text x="320" y="536" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⋈</text>
+  <text x="320" y="553" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">b-tree</text>
 
-  <!-- 15 buffer-pool -->
-  <rect x="465" y="466" width="130" height="72" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
-  <text x="473" y="479" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">15</text>
-  <text x="530" y="511" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">≅</text>
-  <text x="530" y="530" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">buffer-pool</text>
+  <!-- 15 buffer-pool  ≅ = congruent / buffered copy of page -->
+  <rect x="395" y="486" width="130" height="74" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
+  <text x="404" y="501" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">15</text>
+  <text x="460" y="536" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">≅</text>
+  <text x="460" y="553" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">buffer-pool</text>
 
-  <!-- 16 sstable -->
-  <rect x="605" y="466" width="130" height="72" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
-  <text x="613" y="479" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">16</text>
-  <text x="670" y="511" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">≣</text>
-  <text x="670" y="530" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">sstable</text>
+  <!-- 16 sstable  ≣ = quadruple bar / sorted immutable levels -->
+  <rect x="535" y="486" width="130" height="74" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
+  <text x="544" y="501" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">16</text>
+  <text x="600" y="536" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">≣</text>
+  <text x="600" y="553" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">sstable</text>
 
-  <!-- 17 skip-list  (lone 5th crate — centred) -->
-  <rect x="745" y="466" width="130" height="72" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
-  <text x="753" y="479" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">17</text>
-  <text x="810" y="511" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⋯</text>
-  <text x="810" y="530" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">skip-list</text>
+  <!-- 17 skip-list  ⋯ = midline ellipsis / skip over levels -->
+  <rect x="675" y="486" width="130" height="74" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
+  <text x="684" y="501" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">17</text>
+  <text x="740" y="536" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⋯</text>
+  <text x="740" y="553" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">skip-list</text>
 
   <!-- flow arrow -->
-  <line x1="908" y1="538" x2="908" y2="548" stroke="#444d56" stroke-width="1"/>
-  <polygon points="905,547 908,552 911,547" fill="#444d56"/>
+  <line x1="908" y1="560" x2="908" y2="572" stroke="#444d56" stroke-width="1.5"/>
+  <polygon points="904,570 908,576 912,570" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
   <!-- T5  DISTRIBUTED SYSTEMS  (18–23)                      -->
+  <!-- 6 cards · start_x=45 · dx=140                        -->
   <!-- ───────────────────────────────────────────────────── -->
-  <rect x="15" y="556" width="890" height="20" fill="#d2a8ff" opacity="0.08"/>
-  <rect x="15" y="556" width="4"   height="20" fill="#d2a8ff"/>
-  <text x="26" y="571" fill="#d2a8ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold" letter-spacing="3">T5  DISTRIBUTED SYSTEMS</text>
-  <text x="290" y="571" fill="#d2a8ff" font-family="'Courier New',monospace" font-size="9" opacity="0.6">  ·  consistent hashing  ·  bloom filters  ·  rate limiting  ·  merkle proofs  ·  gossip  ·  Raft</text>
+  <rect x="15" y="580" width="890" height="22" fill="#d2a8ff" opacity="0.10"/>
+  <rect x="15" y="580" width="5"   height="22" fill="#d2a8ff"/>
+  <text x="27" y="597" fill="#e2baff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T5  DISTRIBUTED SYSTEMS</text>
+  <text x="303" y="597" fill="#e2baff" font-family="'Courier New',monospace" font-size="9" opacity="0.7">  ·  consistent hashing  ·  bloom filters  ·  rate limiting  ·  merkle proofs  ·  gossip  ·  Raft</text>
 
-  <!-- 18 consistent-hashing -->
-  <rect x="45"  y="582" width="130" height="72" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
-  <text x="53"  y="595" fill="#d2a8ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">18</text>
-  <text x="110" y="627" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊙</text>
-  <text x="110" y="646" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">consist-hash</text>
+  <!-- 18 consistent-hashing  ⊙ = circled dot / hash ring -->
+  <rect x="45"  y="608" width="130" height="74" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
+  <text x="54"  y="623" fill="#e2baff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">18</text>
+  <text x="110" y="658" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊙</text>
+  <text x="110" y="675" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">consist-hash</text>
 
-  <!-- 19 bloom-filter -->
-  <rect x="185" y="582" width="130" height="72" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
-  <text x="193" y="595" fill="#d2a8ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">19</text>
-  <text x="250" y="627" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">∈</text>
-  <text x="250" y="646" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">bloom-filter</text>
+  <!-- 19 bloom-filter  ∈ = element-of / membership test -->
+  <rect x="185" y="608" width="130" height="74" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
+  <text x="194" y="623" fill="#e2baff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">19</text>
+  <text x="250" y="658" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">∈</text>
+  <text x="250" y="675" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">bloom-filter</text>
 
-  <!-- 20 rate-limiter -->
-  <rect x="325" y="582" width="130" height="72" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
-  <text x="333" y="595" fill="#d2a8ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">20</text>
-  <text x="390" y="627" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊗</text>
-  <text x="390" y="646" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">rate-limiter</text>
+  <!-- 20 rate-limiter  ⊗ = circled-times / throttled -->
+  <rect x="325" y="608" width="130" height="74" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
+  <text x="334" y="623" fill="#e2baff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">20</text>
+  <text x="390" y="658" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊗</text>
+  <text x="390" y="675" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">rate-limiter</text>
 
-  <!-- 21 merkle-tree -->
-  <rect x="465" y="582" width="130" height="72" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
-  <text x="473" y="595" fill="#d2a8ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">21</text>
-  <text x="530" y="627" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">ψ</text>
-  <text x="530" y="646" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">merkle-tree</text>
+  <!-- 21 merkle-tree  ψ = psi / cryptographic branching tree -->
+  <rect x="465" y="608" width="130" height="74" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
+  <text x="474" y="623" fill="#e2baff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">21</text>
+  <text x="530" y="658" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">ψ</text>
+  <text x="530" y="675" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">merkle-tree</text>
 
-  <!-- 22 gossip-protocol -->
-  <rect x="605" y="582" width="130" height="72" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
-  <text x="613" y="595" fill="#d2a8ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">22</text>
-  <text x="670" y="627" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">↔</text>
-  <text x="670" y="646" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">gossip-proto</text>
+  <!-- 22 gossip-protocol  ↔ = bidirectional / epidemic spread -->
+  <rect x="605" y="608" width="130" height="74" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
+  <text x="614" y="623" fill="#e2baff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">22</text>
+  <text x="670" y="658" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">↔</text>
+  <text x="670" y="675" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">gossip-proto</text>
 
-  <!-- 23 raft-consensus -->
-  <rect x="745" y="582" width="130" height="72" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
-  <text x="753" y="595" fill="#d2a8ff" font-family="'Courier New',monospace" font-size="10" font-weight="bold">23</text>
-  <text x="810" y="627" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊲</text>
-  <text x="810" y="646" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">raft-consensus</text>
+  <!-- 23 raft-consensus  ⊲ = normal-subgroup / leader ordering -->
+  <rect x="745" y="608" width="130" height="74" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
+  <text x="754" y="623" fill="#e2baff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">23</text>
+  <text x="810" y="658" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊲</text>
+  <text x="810" y="675" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">raft-consensus</text>
 
   <!-- flow arrow -->
-  <line x1="908" y1="654" x2="908" y2="664" stroke="#444d56" stroke-width="1"/>
-  <polygon points="905,663 908,668 911,663" fill="#444d56"/>
+  <line x1="908" y1="682" x2="908" y2="694" stroke="#444d56" stroke-width="1.5"/>
+  <polygon points="904,692 908,698 912,692" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
   <!-- T6  AI &amp; MACHINE LEARNING  (24–29)                -->
+  <!-- 6 cards · start_x=45 · dx=140                        -->
   <!-- ───────────────────────────────────────────────────── -->
-  <rect x="15" y="672" width="890" height="20" fill="#ffa657" opacity="0.08"/>
-  <rect x="15" y="672" width="4"   height="20" fill="#ffa657"/>
-  <text x="26" y="687" fill="#ffa657" font-family="'Courier New',monospace" font-size="11" font-weight="bold" letter-spacing="3">T6  AI &amp; MACHINE LEARNING</text>
-  <text x="298" y="687" fill="#ffa657" font-family="'Courier New',monospace" font-size="9" opacity="0.6">  ·  gradient descent  ·  neural nets  ·  decision trees  ·  clustering  ·  attention  ·  tokenisation</text>
+  <rect x="15" y="702" width="890" height="22" fill="#ffa657" opacity="0.10"/>
+  <rect x="15" y="702" width="5"   height="22" fill="#ffa657"/>
+  <text x="27" y="719" fill="#ffb86c" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T6  AI &amp; MACHINE LEARNING</text>
+  <text x="311" y="719" fill="#ffb86c" font-family="'Courier New',monospace" font-size="9" opacity="0.7">  ·  gradient descent  ·  neural nets  ·  decision trees  ·  clustering  ·  attention  ·  tokenisation</text>
 
-  <!-- 24 gradient-descent -->
-  <rect x="45"  y="698" width="130" height="72" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
-  <text x="53"  y="711" fill="#ffb86c" font-family="'Courier New',monospace" font-size="10" font-weight="bold">24</text>
-  <text x="110" y="743" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">∇</text>
-  <text x="110" y="762" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">grad-descent</text>
+  <!-- 24 gradient-descent  ∇ = nabla / gradient vector -->
+  <rect x="45"  y="730" width="130" height="74" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
+  <text x="54"  y="745" fill="#ffb86c" font-family="'Courier New',monospace" font-size="11" font-weight="bold">24</text>
+  <text x="110" y="780" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">∇</text>
+  <text x="110" y="797" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">grad-descent</text>
 
-  <!-- 25 neural-net -->
-  <rect x="185" y="698" width="130" height="72" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
-  <text x="193" y="711" fill="#ffb86c" font-family="'Courier New',monospace" font-size="10" font-weight="bold">25</text>
-  <text x="250" y="743" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">◎</text>
-  <text x="250" y="762" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">neural-net</text>
+  <!-- 25 neural-net  ◎ = bullseye / neuron node -->
+  <rect x="185" y="730" width="130" height="74" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
+  <text x="194" y="745" fill="#ffb86c" font-family="'Courier New',monospace" font-size="11" font-weight="bold">25</text>
+  <text x="250" y="780" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">◎</text>
+  <text x="250" y="797" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">neural-net</text>
 
-  <!-- 26 decision-tree -->
-  <rect x="325" y="698" width="130" height="72" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
-  <text x="333" y="711" fill="#ffb86c" font-family="'Courier New',monospace" font-size="10" font-weight="bold">26</text>
-  <text x="390" y="743" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊢</text>
-  <text x="390" y="762" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">decision-tree</text>
+  <!-- 26 decision-tree  ⊢ = right-tack / inference rule -->
+  <rect x="325" y="730" width="130" height="74" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
+  <text x="334" y="745" fill="#ffb86c" font-family="'Courier New',monospace" font-size="11" font-weight="bold">26</text>
+  <text x="390" y="780" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊢</text>
+  <text x="390" y="797" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">decision-tree</text>
 
-  <!-- 27 k-means -->
-  <rect x="465" y="698" width="130" height="72" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
-  <text x="473" y="711" fill="#ffb86c" font-family="'Courier New',monospace" font-size="10" font-weight="bold">27</text>
-  <text x="530" y="743" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">✦</text>
-  <text x="530" y="762" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">k-means</text>
+  <!-- 27 k-means  ✦ = four-point star / cluster centroid -->
+  <rect x="465" y="730" width="130" height="74" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
+  <text x="474" y="745" fill="#ffb86c" font-family="'Courier New',monospace" font-size="11" font-weight="bold">27</text>
+  <text x="530" y="780" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">✦</text>
+  <text x="530" y="797" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">k-means</text>
 
-  <!-- 28 attention-mechanism -->
-  <rect x="605" y="698" width="130" height="72" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
-  <text x="613" y="711" fill="#ffb86c" font-family="'Courier New',monospace" font-size="10" font-weight="bold">28</text>
-  <text x="670" y="743" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">⊚</text>
-  <text x="670" y="762" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">attention</text>
+  <!-- 28 attention-mechanism  ⊚ = circled-ring / attention weights -->
+  <rect x="605" y="730" width="130" height="74" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
+  <text x="614" y="745" fill="#ffb86c" font-family="'Courier New',monospace" font-size="11" font-weight="bold">28</text>
+  <text x="670" y="780" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">⊚</text>
+  <text x="670" y="797" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">attention</text>
 
-  <!-- 29 bpe-tokeniser -->
-  <rect x="745" y="698" width="130" height="72" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
-  <text x="753" y="711" fill="#ffb86c" font-family="'Courier New',monospace" font-size="10" font-weight="bold">29</text>
-  <text x="810" y="743" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="28" font-weight="bold">≡</text>
-  <text x="810" y="762" text-anchor="middle" fill="#c9d1d9" font-family="'Courier New',monospace" font-size="10" font-weight="bold">bpe-tokeniser</text>
-
-  <!-- footer -->
-  <line x1="15" y1="778" x2="905" y2="778" stroke="#21262d" stroke-width="1"/>
-  <text x="15" y="788" fill="#6e7681" font-family="'Courier New',monospace" font-size="9">T1 → T2 → T3 → T4 → T5 → T6  ·  later crates import earlier ones  ·  cargo run -p &lt;crate-name&gt;</text>
+  <!-- 29 bpe-tokeniser  ≡ = triple-bar / byte-pair equivalence -->
+  <rect x="745" y="730" width="130" height="74" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
+  <text x="754" y="745" fill="#ffb86c" font-family="'Courier New',monospace" font-size="11" font-weight="bold">29</text>
+  <text x="810" y="780" text-anchor="middle" fill="#ffffff" font-family="'Courier New',monospace" font-size="30" font-weight="bold">≡</text>
+  <text x="810" y="797" text-anchor="middle" fill="#f0f6fc" font-family="'Courier New',monospace" font-size="11" font-weight="bold">bpe-tokeniser</text>
 
 </svg>

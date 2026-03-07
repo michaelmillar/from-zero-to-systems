@@ -111,8 +111,8 @@ cargo run -p monte-carlo -- --trials 1000000
 
 | Tier | Crates | Domain |
 |------|--------|--------|
-| 1 | 01-04 | Simulation & Probability |
-| 2 | 05-08 | Maths & Statistics |
+| 1 | 01-05 | Probability & Statistics |
+| 2 | 06-08 | Linear Algebra |
 | 3 | 09-12 | Low-Level Systems |
 | 4 | 13-17 | Storage Internals |
 | 5 | 18-23 | Distributed Systems |
