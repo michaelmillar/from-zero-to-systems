@@ -30,5 +30,6 @@ members = [
     "crates/27-buffer-pool",
     "crates/28-sstable",
     "crates/29-skip-list",
+    "play",
 ]
 resolver = "2"
