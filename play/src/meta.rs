@@ -1,0 +1,1330 @@
+pub struct DocLink {
+    pub label: &'static str,
+    pub url:   &'static str,
+}
+
+pub struct TestHints {
+    /// Substring matched against the leaf test name.
+    pub test_name: &'static str,
+    /// Up to 3 hints, revealed one at a time with [h].
+    pub hints: &'static [&'static str],
+}
+
+pub struct CrateMeta {
+    pub package:  &'static str,
+    pub display:  &'static str,
+    pub intro:    &'static str,
+    pub concepts: &'static [&'static str],
+    pub docs:     &'static [DocLink],
+    pub tests:    &'static [TestHints],
+}
+
+pub const CRATES: &[CrateMeta] = &[
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "risk-sampler", display: "01 · risk-sampler",
+        intro: "Simulate risk events across thousands of trials to calculate Value at Risk (VaR). Each trial rolls random events and accumulates losses; the 95th-percentile trial loss is your VaR 95 — the figure used by banks and insurers to size capital reserves.",
+        concepts: &[
+            "Monte Carlo simulation",
+            "Loss distribution sampling",
+            "Value at Risk (VaR) - 95th percentile",
+            "Seeded deterministic RNG",
+        ],
+        docs: &[
+            DocLink { label: "rand::SeedableRng", url: "https://docs.rs/rand/latest/rand/trait.SeedableRng.html" },
+            DocLink { label: "Monte Carlo method", url: "https://en.wikipedia.org/wiki/Monte_Carlo_method" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "zero_probability",
+                hints: &[
+                    "Start here: `let mut rng = StdRng::seed_from_u64(seed);` then loop `for _ in 0..trials { }`. Inside that loop, iterate over events.",
+                    "For each event: `if rng.gen::<f64>() < event.probability { /* fires */ }`. With probability=0.0, this condition is never true, so occurrences stays 0.",
+                    "Return `SimulationResult { trials, occurrences: 0, total_loss: 0.0, mean_loss_per_trial: 0.0, max_observed_loss: 0.0, var_95: 0.0 }` — fill in the real values once the loop works.",
+                ],
+            },
+            TestHints {
+                test_name: "certain_event",
+                hints: &[
+                    "Inside the event-fires branch: `occurrences += 1;` and sample a loss: `let loss = rng.gen::<f64>() * event.max_loss;`",
+                    "Accumulate into two places: `trial_total += loss;` (local to this trial) and `total_loss += loss;` (running total across all trials).",
+                    "After all trials: `mean_loss_per_trial = total_loss / trials as f64`. With probability=1.0, occurrences == trials.",
+                ],
+            },
+            TestHints {
+                test_name: "var_95",
+                hints: &[
+                    "Collect each trial's total into a Vec: after the inner event loop, push trial_total: `trial_losses.push(trial_total);`",
+                    "Sort it after all trials: `trial_losses.sort_by(|a, b| a.partial_cmp(b).unwrap());` — f64 needs partial_cmp, not cmp.",
+                    "`var_95 = trial_losses[(0.95 * trials as f64) as usize];` — this is the loss at the 95th percentile index.",
+                ],
+            },
+            TestHints {
+                test_name: "mean_loss",
+                hints: &[
+                    "`max_observed_loss` is the largest single trial_total you saw: `trial_losses.iter().cloned().fold(f64::NEG_INFINITY, f64::max)`",
+                    "The test checks that `mean_loss_per_trial` converges to `prob * max_loss / 2.0` (uniform distribution mean) within 5%. With 500k trials it will.",
+                    "Make sure `mean_loss_per_trial = total_loss / trials as f64` — divide by ALL trials, not just the ones where the event fired.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "probability-engine", display: "02 · probability-engine",
+        intro: "Build the probability primitives behind Bayesian reasoning. You implement Bernoulli and Beta distributions, then apply Bayes' theorem to update beliefs as new data arrives — the maths inside spam filters, A/B testing, and fraud detection.",
+        concepts: &[
+            "Bernoulli distribution: single yes/no trial",
+            "Beta distribution: conjugate prior for Bernoulli",
+            "Bayesian update rule: posterior = prior + data",
+            "Gamma sampling (Marsaglia-Tsang method, already given)",
+        ],
+        docs: &[
+            DocLink { label: "Beta distribution", url: "https://en.wikipedia.org/wiki/Beta_distribution" },
+            DocLink { label: "Conjugate prior", url: "https://en.wikipedia.org/wiki/Conjugate_prior" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "bernoulli_mean",
+                hints: &["Bernoulli(p) mean = p. Just return self.p."],
+            },
+            TestHints {
+                test_name: "bernoulli_variance",
+                hints: &["Bernoulli(p) variance = p * (1 - p)."],
+            },
+            TestHints {
+                test_name: "beta_mean",
+                hints: &["Beta(alpha, beta) mean = alpha / (alpha + beta)."],
+            },
+            TestHints {
+                test_name: "bayesian_update",
+                hints: &[
+                    "Bayesian update: posterior = Beta(alpha + successes, beta + failures).",
+                    "Beta(1,1) + 8 successes + 2 failures -> Beta(9, 3). mean = 9/12 = 0.75.",
+                ],
+            },
+            TestHints {
+                test_name: "bernoulli_samples",
+                hints: &["Sample: if rng.gen::<f64>() < self.p return 1.0 else 0.0."],
+            },
+            TestHints {
+                test_name: "beta_sample",
+                hints: &[
+                    "Beta sample: x = sample_gamma(alpha, rng); y = sample_gamma(beta, rng); x / (x + y).",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "monte-carlo", display: "03 · monte-carlo",
+        intro: "Price a European call option using geometric Brownian motion. You simulate thousands of stock price paths, compute the average discounted payoff, then validate against the analytical Black-Scholes formula — the same approach used by every quantitative trading desk.",
+        concepts: &[
+            "European call option pricing",
+            "Geometric Brownian motion: S_T = S_0 * exp((r-0.5σ²)T + σ√T·Z)",
+            "Black-Scholes analytical formula (for validation)",
+            "Value at Risk: loss at given confidence percentile",
+        ],
+        docs: &[
+            DocLink { label: "Black-Scholes model", url: "https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model" },
+            DocLink { label: "Geometric Brownian motion", url: "https://en.wikipedia.org/wiki/Geometric_Brownian_motion" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "mc_option_price",
+                hints: &[
+                    "Split trials into chunks, run each in a rayon parallel thread: `(0..trials).into_par_iter().map_init(|| StdRng::seed_from_u64(seed ^ id), |rng, _| { /* simulate one path */ }).sum::<f64>() / trials as f64`",
+                    "One path: sample Z ~ N(0,1) with `Normal::new(0.0,1.0).unwrap().sample(rng)`. Then: `let s_t = spot * ((rate - 0.5*vol*vol)*expiry + vol*expiry.sqrt()*z).exp(); (s_t - strike).max(0.0)`",
+                    "Discount back to present value: `price = mean_payoff * (-rate * expiry).exp()`. Black-Scholes: `d1 = (ln(S/K) + (r+0.5σ²)T) / (σ√T); d2 = d1 - σ√T; price = S*N(d1) - K*e^(-rT)*N(d2)`",
+                ],
+            },
+            TestHints {
+                test_name: "deep_out_of_money",
+                hints: &[
+                    "With strike=200 and spot=100, S_T almost never exceeds 200. Payoff = max(S_T-200, 0) ≈ 0. If your price is not near zero, check the GBM formula — a common mistake is forgetting the -0.5*σ² drift correction.",
+                ],
+            },
+            TestHints {
+                test_name: "deep_in_money",
+                hints: &[
+                    "With spot=200, strike=100: the payoff max(S_T-100, 0) is almost always large. If it's not > 95, check you are discounting with exp(-rate*expiry) not dividing by (1+rate).",
+                ],
+            },
+            TestHints {
+                test_name: "var_95_is_less",
+                hints: &[
+                    "VaR measures loss, so sort returns ascending and take the low end. `let mut sorted = returns.to_vec(); sorted.sort_by(|a,b| a.partial_cmp(b).unwrap());`",
+                    "At confidence c, the loss is: `-sorted[((1.0 - confidence) * n as f64) as usize]`. VaR_99 cuts deeper into the tail than VaR_95 so VaR_99 > VaR_95.",
+                ],
+            },
+            TestHints {
+                test_name: "var_of_all_gains",
+                hints: &[
+                    "If every return is positive, sorted[low_index] is still positive, so -sorted[low_index] <= 0. VaR represents loss, so a profitable portfolio has VaR <= 0.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "distribution-sampler", display: "04 · distribution-sampler",
+        intro: "Implement Exponential, Poisson, and Weibull samplers from first principles. Each uses a different mathematical strategy — inverse CDF, Knuth's product algorithm, power transforms — and models a different real-world phenomenon like queue arrivals and hardware wear-out.",
+        concepts: &[
+            "Exponential: inverse CDF sampling (-ln(U)/lambda)",
+            "Poisson: Knuth's algorithm (product of uniforms)",
+            "Weibull: generalises Exponential (k < 1: infant mortality; k > 1: wear-out)",
+            "Gamma function (Lanczos approx, already given)",
+        ],
+        docs: &[
+            DocLink { label: "Inverse transform sampling", url: "https://en.wikipedia.org/wiki/Inverse_transform_sampling" },
+            DocLink { label: "Poisson distribution", url: "https://en.wikipedia.org/wiki/Poisson_distribution" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "exponential_sample_mean",
+                hints: &[
+                    "Exponential sample: -rng.gen::<f64>().max(1e-15).ln() / self.lambda.",
+                    "mean() = 1.0 / self.lambda. With 200k samples it converges to within 2%.",
+                ],
+            },
+            TestHints {
+                test_name: "poisson_sample_mean",
+                hints: &[
+                    "Knuth: let L = (-lambda).exp(); p=1.0; k=0. Loop: p *= rng.gen::<f64>(); k += 1; until p < L. Return (k-1) as f64.",
+                ],
+            },
+            TestHints {
+                test_name: "weibull_shape1",
+                hints: &[
+                    "Weibull mean = scale * gamma(1 + 1/shape). When shape=1: gamma(2)=1, mean=scale.",
+                    "With shape=1 and scale=2: mean=2. Exponential(lambda=0.5) also has mean=2. They match.",
+                ],
+            },
+            TestHints {
+                test_name: "weibull_mean_matches",
+                hints: &[
+                    "Weibull mean = self.scale * gamma(1.0 + 1.0 / self.shape). Use the provided gamma() function.",
+                    "Weibull sample: self.scale * (-rng.gen::<f64>().max(1e-15).ln()).powf(1.0 / self.shape).",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "statistics-core", display: "05 · statistics-core",
+        intro: "Build descriptive statistics from scratch over raw slices. Mean, variance, median, percentiles, z-scores, skewness, kurtosis, and IQR outlier detection — the exact functions every data science library exposes, written without dependencies.",
+        concepts: &[
+            "Mean, variance (population N), sample variance (N-1)",
+            "Median (sort + midpoint), percentile (linear interpolation)",
+            "Skewness (3rd moment), excess kurtosis (4th moment - 3)",
+            "IQR outlier detection: [Q1 - 1.5*IQR, Q3 + 1.5*IQR]",
+        ],
+        docs: &[
+            DocLink { label: "Standard deviation", url: "https://en.wikipedia.org/wiki/Standard_deviation" },
+            DocLink { label: "Interquartile range", url: "https://en.wikipedia.org/wiki/Interquartile_range" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "mean_of_known",
+                hints: &[
+                    "Check if data is empty first: `if data.is_empty() { return Err(StatsError::Empty); }`",
+                    "Mean = sum / count: `data.iter().sum::<f64>() / data.len() as f64`",
+                ],
+            },
+            TestHints {
+                test_name: "variance_of_constant",
+                hints: &[
+                    "Population variance = average of squared deviations from the mean.",
+                    "`let m = mean(data)?; data.iter().map(|x| (x - m).powi(2)).sum::<f64>() / data.len() as f64`",
+                ],
+            },
+            TestHints {
+                test_name: "median_even",
+                hints: &[
+                    "Sort a copy: `let mut s = data.to_vec(); s.sort_by(|a,b| a.partial_cmp(b).unwrap());`",
+                    "Even length: `(s[n/2 - 1] + s[n/2]) / 2.0`. Odd length: `s[n/2]`.",
+                ],
+            },
+            TestHints {
+                test_name: "percentile_0",
+                hints: &[
+                    "Sort data. Compute a fractional index: `let idx = p * (n - 1) as f64;`",
+                    "Interpolate: `let lo = idx.floor() as usize; let frac = idx - lo as f64; sorted[lo] + frac * (sorted[lo+1] - sorted[lo])`",
+                    "Edge cases: p=0.0 returns sorted[0], p=1.0 returns sorted[n-1]. Guard against lo+1 >= n.",
+                ],
+            },
+            TestHints {
+                test_name: "z_scores",
+                hints: &[
+                    "z_score[i] = (x[i] - mean) / std_dev, where std_dev = variance.sqrt().",
+                    "`data.iter().map(|x| (x - m) / std).collect()`",
+                ],
+            },
+            TestHints {
+                test_name: "iqr_outliers",
+                hints: &[
+                    "Q1 = percentile(data, 0.25), Q3 = percentile(data, 0.75). IQR = Q3 - Q1.",
+                    "Fences: lower = Q1 - 1.5*IQR, upper = Q3 + 1.5*IQR. Outliers: `data.iter().filter(|&&x| x < lower || x > upper)`",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "matrix-math", display: "06 · matrix-math",
+        intro: "Implement matrix algebra from the ground up. Multiply, transpose, and Gaussian elimination with partial pivoting give you inverses and determinants — the numerical core powering regression, neural networks, and graphics transforms in every later crate.",
+        concepts: &[
+            "Row-major matrix storage: element (r,c) at index r*cols+c",
+            "Transpose: swap rows and columns",
+            "Matrix multiplication: result[i][j] = sum_k a[i][k] * b[k][j]",
+            "Gaussian elimination with partial pivoting for inverse + determinant",
+        ],
+        docs: &[
+            DocLink { label: "Gaussian elimination", url: "https://en.wikipedia.org/wiki/Gaussian_elimination" },
+            DocLink { label: "Matrix multiplication", url: "https://en.wikipedia.org/wiki/Matrix_multiplication" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "identity_times_matrix",
+                hints: &[
+                    "Access element (row r, col c): `self.data[r * self.cols + c]`. Return None if self.cols != rhs.rows.",
+                    "`result[(i,j)] = (0..self.cols).map(|k| self[(i,k)] * rhs[(k,j)]).sum::<f64>()`",
+                ],
+            },
+            TestHints {
+                test_name: "transpose_twice",
+                hints: &[
+                    "New matrix has shape (self.cols x self.rows). Set `result[(j,i)] = self[(i,r)]` for all i,r.",
+                    "Transpose twice == identity: `m.transpose().transpose().data == m.data`.",
+                ],
+            },
+            TestHints {
+                test_name: "inverse_of_identity",
+                hints: &[
+                    "Build an n x 2n augmented matrix: left half = A, right half = identity. Row-reduce the left half to identity; the right half becomes A^-1.",
+                    "Partial pivoting: for column k, find the row below k with the largest |value| and swap it to position k before eliminating.",
+                    "Eliminate below and above the pivot: for each other row r, subtract (row[r][k] / pivot) * pivot_row from row r.",
+                ],
+            },
+            TestHints {
+                test_name: "determinant_of_singular",
+                hints: &[
+                    "During elimination, if the best pivot found is ~0 (abs < 1e-10), the matrix is singular. Return None for both inverse and determinant.",
+                ],
+            },
+            TestHints {
+                test_name: "mul_vec",
+                hints: &[
+                    "Return None if self.cols != v.len(). Then: `(0..self.rows).map(|i| (0..self.cols).map(|k| self[(i,k)] * v[k]).sum()).collect()`",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "linear-regression", display: "07 · linear-regression",
+        intro: "Fit a multi-feature linear regression model using the normal equations. You build the design matrix, solve β = (XᵀX)⁻¹Xᵀy using your matrix crate, then compute R² — exactly how NumPy's lstsq and scikit-learn's LinearRegression work under the hood.",
+        concepts: &[
+            "Ordinary Least Squares via normal equations: β = (X'X)⁻¹X'y",
+            "Design matrix: prepend a column of 1s for the intercept",
+            "R-squared: 1 - SS_res / SS_tot",
+            "coefficients[0] = intercept, coefficients[1..] = slopes",
+        ],
+        docs: &[
+            DocLink { label: "OLS regression", url: "https://en.wikipedia.org/wiki/Ordinary_least_squares" },
+            DocLink { label: "Normal equations", url: "https://en.wikipedia.org/wiki/Ordinary_least_squares#Matrix/vector_formulation" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "perfect_linear_fit",
+                hints: &[
+                    "Build design matrix X: each row is [1.0, feature0, feature1, ...]. The leading 1 gives you the intercept term.",
+                    "Normal equations: β = (Xᵀ·X)⁻¹ · Xᵀ·y. Compute X_t = X.transpose(), then X_t.matmul(&x)?.inverse()?, then .mul_vec(&x_t.mul_vec(&y_vec)?)?",
+                    "coefficients[0] is the intercept (the weight on the leading 1). coefficients[1..] are the slopes for each feature.",
+                ],
+            },
+            TestHints {
+                test_name: "predict_matches",
+                hints: &[
+                    "predict: prepend 1.0 to the feature vector, then dot-product with self.coefficients.",
+                    "`[1.0].iter().chain(features).zip(&self.coefficients).map(|(x, c)| x * c).sum()`",
+                ],
+            },
+            TestHints {
+                test_name: "multi_feature",
+                hints: &[
+                    "R² = 1 - SS_res / SS_tot. SS_res = Σ(y_actual - y_predicted)². SS_tot = Σ(y_actual - mean_y)².",
+                    "R²=1.0 means a perfect fit. R²=0.0 means the model is no better than predicting the mean.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "graph", display: "08 · graph",
+        intro: "Implement the core graph traversal and shortest-path algorithms powering route planners, compilers, and social networks. BFS explores level by level; DFS goes deep first; Dijkstra finds minimum-cost paths in weighted graphs; Kahn's algorithm topologically sorts dependency DAGs.",
+        concepts: &[
+            "Adjacency list: HashMap<Node, Vec<(Node, weight)>> -- O(1) neighbour lookup",
+            "BFS with VecDeque: explore level by level, guarantees shortest hop count",
+            "Dijkstra with BinaryHeap<Reverse<_>>: always expand the cheapest frontier node",
+            "Topological sort (Kahn): track in-degrees, process zero-in-degree nodes first",
+        ],
+        docs: &[
+            DocLink { label: "BFS Wikipedia", url: "https://en.wikipedia.org/wiki/Breadth-first_search" },
+            DocLink { label: "Dijkstra Wikipedia", url: "https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "visits_start_node_first",
+                hints: &[
+                    "BFS: push start onto a VecDeque, mark visited in a HashSet. Loop: pop front, push unvisited neighbours to back.",
+                    "Return visited nodes in pop order -- start is always first.",
+                ],
+            },
+            TestHints {
+                test_name: "level_order_before_depth",
+                hints: &["BFS uses a queue (VecDeque). DFS uses a stack (Vec) or recursion. The queue ensures level-order (breadth-first) expansion."],
+            },
+            TestHints {
+                test_name: "visits_deeply_before_widely",
+                hints: &[
+                    "DFS: push start onto a Vec stack. Loop: pop, if not visited: mark visited, push neighbours (in reverse order for consistent traversal).",
+                ],
+            },
+            TestHints {
+                test_name: "distance_to_start_is_zero",
+                hints: &[
+                    "Dijkstra: dist = HashMap with start -> 0.0. Priority queue = BinaryHeap<Reverse<(OrderedFloat, Node)>>.",
+                    "Pop minimum-cost node. For each neighbour: if dist[node] + edge_weight < dist[neighbour]: update dist, push to heap.",
+                ],
+            },
+            TestHints {
+                test_name: "unreachable_nodes_are_absent",
+                hints: &["Dijkstra only visits reachable nodes. Unreachable nodes never enter dist map -- return None or skip them."],
+            },
+            TestHints {
+                test_name: "respects_dependency_order",
+                hints: &[
+                    "Kahn's topological sort: compute in_degree for every node. Push all nodes with in_degree == 0 into a queue.",
+                    "Each iteration: pop node, append to result, decrement in_degree of its neighbours. Push neighbours that reach in_degree == 0.",
+                ],
+            },
+            TestHints {
+                test_name: "detects_cycle",
+                hints: &["If the result length after Kahn's is less than the number of nodes, a cycle exists. Return None (or Err)."],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "bit-manipulator", display: "09 · bit-manipulator",
+        intro: "Master low-level bit operations and apply them to real packet parsing. You extract, set, clear, and toggle individual bits using masks and shifts, then decode version, IHL, and source address fields from a raw IPv4 header byte array.",
+        concepts: &[
+            "Bit masks: (1u32 << n) - 1 creates n ones",
+            "Extract bits: (value >> offset) & mask",
+            "Set/clear/toggle: OR, AND-NOT, XOR with shifted 1",
+            "IPv4 header: version in upper 4 bits, IHL in lower 4 bits of byte 0",
+        ],
+        docs: &[
+            DocLink { label: "Bit manipulation", url: "https://en.wikipedia.org/wiki/Bit_manipulation" },
+            DocLink { label: "IPv4 header format", url: "https://en.wikipedia.org/wiki/IPv4#Packet_structure" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "extract_bits",
+                hints: &[
+                    "Mask of len ones: (1u32 << len) - 1. Beware len=32: use .wrapping_shl(len).",
+                    "extract_bits = (value >> offset) & mask.",
+                ],
+            },
+            TestHints {
+                test_name: "setting_bit",
+                hints: &["set_bit = value | (1u32 << bit). clear_bit = value & !(1u32 << bit). toggle = value ^ (1u32 << bit)."],
+            },
+            TestHints {
+                test_name: "count_ones",
+                hints: &["value.count_ones() is a Rust built-in method on integer types."],
+            },
+            TestHints {
+                test_name: "rotate_left",
+                hints: &["value.rotate_left(n as u32) and value.rotate_right(n as u32) are built-in."],
+            },
+            TestHints {
+                test_name: "swap_bytes",
+                hints: &["value.swap_bytes() is a built-in that reverses byte order."],
+            },
+            TestHints {
+                test_name: "ipv4_version",
+                hints: &[
+                    "Version = upper 4 bits: header_byte0 >> 4. IHL = lower 4 bits: header_byte0 & 0x0F.",
+                ],
+            },
+            TestHints {
+                test_name: "ipv4_src_addr",
+                hints: &["Source IP is at bytes 12-15 of the header. Return (header[12], header[13], header[14], header[15])."],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "memory-arena", display: "10 · memory-arena",
+        intro: "Build a bump allocator that never calls malloc. You manage a fixed byte buffer, handle alignment for any type T, and hand out typed mutable references — the same technique used by game engines, OS kernels, and WebAssembly runtimes to eliminate heap overhead.",
+        concepts: &[
+            "Bump allocator: advance a pointer, never free individually",
+            "Alignment: pad offset to next multiple of T's alignment",
+            "unsafe: cast raw pointer to &mut T",
+            "Arena reset: just set offset back to 0 (no deallocation needed)",
+        ],
+        docs: &[
+            DocLink { label: "Arena allocation", url: "https://en.wikipedia.org/wiki/Region-based_memory_management" },
+            DocLink { label: "std::alloc::Layout", url: "https://doc.rust-lang.org/std/alloc/struct.Layout.html" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "used_is_zero",
+                hints: &["used() returns self.offset. A fresh arena has offset=0."],
+            },
+            TestHints {
+                test_name: "remaining_equals",
+                hints: &["remaining() = self.buffer.len() - self.offset."],
+            },
+            TestHints {
+                test_name: "allocating_u64",
+                hints: &[
+                    "Use std::alloc::Layout::new::<T>() to get size and align.",
+                    "Aligned offset: let a = (self.offset + align - 1) & !(align - 1);. Then check a + size <= buffer.len().",
+                    "Cast: let ptr = self.buffer.as_mut_ptr().add(a) as *mut T; self.offset = a + size; Some(unsafe { &mut *ptr })",
+                ],
+            },
+            TestHints {
+                test_name: "alloc_returns_none",
+                hints: &["Return None when aligned_offset + size > self.buffer.len()."],
+            },
+            TestHints {
+                test_name: "after_reset",
+                hints: &["reset() sets self.offset = 0. The buffer memory is reused on next alloc."],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "hash-table", display: "11 · hash-table",
+        intro: "Build a Robin Hood open-addressing hash table from scratch. When inserting, if the new entry's probe distance exceeds the current occupant's, they swap -- this evens out probe sequences and keeps worst-case lookup predictable. Deletion uses backward-shift to avoid leaving holes that would break later lookups.",
+        concepts: &[
+            "Open addressing: all entries live in a single flat array, no chaining",
+            "Robin Hood hashing: steal from the rich (short probe sequences) to give to the poor",
+            "Probe distance (DIB): how many slots past ideal position an entry sits",
+            "Backward-shift deletion: shift entries back instead of using tombstones",
+        ],
+        docs: &[
+            DocLink { label: "Robin Hood hashing", url: "https://en.wikipedia.org/wiki/Hash_table#Robin_Hood_hashing" },
+            DocLink { label: "Open addressing", url: "https://en.wikipedia.org/wiki/Open_addressing" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "insert_and_get",
+                hints: &[
+                    "HashMap::new() starts with a Vec of Slot::Empty entries (capacity must be a power of two).",
+                    "insert: compute ideal slot = hash(key) % capacity. Probe forward, tracking dist (distance from ideal). If slot is Empty: place entry.",
+                    "If occupied and key matches: update value. If occupied and dist > slot's dist: swap (Robin Hood).",
+                ],
+            },
+            TestHints {
+                test_name: "update_existing_key_returns_old_value",
+                hints: &["During the Robin Hood probe loop, if k == key: replace the value in place and return Some(old_value). Don't insert a duplicate."],
+            },
+            TestHints {
+                test_name: "remove_existing_key_returns_value",
+                hints: &[
+                    "Find the entry via linear probe. Once found, use backward-shift: move each subsequent entry back one slot while its dist > 0.",
+                    "Backward-shift: slot[i] = slot[i+1]; decrement dist. Stop when you hit an Empty slot or dist == 0 (entry is at its ideal slot).",
+                ],
+            },
+            TestHints {
+                test_name: "all_entries_survive_resize",
+                hints: &[
+                    "When load factor > 0.75, double capacity. Create new slots Vec. Re-insert every existing entry into the new array.",
+                    "Resize during insert, before placing the new entry.",
+                ],
+            },
+            TestHints {
+                test_name: "many_colliding_keys_all_retrievable",
+                hints: &[
+                    "Robin Hood evens out probe chains. Even with many collisions, every key is still findable by linear probe from its ideal slot.",
+                    "get: probe from ideal slot, stop if slot is Empty OR current slot's dist < target dist (Robin Hood invariant: if we've gone further than the occupant, key doesn't exist).",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "mini-vm", display: "12 · mini-vm",
+        intro: "Implement a stack-based bytecode interpreter. You execute Push, Add, Sub, Mul, Div, and Halt over a value stack — the execution model used by the JVM, CPython, WASM, and the Lua VM, bringing together bit ops from crate 09 and arena allocation from crate 10.",
+        concepts: &[
+            "Stack machine: all operands live on a value stack",
+            "Program counter: iterate through instructions in order",
+            "Pop order: Sub/Div pop top, then second. Result = second OP top",
+            "Halt returns top-of-stack; empty stack at Halt is an error",
+        ],
+        docs: &[
+            DocLink { label: "Stack machine", url: "https://en.wikipedia.org/wiki/Stack_machine" },
+            DocLink { label: "Forth language (stack-based)", url: "https://en.wikipedia.org/wiki/Forth_(programming_language)" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "push_then_halt",
+                hints: &[
+                    "Iterate instructions. Push(n): stack.push(n). Halt: return Ok(stack.last().copied().ok_or(EmptyStack)?)",
+                ],
+            },
+            TestHints {
+                test_name: "add_two",
+                hints: &[
+                    "Pop two values: let top = stack.pop().ok_or(StackUnderflow)?; let second = stack.pop()...;",
+                    "Add: push second + top. Sub: push second - top. Mul: push second * top.",
+                ],
+            },
+            TestHints {
+                test_name: "div_by_zero",
+                hints: &["Div: if top == 0 return Err(DivisionByZero). Else push second / top."],
+            },
+            TestHints {
+                test_name: "program_ending_without_halt",
+                hints: &[
+                    "When the instruction slice is exhausted (no Halt): return stack.last().copied().ok_or(EmptyStack)",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "consistent-hashing", display: "13 · consistent-hashing",
+        intro: "Build a consistent hash ring for distributed key routing. Virtual nodes spread load evenly across physical nodes; BTreeMap gives O(log n) clockwise lookup. When a node joins or leaves, only keys on that arc need rehashing — the technique behind DynamoDB and Cassandra.",
+        concepts: &[
+            "Consistent hash ring: nodes and keys share a circular u64 space",
+            "Virtual nodes (vnodes): each physical node gets multiple ring positions",
+            "BTreeMap for O(log n) clockwise lookup",
+            "Minimal key disruption when nodes are added or removed",
+        ],
+        docs: &[
+            DocLink { label: "Consistent hashing", url: "https://en.wikipedia.org/wiki/Consistent_hashing" },
+            DocLink { label: "BTreeMap", url: "https://doc.rust-lang.org/std/collections/struct.BTreeMap.html" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "empty_ring",
+                hints: &["An empty BTreeMap has no entries. get_node should return None."],
+            },
+            TestHints {
+                test_name: "single_node",
+                hints: &[
+                    "add_node: for i in 0..self.vnodes insert (mmh3_mix(fnv1a(name) ^ i as u64), name.to_string()) into self.ring.",
+                    "get_node: h = fnv1a(key). Find ring.range(h..).next() for clockwise lookup. Wrap to ring.iter().next() if empty.",
+                ],
+            },
+            TestHints {
+                test_name: "node_count",
+                hints: &["Track physical nodes separately (a HashSet<String>), or count ring.len() / self.vnodes."],
+            },
+            TestHints {
+                test_name: "removing_a_node",
+                hints: &["remove_node: for i in 0..self.vnodes compute the same hash and ring.remove(&hash)."],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "bloom-filter", display: "14 · bloom-filter",
+        intro: "Build a Bloom filter: a probabilistic membership structure with zero false negatives. k hash functions each set and check one bit; a missing bit means definitely absent, all bits set means probably present. Used in Chrome Safe Browsing, CDN caches, and database planners.",
+        concepts: &[
+            "Probabilistic membership: never false negative, may false positive",
+            "k hash functions set/check k bits per item",
+            "False positive rate: (1 - e^(-kn/m))^k",
+            "Larger m (bit array) or smaller n reduces false positives",
+        ],
+        docs: &[
+            DocLink { label: "Bloom filter", url: "https://en.wikipedia.org/wiki/Bloom_filter" },
+            DocLink { label: "FNV-1a hash", url: "https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "inserted_item",
+                hints: &[
+                    "insert: for seed in 0..self.k { self.bits[hash_with_seed(item, seed as u64, m)] = true; }",
+                    "contains: for seed in 0..self.k { if !self.bits[hash_with_seed(item, seed as u64, m)] { return false; } } true",
+                ],
+            },
+            TestHints {
+                test_name: "estimated_fpr",
+                hints: &[
+                    "fpr = (1.0 - (-self.k as f64 * self.n_inserted as f64 / m as f64).exp()).powi(self.k as i32)",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "rate-limiter", display: "15 · rate-limiter",
+        intro: "Implement two classic rate limiting algorithms. The token bucket refills at a constant rate and allows bursting up to capacity. The sliding window counts requests in a rolling time window. These exact mechanisms power AWS API Gateway, Nginx, and Stripe.",
+        concepts: &[
+            "Token bucket: capacity cap, refilled at rate tokens/sec",
+            "Lazy refill: compute elapsed since last_refill on each try_acquire call",
+            "Sliding window: keep a deque of timestamps, evict old ones",
+            "Used by: AWS API Gateway, Nginx, Stripe, GitHub",
+        ],
+        docs: &[
+            DocLink { label: "Token bucket algorithm", url: "https://en.wikipedia.org/wiki/Token_bucket" },
+            DocLink { label: "std::time::Instant", url: "https://doc.rust-lang.org/std/time/struct.Instant.html" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "new_bucket_starts_full",
+                hints: &[
+                    "available_tokens: call refill() first, then return self.tokens.",
+                    "refill: elapsed = self.last_refill.elapsed().as_secs_f64(). tokens += elapsed * rate. Cap at capacity. Update last_refill.",
+                ],
+            },
+            TestHints {
+                test_name: "acquiring_more_than",
+                hints: &["try_acquire: refill(), if tokens >= cost { tokens -= cost; true } else { false }"],
+            },
+            TestHints {
+                test_name: "tokens_do_not_exceed",
+                hints: &["self.tokens = (self.tokens + added).min(self.capacity)"],
+            },
+            TestHints {
+                test_name: "old_requests_expire",
+                hints: &[
+                    "SlidingWindowLimiter::try_acquire: first drain timestamps older than self.window.",
+                    "while let Some(&front) = self.timestamps.front() { if front.elapsed() > self.window { self.timestamps.pop_front(); } else { break; } }",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "merkle-tree", display: "16 · merkle-tree",
+        intro: "Build a Merkle tree for tamper-evident data integrity. Each parent node is the hash of its two children; any changed leaf corrupts the root. You generate O(log n) inclusion proofs and verify them — the data structure behind Bitcoin, git objects, and certificate transparency.",
+        concepts: &[
+            "Binary hash tree: parent = hash(left_child || right_child)",
+            "Root summarises ALL data - changing any leaf changes the root",
+            "Inclusion proofs: O(log n) - just the sibling path to root",
+            "Used in: Bitcoin, git, certificate transparency, AWS S3",
+        ],
+        docs: &[
+            DocLink { label: "Merkle tree", url: "https://en.wikipedia.org/wiki/Merkle_tree" },
+            DocLink { label: "Bitcoin Merkle trees", url: "https://en.bitcoin.it/wiki/Protocol_documentation#Merkle_Trees" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "single_leaf_root",
+                hints: &[
+                    "build: hash each block with fnv1a(). levels[0] = leaf hashes. Then pair up and combine level by level.",
+                    "If odd number of leaves, duplicate the last: level.push(*level.last().unwrap()).",
+                ],
+            },
+            TestHints {
+                test_name: "different_data_produces",
+                hints: &["parent_hash = combine(left, right) where combine is already implemented for you."],
+            },
+            TestHints {
+                test_name: "proof_verifies",
+                hints: &[
+                    "For leaf at index i: sibling index = i ^ 1. If i is even, sibling is on Right; if odd, on Left.",
+                    "proof: walk up the levels, collecting (sibling_hash, side) pairs.",
+                ],
+            },
+            TestHints {
+                test_name: "tampered_data",
+                hints: &[
+                    "verify: hash data with fnv1a(). For each (sibling, side): if Left: combine(sibling, current); if Right: combine(current, sibling).",
+                    "Compare final hash to root. Tampered data produces a different hash at the leaf, propagating up.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "gossip-protocol", display: "17 · gossip-protocol",
+        intro: "Simulate epidemic information spreading across a cluster. Each informed node fans out to random neighbours every round; convergence is guaranteed in O(log n) rounds regardless of cluster size. This eventual consistency mechanism underlies Cassandra, Consul, and blockchain peer discovery.",
+        concepts: &[
+            "Epidemic protocol: informed nodes infect random neighbours each round",
+            "Convergence in O(log n) rounds with fanout >= 2",
+            "Eventual consistency - all nodes eventually have the same state",
+            "Used in: Cassandra, Consul, blockchain peer discovery",
+        ],
+        docs: &[
+            DocLink { label: "Gossip protocol", url: "https://en.wikipedia.org/wiki/Gossip_protocol" },
+            DocLink { label: "Cassandra gossip", url: "https://cassandra.apache.org/doc/latest/cassandra/architecture/gossip.html" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "broadcast_marks_origin",
+                hints: &[
+                    "broadcast(origin, value): self.nodes[origin].value = Some(value); self.target_value = Some(value);",
+                ],
+            },
+            TestHints {
+                test_name: "gossip_reaches_all",
+                hints: &[
+                    "step: collect indices of all informed nodes (value == target). For each, pick fanout random OTHER nodes and set their value.",
+                    "Increment self.rounds after each step.",
+                ],
+            },
+            TestHints {
+                test_name: "informed_count_grows",
+                hints: &[
+                    "informed_count = nodes where value == self.target_value. converged = informed_count == nodes.len().",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "raft-consensus", display: "18 · raft-consensus",
+        intro: "Implement the Raft distributed consensus algorithm. Term-based leader election requires a majority vote; log replication requires majority acknowledgement before committing. This is the algorithm powering etcd, CockroachDB, TiKV, and distributed databases at every major cloud provider.",
+        concepts: &[
+            "Raft: understandable consensus algorithm (simpler than Paxos)",
+            "Term: logical clock that increases with each election",
+            "Leader election: candidate collects majority votes",
+            "Log replication: leader appends, followers accept, majority = committed",
+        ],
+        docs: &[
+            DocLink { label: "Raft paper", url: "https://raft.github.io/raft.pdf" },
+            DocLink { label: "Raft visualisation", url: "https://raft.github.io" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "cluster_of_one",
+                hints: &[
+                    "tick: node 0 becomes Candidate, increments term, votes for itself. With n=1, 1 vote = majority. Becomes Leader.",
+                ],
+            },
+            TestHints {
+                test_name: "three_node_cluster",
+                hints: &[
+                    "Node 0 requests votes from nodes still on old term. They grant it and update their term. 2/3 = majority -> Leader.",
+                ],
+            },
+            TestHints {
+                test_name: "committed_log",
+                hints: &[
+                    "append: leader creates LogEntry { term, data }, appends to leader.log, replicates to all follower logs.",
+                    "committed_log: entries present in a majority of nodes' logs in the same order.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "gradient-descent", display: "19 · gradient-descent",
+        intro: "Implement SGD with momentum and the Adam optimiser. Adam tracks per-parameter first and second moment estimates with bias correction, giving adaptive learning rates that work well without per-weight tuning — the default optimiser for training every major deep learning model.",
+        concepts: &[
+            "SGD: velocity = beta*v + (1-beta)*grad; params -= lr * velocity",
+            "Adam: adaptive per-parameter learning rates using moment estimates",
+            "Bias correction: m_hat = m / (1 - beta1^t) prevents cold-start decay",
+            "Numerical gradient: central differences (f(x+h) - f(x-h)) / 2h",
+        ],
+        docs: &[
+            DocLink { label: "Adam paper (Kingma & Ba 2014)", url: "https://arxiv.org/abs/1412.6980" },
+            DocLink { label: "Gradient descent", url: "https://en.wikipedia.org/wiki/Gradient_descent" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "zero_lr",
+                hints: &["If lr=0, velocity is updated but params -= 0*v = no change. params should stay the same."],
+            },
+            TestHints {
+                test_name: "step_moves_in_negative",
+                hints: &[
+                    "SGD: if velocity is empty, initialise to zeros. velocity[i] = momentum*v[i] + (1-momentum)*grad[i].",
+                    "params[i] -= lr * velocity[i]. Positive gradient -> decrease params.",
+                ],
+            },
+            TestHints {
+                test_name: "converges_to_minimum_of_x",
+                hints: &[
+                    "For f(x)=x², grad=2x. With lr=0.1 and no momentum, x converges to 0 in ~200 steps.",
+                    "Adam: m = beta1*m + (1-beta1)*g; v = beta2*v + (1-beta2)*g*g; t++; m_hat=m/(1-beta1^t); v_hat=v/(1-beta2^t); params -= lr*m_hat/(sqrt(v_hat)+eps).",
+                ],
+            },
+            TestHints {
+                test_name: "numerical_gradient_of_x_squared",
+                hints: &[
+                    "numerical_gradient: for each dim i, perturb x±h on that axis only. grad[i] = (f(x+h*e_i) - f(x-h*e_i)) / (2*h).",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "neural-net", display: "20 · neural-net",
+        intro: "Build a feedforward neural network from scratch. You implement forward pass with sigmoid activations, backpropagation via the chain rule, and weight updates. The network learns to solve XOR — the classic proof that a single hidden layer can represent any non-linear function.",
+        concepts: &[
+            "Forward pass: z = W*a + b, a = sigmoid(z) for each layer",
+            "Backprop output delta: a_L - y (BCE + sigmoid simplifies beautifully)",
+            "Hidden delta: (W_next)^T * delta_next * sigmoid'(z)",
+            "Weight update: W -= lr * delta × a_prev^T",
+        ],
+        docs: &[
+            DocLink { label: "Backpropagation", url: "https://en.wikipedia.org/wiki/Backpropagation" },
+            DocLink { label: "Neural networks and deep learning (free book)", url: "http://neuralnetworksanddeeplearning.com" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "forward_output_shape",
+                hints: &[
+                    "Forward: start with a = input. For layer l: z[j] = sum_k(weights[l][j][k] * a[k]) + biases[l][j]. a = sigmoid(z).",
+                ],
+            },
+            TestHints {
+                test_name: "learns_xor",
+                hints: &[
+                    "train: for each epoch, iterate all (input, target) pairs and call backprop.",
+                    "Backprop: forward pass storing all z and a. Output delta = a_L - y. For hidden: delta = W_next^T * delta_next elem-wise * sigmoid_deriv(z).",
+                    "Update W[l][j][k] -= lr * delta[j] * a_prev[k]. Update bias[l][j] -= lr * delta[j].",
+                ],
+            },
+            TestHints {
+                test_name: "accuracy_improves",
+                hints: &["accuracy: for each sample, output = forward(x). Predicted = (output[i] >= 0.5). Count matches / total."],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "decision-tree", display: "21 · decision-tree",
+        intro: "Build a CART decision tree classifier. You compute Gini impurity, calculate information gain for candidate splits, and recursively partition the data until pure or at max depth. Decision trees are the base learner inside random forests, XGBoost, and LightGBM.",
+        concepts: &[
+            "CART: Classification And Regression Trees",
+            "Gini impurity: 1 - Σ p_i². Pure node=0, 50/50 split=0.5",
+            "Information gain: Gini(parent) - weighted_avg(Gini(left), Gini(right))",
+            "Stop conditions: all same class, max_depth reached, no gain",
+        ],
+        docs: &[
+            DocLink { label: "Decision tree learning", url: "https://en.wikipedia.org/wiki/Decision_tree_learning" },
+            DocLink { label: "Gini impurity", url: "https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "gini_pure_node",
+                hints: &["gini = 1 - Σ p_i². p = count / total. Pure node: p=1 -> gini = 0."],
+            },
+            TestHints {
+                test_name: "gini_balanced",
+                hints: &["50/50 split: p_true=p_false=0.5. gini = 1 - (0.25 + 0.25) = 0.5."],
+            },
+            TestHints {
+                test_name: "information_gain_is_positive",
+                hints: &[
+                    "gain = gini(parent) - (|left|/|parent|)*gini(left) - (|right|/|parent|)*gini(right).",
+                    "Perfect split: gini(left)=0, gini(right)=0 -> gain = gini(parent) > 0.",
+                ],
+            },
+            TestHints {
+                test_name: "linearly_separable",
+                hints: &[
+                    "build_node: if pure or depth==max_depth -> Leaf. Else best_split -> Split { left: build_node(...), right: build_node(...) }.",
+                    "best_split: try each feature. Sort values, try thresholds = midpoints between adjacent values. Return (feature, threshold) with max gain.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "k-means", display: "22 · k-means",
+        intro: "Implement Lloyd's k-means clustering algorithm. Assign each point to its nearest centroid, recompute centroids as cluster means, and iterate to convergence. Used in image quantisation, customer segmentation, vector database indexing, and as a preprocessing step in larger ML pipelines.",
+        concepts: &[
+            "Lloyd's algorithm: assign -> update centroids -> repeat",
+            "Euclidean distance: sqrt(Σ (a_i - b_i)²)",
+            "Initialise centroids by sampling k distinct data points",
+            "Convergence: centroids stop moving (or max_iter reached)",
+        ],
+        docs: &[
+            DocLink { label: "K-means clustering", url: "https://en.wikipedia.org/wiki/K-means_clustering" },
+            DocLink { label: "Lloyd's algorithm", url: "https://en.wikipedia.org/wiki/Lloyd%27s_algorithm" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "identical_points_have_zero",
+                hints: &["euclidean_distance = a.iter().zip(b).map(|(ai,bi)| (ai-bi).powi(2)).sum::<f64>().sqrt()"],
+            },
+            TestHints {
+                test_name: "k1_assigns",
+                hints: &[
+                    "Initialise: pick k random (distinct) indices from data as starting centroids.",
+                    "Assign step: predict(point) = index of closest centroid. Update: new centroid = mean of assigned points.",
+                ],
+            },
+            TestHints {
+                test_name: "three_well_separated",
+                hints: &[
+                    "Convergence check: if no centroid moved more than 1e-10, stop early.",
+                    "If a cluster has no points after assignment, keep the old centroid (avoid NaN from empty mean).",
+                ],
+            },
+            TestHints {
+                test_name: "inertia",
+                hints: &["inertia = Σ euclidean_distance(point, centroid[predict(point)])²"],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "attention-mechanism", display: "23 · attention-mechanism",
+        intro: "Implement scaled dot-product attention: softmax(QKᵀ / sqrt(d_k)) V. You add a causal mask that prevents each position attending to future tokens. This is the exact operation executed billions of times per forward pass in GPT, BERT, LLaMA, Whisper, and Claude.",
+        concepts: &[
+            "Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) V",
+            "Scaling by 1/sqrt(d_k) prevents vanishing gradients in deep networks",
+            "Causal mask: set future positions to -inf before softmax",
+            "The computational core of GPT, BERT, LLaMA, Whisper, Claude",
+        ],
+        docs: &[
+            DocLink { label: "Attention Is All You Need (2017)", url: "https://arxiv.org/abs/1706.03762" },
+            DocLink { label: "The Illustrated Transformer", url: "http://jalammar.github.io/illustrated-transformer/" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "outputs_sum_to_one",
+                hints: &[
+                    "softmax(x): subtract max for stability. e_i = exp(x_i - max). result_i = e_i / sum(e).",
+                ],
+            },
+            TestHints {
+                test_name: "output_shape",
+                hints: &[
+                    "Step 1: scores = matmul_2d(q, &transpose_2d(k)). Divide each element by sqrt(d_k).",
+                    "Step 2: apply softmax to each row of scores. Step 3: output = matmul_2d(&weights, v).",
+                ],
+            },
+            TestHints {
+                test_name: "identical_q_k",
+                hints: &["When Q=K, each row of scores is identical -> softmax gives uniform weights -> output = mean of V rows."],
+            },
+            TestHints {
+                test_name: "causal_mask",
+                hints: &[
+                    "Before softmax: for i in 0..seq_len { for j in (i+1)..seq_len { scores[i][j] = f64::NEG_INFINITY; } }",
+                    "After masking: softmax of row 0 will give weight 1.0 to position 0 only. output[0] = v[0].",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "bpe-tokeniser", display: "24 · bpe-tokeniser",
+        intro: "Implement Byte-Pair Encoding tokenisation from scratch. You start with individual characters, count adjacent pair frequencies, merge the most frequent pair into a new token, and repeat until the vocabulary reaches its target size. This is how GPT-2/3/4, LLaMA, and Claude tokenise text.",
+        concepts: &[
+            "BPE: start from characters, greedily merge the most frequent adjacent pair",
+            "Each merge creates a new token and reduces the total sequence length",
+            "Encoding: apply learned merge rules in order to new text",
+            "Used in GPT-2/3/4, LLaMA, Whisper, Claude",
+        ],
+        docs: &[
+            DocLink { label: "BPE paper (Sennrich et al. 2015)", url: "https://arxiv.org/abs/1508.07909" },
+            DocLink { label: "tiktoken (OpenAI)", url: "https://github.com/openai/tiktoken" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "pair_frequencies",
+                hints: &[
+                    "For each sequence, slide window of 2: freqs[(&seq[i], &seq[i+1])] += 1.",
+                    "Use HashMap<(String,String), usize>. Count all adjacent pairs across all sequences.",
+                ],
+            },
+            TestHints {
+                test_name: "merge_pair_replaces",
+                hints: &[
+                    "Scan tokens left to right. When tokens[i]==pair.0 && tokens[i+1]==pair.1, push merged token and skip i+1.",
+                ],
+            },
+            TestHints {
+                test_name: "most_frequent_pair",
+                hints: &[
+                    "train: split corpus into char sequences. Repeat: pair_frequencies -> find max pair -> merge_pair on all seqs -> add new token to vocab.",
+                    "Stop when vocab_size reaches target. The first merge is the globally most frequent pair.",
+                ],
+            },
+            TestHints {
+                test_name: "encode_decode_roundtrip",
+                hints: &[
+                    "encode: start with each char as a token. For each merge rule in self.merges order, apply merge_pair.",
+                    "decode: self.id_to_token[id] for each id. Concatenate the strings.",
+                ],
+            },
+            TestHints {
+                test_name: "trained_tokeniser_produces_fewer",
+                hints: &[
+                    "After training on 'aaaa', the pair ('a','a') is merged into 'aa'. 'aaaa' -> ['aa','aa'] -> 2 tokens instead of 4.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "slotted-page", display: "25 · slotted-page",
+        intro: "Implement the fundamental storage unit of every relational database: the slotted page. A 4096-byte page holds variable-length records via a slot array at the front and data growing downward from the back. Deletion marks slots invalid; compaction rewrites live records contiguously to reclaim space.",
+        concepts: &[
+            "Slotted page layout: slot array grows forward, data grows backward",
+            "Variable-length records: (offset, len) slot pairs point into the data region",
+            "Compaction: rewrites live records to reclaim fragmented space",
+            "Page header: num_slots (u16) + free_ptr (u16) in the first 4 bytes",
+        ],
+        docs: &[
+            DocLink { label: "CMU 15-445 Slotted Pages", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/03-storage1.pdf" },
+            DocLink { label: "PostgreSQL page layout", url: "https://www.postgresql.org/docs/current/storage-page-layout.html" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "insert_and_retrieve_single_record",
+                hints: &[
+                    "SlottedPage wraps a [u8; PAGE_SIZE] buffer. Store num_slots as u16 at offset 0, free_ptr as u16 at offset 2 (initialised to PAGE_SIZE as u16).",
+                    "insert: free_ptr -= data.len(); copy data to buf[free_ptr..]; write (free_ptr as u16, data.len() as u16) into the slot array at 4 + slot_id * 4; increment num_slots.",
+                    "get: read slot (offset, len) from 4 + slot_id * 4; return &buf[offset..offset+len].",
+                ],
+            },
+            TestHints {
+                test_name: "multiple_records_are_independent",
+                hints: &[
+                    "Each insert appends a new (offset, len) pair to the slot array and writes data at the current free_ptr.",
+                    "Records don't overlap because free_ptr decrements by exactly data.len() before writing.",
+                ],
+            },
+            TestHints {
+                test_name: "slot_ids_are_sequential",
+                hints: &["slot_id = num_slots before increment. First insert -> slot 0, second -> slot 1, etc."],
+            },
+            TestHints {
+                test_name: "out_of_space_returns_error",
+                hints: &[
+                    "Before inserting: check that free_ptr - data.len() >= 4 + (num_slots + 1) * 4. If not, return Err(PageFull).",
+                    "The slot array header takes 4 bytes; each slot takes 4 bytes (two u16s). Ensure data doesn't collide with slot space.",
+                ],
+            },
+            TestHints {
+                test_name: "deleted_slot_returns_invalid_slot_error",
+                hints: &[
+                    "delete: find the slot at 4 + slot_id * 4 and write len = 0 (set the second u16 to 0). Don't move data.",
+                    "get: if len == 0, return Err(InvalidSlot).",
+                ],
+            },
+            TestHints {
+                test_name: "deleted_slot_id_is_reused_on_next_insert",
+                hints: &[
+                    "On insert, scan the slot array for any entry with len == 0 (deleted). If found, reuse that slot_id rather than appending a new slot.",
+                    "You still write new data at free_ptr -- deleted records' space is NOT reclaimed until compact().",
+                ],
+            },
+            TestHints {
+                test_name: "live_records_survive_compaction",
+                hints: &[
+                    "compact(): create a fresh buffer. Walk slot 0..num_slots. For each live slot (len > 0): copy its data into the new buffer's data region (from the back), update the slot entry with the new offset.",
+                    "After compaction, free_ptr points just above the compacted data. Dead slots are removed.",
+                ],
+            },
+            TestHints {
+                test_name: "compact_reclaims_space_for_new_inserts",
+                hints: &[
+                    "After compact(), the hole left by deleted records is gone and free_space() returns a larger value.",
+                    "free_space = free_ptr - (4 + num_slots * 4). After compaction this should grow by the size of any deleted records.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "b-tree", display: "26 · b-tree",
+        intro: "Build an order-5 B-tree that keeps data sorted across a hierarchy of nodes. Internal nodes hold separator keys and child pointers; leaf nodes hold the actual key-value pairs. When a node overflows on insert, it splits and pushes a median key up to the parent. This is the index structure inside every SQL database.",
+        concepts: &[
+            "B-tree order: max 2*ORDER-1 = 9 keys per node; min ORDER-1 = 4 keys (except root)",
+            "Node split: when full, split in half and push median key to parent",
+            "Root split: when root splits, create a new root with one key and two children",
+            "Range scan: recurse into subtrees whose separator key range overlaps [from, to]",
+        ],
+        docs: &[
+            DocLink { label: "B-tree Wikipedia", url: "https://en.wikipedia.org/wiki/B-tree" },
+            DocLink { label: "CMU 15-445 B-Trees", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/07-trees.pdf" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "get_on_empty_tree_returns_none",
+                hints: &["BTree::new() creates a root Leaf with an empty entries Vec. get() on any key returns None."],
+            },
+            TestHints {
+                test_name: "insert_then_get_returns_value",
+                hints: &[
+                    "Insert into a Leaf: find the sorted position with binary_search_by_key, then entries.insert(pos, (key, value)).",
+                    "After inserting, check if entries.len() > MAX_KEYS (= 2*ORDER - 1 = 9). If so, split.",
+                ],
+            },
+            TestHints {
+                test_name: "keys_are_always_sorted",
+                hints: &["BTreeMap keeps entries sorted on insert -- use binary_search_by_key to find the insertion index."],
+            },
+            TestHints {
+                test_name: "many_insertions_all_retrievable",
+                hints: &[
+                    "insert_node returns Option<(median_key, right_child_box)> when a node splits.",
+                    "When the root splits: new root = Internal { keys: vec![median], children: vec![old_root_box, right_child_box] }.",
+                ],
+            },
+            TestHints {
+                test_name: "range_scan_returns_correct_subset",
+                hints: &[
+                    "In a Leaf: collect entries where from <= key <= to.",
+                    "In an Internal: recurse into children[i] when keys[i-1] <= to AND (i == 0 OR keys[i-1] >= from). Prune aggressively.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "buffer-pool", display: "27 · buffer-pool",
+        intro: "Implement the buffer pool -- the I/O cache at the heart of every database engine. A fixed number of frames hold pages in RAM. The clock algorithm evicts unpinned frames with a second-chance ref_bit. Pinned pages are safe from eviction; dirty pages must be flushed before eviction. This is what PostgreSQL's shared_buffers and InnoDB's innodb_buffer_pool_size tune.",
+        concepts: &[
+            "Frame vs page: a frame is a RAM slot; a page is disk data assigned to a frame",
+            "Pin count: reference counting for in-use pages -- pinned pages cannot be evicted",
+            "Clock eviction: sweep hand gives each frame one second chance (ref_bit) before evicting",
+            "Dirty tracking: modified pages must be written back to disk before the frame is reused",
+        ],
+        docs: &[
+            DocLink { label: "CMU 15-445 Buffer Pools", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/05-bufferpool.pdf" },
+            DocLink { label: "PostgreSQL buffer manager", url: "https://www.postgresql.org/docs/current/storage-buffer.html" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "pin_loads_page_into_pool",
+                hints: &[
+                    "BufferPool has frames: Vec<Frame> and page_table: HashMap<PageId, usize>.",
+                    "pin(page_id): if page_table contains it, increment pin_count and set ref_bit. If not, call evict() to find a free frame index, load from disk, insert into page_table.",
+                ],
+            },
+            TestHints {
+                test_name: "data_written_to_pinned_page_is_visible",
+                hints: &[
+                    "pin() returns &mut Vec<u8> into frames[idx].data. The caller writes through this reference.",
+                    "A second pin() of the same page finds it already in the page_table, increments pin_count, returns the same data.",
+                ],
+            },
+            TestHints {
+                test_name: "unpin_marks_page_dirty",
+                hints: &[
+                    "unpin(page_id, is_dirty): look up the frame, decrement pin_count, if is_dirty set frame.dirty = true.",
+                    "Return Err if page_id is not in the page_table (not currently loaded).",
+                ],
+            },
+            TestHints {
+                test_name: "evicts_when_pool_is_full",
+                hints: &[
+                    "evict(): advance clock_hand, check frames[hand]. If pin_count == 0 and ref_bit == false: evict (write back if dirty, remove from page_table, return frame index).",
+                    "If ref_bit == true and pin_count == 0: clear ref_bit, continue sweeping.",
+                ],
+            },
+            TestHints {
+                test_name: "pinned_pages_are_not_evicted",
+                hints: &["If pin_count > 0, skip the frame in the clock sweep. After a full revolution, return Err(AllPinned) if no candidate found."],
+            },
+            TestHints {
+                test_name: "flush_writes_dirty_pages_to_disk",
+                hints: &[
+                    "flush_dirty(): for each frame that is dirty and pin_count == 0: write frame.data to disk.write(page_id, &frame.data), set frame.dirty = false.",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "sstable", display: "28 · sstable",
+        intro: "Build the on-disk backbone of an LSM-tree: a Sorted String Table. Keys are written in sorted order using BTreeMap; a sparse index (every 4th entry) enables O(log n) point lookups without scanning the whole file; range scans use the same index to find the start block. This exact format underlies LevelDB, RocksDB, and Cassandra.",
+        concepts: &[
+            "Immutability: once written, never modified -- updates are new files, old ones compacted",
+            "Sparse index: points to every 4th entry; lookup = binary search index + linear scan within block",
+            "Footer: fixed-size 24-byte record at the end stores index_offset, index_len, num_entries",
+            "Read + Seek trait bounds: SSTableReader works with File, Cursor, or memory-mapped files",
+        ],
+        docs: &[
+            DocLink { label: "LevelDB SSTable format", url: "https://github.com/google/leveldb/blob/main/doc/table_format.md" },
+            DocLink { label: "LSM-tree Wikipedia", url: "https://en.wikipedia.org/wiki/Log-structured_merge-tree" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "write_then_read_single_entry",
+                hints: &[
+                    "SSTableWriter stores entries in a BTreeMap. finish() iterates in sorted order, writes [key_len: u32][key][val_len: u32][val] for each entry.",
+                    "Every INDEX_STRIDE (4th) entry is recorded in the sparse index as (key, file_offset). Write index section, then 24-byte footer: index_offset u64, index_len u64, num_entries u64.",
+                    "SSTableReader::open() seeks to End - 24, reads footer, then seeks to index_offset and reads the index into a Vec.",
+                ],
+            },
+            TestHints {
+                test_name: "entries_are_sorted_on_write",
+                hints: &["BTreeMap iterates in key order -- no explicit sort needed. Insertions in any order come out sorted."],
+            },
+            TestHints {
+                test_name: "scan_returns_entries_in_range",
+                hints: &[
+                    "scan(from, to): binary search the sparse index for the last entry with key <= from. Seek to that offset.",
+                    "Linear scan from there: skip entries where key < from; collect where key <= to; break when key > to.",
+                ],
+            },
+            TestHints {
+                test_name: "many_entries_all_retrievable",
+                hints: &[
+                    "get(key): binary search index for last entry with key <= target. Seek to block start.",
+                    "scan_block_for: read entries linearly until key found, key > target, or end of block (next index entry offset).",
+                ],
+            },
+        ],
+    },
+    // ------------------------------------------------------------------
+    CrateMeta {
+        package: "skip-list", display: "29 · skip-list",
+        intro: "Build a probabilistic sorted structure using raw Rust pointers. A skip list maintains multiple linked lists: level 0 is the full sorted list; higher levels are express lanes that skip over groups of nodes. Insert and lookup are both O(log n) with no rebalancing logic. Ownership flows exclusively through the level-0 chain -- higher levels are raw non-owning aliases.",
+        concepts: &[
+            "Box::into_raw / Box::from_raw: transferring heap ownership to and from raw pointers",
+            "Level-0 ownership: only the level-0 chain owns nodes; Drop walks it to free memory exactly once",
+            "Raw pointer aliasing: higher-level pointers are non-owning observers -- safe because owner outlives them",
+            "thread_local! with Cell<u64>: cheap per-thread PRNG for level generation without heap allocation",
+        ],
+        docs: &[
+            DocLink { label: "Skip list paper (Pugh 1990)", url: "https://15721.courses.cs.cmu.edu/spring2018/papers/08-oltpindexes1/pugh-skiplists-cacm1990.pdf" },
+            DocLink { label: "Box::into_raw", url: "https://doc.rust-lang.org/std/boxed/struct.Box.html#method.into_raw" },
+        ],
+        tests: &[
+            TestHints {
+                test_name: "get_on_empty_returns_none",
+                hints: &["SkipList starts with a sentinel head node at all MAX_LEVEL levels with forward pointers all null."],
+            },
+            TestHints {
+                test_name: "insert_then_get",
+                hints: &[
+                    "insert: collect `update[i]` = last node at level i whose next key < target. Generate random_level() for new node.",
+                    "Link new node into levels 0..new_level: new.forward[i] = update[i].forward[i]; update[i].forward[i] = new_node_ptr.",
+                ],
+            },
+            TestHints {
+                test_name: "update_existing_key",
+                hints: &["On insert, if an existing node has the same key, update its value in place rather than inserting a duplicate."],
+            },
+            TestHints {
+                test_name: "many_insertions_all_retrievable",
+                hints: &[
+                    "get: start at head, highest level. Advance while next key < target. Drop level when stuck. At level 0, check if next key == target.",
+                    "random_level uses xorshift64 thread-local PRNG: each level above 0 is added with probability 0.5.",
+                ],
+            },
+            TestHints {
+                test_name: "remove_existing_key_returns_true",
+                hints: &[
+                    "remove: collect update[] like insert. At level 0, if next node key == target: for each level, if update[i].forward[i] == target_ptr, set update[i].forward[i] = target.forward[i].",
+                    "After unlinking from all levels, drop the node: Box::from_raw(target_ptr). Decrement len.",
+                ],
+            },
+            TestHints {
+                test_name: "range_returns_sorted_subset",
+                hints: &[
+                    "range(from, to): use get-style traversal to find the first node with key >= from. Then walk level-0 forward pointers collecting entries while key <= to.",
+                ],
+            },
+        ],
+    },
+];
