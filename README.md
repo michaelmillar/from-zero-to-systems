@@ -26,28 +26,28 @@ Each numbered crate under `crates/` is:
 05-statistics-core ─────── depends on ──► 03
 06-matrix-math ────────────────────────────────────────────────── standalone
 07-linear-regression ───── depends on ──► 05, 06
-08-graph ───────────────────────────────── standalone
+08-signal-processing ───────────────────────────────────────────── standalone
 09-bit-manipulator ────────────────────────────────────────────── standalone
 10-memory-arena ───────────────────────────────────────────────── standalone
-11-hash-table ──────────────────────────── standalone
+11-float-inspector ─────────────────────────────────────────────── standalone
 12-mini-vm ─────────────── depends on ──► 09, 10
-13-consistent-hashing ─────────────────────────────────────────── standalone
-14-bloom-filter ───────────────────────────────────────────────── standalone
-15-rate-limiter ───────────────────────────────────────────────── standalone
-16-merkle-tree ─────────── depends on ──► 14
-17-gossip-protocol ─────── depends on ──► 15
-18-raft-consensus ──────── depends on ──► 17
-19-gradient-descent ────── depends on ──► 06
-20-neural-net ──────────── depends on ──► 06, 19
-21-decision-tree ───────── depends on ──► 05, 20
-22-k-means ─────────────── depends on ──► 05, 06
-23-attention-mechanism ─── depends on ──► 06, 19
-24-bpe-tokeniser ───────── depends on ──► 09
-25-slotted-page ────────────────────────── standalone
-26-b-tree ──────── depends on ──► 25
-27-buffer-pool ─── depends on ──► 25
-28-sstable ────────────────────────────── standalone
-29-skip-list ───────────────────────────── standalone
+13-slotted-page ────────────────────────── standalone
+14-b-tree ──────────────── depends on ──► 13
+15-buffer-pool ─────────── depends on ──► 13
+16-sstable ─────────────────────────────── standalone
+17-skip-list ───────────────────────────── standalone
+18-consistent-hashing ─────────────────────────────────────────── standalone
+19-bloom-filter ───────────────────────────────────────────────── standalone
+20-rate-limiter ───────────────────────────────────────────────── standalone
+21-merkle-tree ─────────── depends on ──► 19
+22-gossip-protocol ─────── depends on ──► 20
+23-raft-consensus ──────── depends on ──► 22
+24-gradient-descent ────── depends on ──► 06
+25-neural-net ──────────── depends on ──► 06, 24
+26-decision-tree ───────── depends on ──► 05, 25
+27-k-means ─────────────── depends on ──► 05, 06
+28-attention-mechanism ─── depends on ──► 06, 24
+29-bpe-tokeniser ───────── depends on ──► 09
 ```
 
 ## Playing the game
@@ -114,9 +114,9 @@ cargo run -p monte-carlo -- --trials 1000000
 | 1 | 01-04 | Simulation & Probability |
 | 2 | 05-08 | Maths & Statistics |
 | 3 | 09-12 | Low-Level Systems |
-| 4 | 13-18 | Distributed Systems |
-| 5 | 19-24 | AI & Machine Learning |
-| 6 | 25-29 | Storage Internals |
+| 4 | 13-17 | Storage Internals |
+| 5 | 18-23 | Distributed Systems |
+| 6 | 24-29 | AI & Machine Learning |
 
 ## Licence
 

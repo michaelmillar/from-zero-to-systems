@@ -1,1 +1,10 @@
 /target
+
+# secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.toml

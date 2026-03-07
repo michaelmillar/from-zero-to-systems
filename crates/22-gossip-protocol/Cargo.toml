@@ -1,16 +1,16 @@
 [package]
-name = "raft-consensus"
+name = "gossip-protocol"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "raft_consensus"
+name = "gossip_protocol"
 path = "src/lib.rs"
 
 [[bin]]
-name = "raft-consensus"
+name = "gossip-protocol"
 path = "src/main.rs"
 
 [dependencies]
-gossip-protocol = { path = "../17-gossip-protocol" }
+rate-limiter = { path = "../20-rate-limiter" }
 rand = "0.8"
