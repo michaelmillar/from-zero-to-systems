@@ -1,0 +1,36 @@
+name: sync play to challenges
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "play/**"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: sync play/ into challenges branch
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+          git checkout challenges
+
+          # Apply only the play/ directory from main.
+          git checkout main -- play/
+
+          # Nothing to do if play/ is already identical.
+          if git diff --cached --quiet; then
+            echo "play/ already up to date on challenges"
+            exit 0
+          fi
+
+          git commit -m "chore: sync play/ from main"
+          git push origin challenges
