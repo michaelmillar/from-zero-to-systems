@@ -1,0 +1,15 @@
+[package]
+name = "slotted-page"
+version = "0.1.0"
+edition = "2021"
+description = "Slotted-page storage format -- variable-length records, compaction, free space management"
+
+[lib]
+name = "slotted_page"
+path = "src/lib.rs"
+
+[[bin]]
+name = "slotted-page"
+path = "src/main.rs"
+
+[dependencies]
