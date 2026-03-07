@@ -63,46 +63,43 @@ cargo run -p play
 ```
 
 ```
-┌─ from-zero-to-systems ──────────────────────────────────────────────────────┐
-│ 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 ...  │
-│ ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   │
-├─────────────────────────────────────────┬───────────────────────────────────┤
-│ 01 · risk-sampler                       │ Info                              │
-│                                         │                                   │
-│   Press [r] to run tests                │ Simulate risk events across       │
-│                                         │ thousands of trials to calculate  │
-│                                         │ Value at Risk (VaR).              │
-│                                         │                                   │
-│                                         │ Completed: 0/29                   │
-│                                         │                                   │
-│                                         │ Press [r] to run tests, [h] for   │
-│                                         │ hints, [d] for docs, [c] for      │
-│                                         │ concepts.                         │
-└─────────────────────────────────────────┴───────────────────────────────────┘
- [r]un  [h]int  [d]ocs  [c]oncepts  [←/p]prev  [→/n]next  [q]uit
+  from-zero-to-systems                                          01 / 29
+─────────────────────────────────────────────────────────────────────────
+  01  02  03  04  05  06  07  08  09  10  11  12  13  14  ...
+  .   .   .   .   .   .   .   .   .   .   .   .   .   .   ...
+─────────────────────────────────────────────────────────────────────────
+  01 . risk-sampler                       | info
+                                          |
+  press r to run tests                    | Simulate risk events across
+                                          | thousands of trials to
+                                          | calculate Value at Risk.
+                                          |
+                                          | Completed  0 / 29
+─────────────────────────────────────────────────────────────────────────
+  r run  .  h hint  .  d docs  .  c concepts  .  <- -> navigate  .  q quit
 ```
 
 **1. Clear the implementation**
 
-Open `crates/01-risk-sampler/src/lib.rs`. Delete everything *above* the `#[cfg(test)]` block -- the structs, function, all of it. Leave the tests completely untouched. Press **[r]** in the runner:
+Open `crates/01-risk-sampler/src/lib.rs`. Delete everything *above* the `#[cfg(test)]` block -- the structs, function, all of it. Leave the tests completely untouched. Press **r** in the runner:
 
 ```
-┌─ from-zero-to-systems ──────────────────────────────────────────────────────┐
-│ 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 ...  │
-│ ✗  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   │
-├─────────────────────────────────────────┬───────────────────────────────────┤
-│ 01 · risk-sampler                       │ Info                              │
-│                                         │                                   │
-│  ✗  zero_probability_event_never_occurs │ Completed: 0/29                   │
-│  ✗  certain_event_always_occurs         │                                   │
-│  ✗  var_95_is_not_greater_than_max_...  │ Press [r] to run tests, [h] for   │
-│  ✗  mean_loss_is_consistent_with_...   │ hints, [d] for docs, [c] for      │
-│                                         │ concepts.                         │
-└─────────────────────────────────────────┴───────────────────────────────────┘
- [r]un  [h]int  [d]ocs  [c]oncepts  [←/p]prev  [→/n]next  [q]uit
+  from-zero-to-systems                                          01 / 29
+─────────────────────────────────────────────────────────────────────────
+  01  02  03  04  05  06  07  08  09  10  11  12  13  14  ...
+  x   .   .   .   .   .   .   .   .   .   .   .   .   .   ...
+─────────────────────────────────────────────────────────────────────────
+  01 . risk-sampler                       | info
+                                          |
+  x  zero_probability_event_never_occurs  | Completed  0 / 29
+  x  certain_event_always_occurs          |
+  x  var_95_is_not_greater_than_max_loss  |
+  x  mean_loss_is_consistent_with_proba.. |
+─────────────────────────────────────────────────────────────────────────
+  r run  .  h hint  .  d docs  .  c concepts  .  <- -> navigate  .  q quit
 ```
 
-Four red tests. That is your todo list.
+Four failing tests. That is your todo list.
 
 **2. Read the first test -- it tells you exactly what to build**
 
@@ -120,27 +117,27 @@ fn zero_probability_event_never_occurs() {
 }
 ```
 
-It needs a `RiskEvent` struct, a `SimulationResult` struct, and a `simulate` function. Add the minimum to make this compile and pass. Press **[h]** for a nudge if you are stuck.
+It needs a `RiskEvent` struct, a `SimulationResult` struct, and a `simulate` function. Add the minimum to make this compile and pass. Press **h** for a nudge if you are stuck.
 
-**3. Press [r] -- watch it go green**
+**3. Press r -- watch it go green**
 
 ```
-┌─ from-zero-to-systems ──────────────────────────────────────────────────────┐
-│ 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 ...  │
-│ ✓  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   │
-├─────────────────────────────────────────┬───────────────────────────────────┤
-│ 01 · risk-sampler                       │ Info                              │
-│                                         │                                   │
-│  ✓  zero_probability_event_never_occurs │ Completed: 1/29                   │
-│  ✓  certain_event_always_occurs         │                                   │
-│  ✓  var_95_is_not_greater_than_max_...  │ Press [r] to run tests, [h] for   │
-│  ✓  mean_loss_is_consistent_with_...   │ hints, [d] for docs, [c] for      │
-│                                         │ concepts.                         │
-└─────────────────────────────────────────┴───────────────────────────────────┘
- [r]un  [h]int  [d]ocs  [c]oncepts  [←/p]prev  [→/n]next  [q]uit
+  from-zero-to-systems                                          01 / 29
+─────────────────────────────────────────────────────────────────────────
+  01  02  03  04  05  06  07  08  09  10  11  12  13  14  ...
+  v   .   .   .   .   .   .   .   .   .   .   .   .   .   ...
+─────────────────────────────────────────────────────────────────────────
+  01 . risk-sampler                       | info
+                                          |
+  v  zero_probability_event_never_occurs  | Completed  1 / 29
+  v  certain_event_always_occurs          |
+  v  var_95_is_not_greater_than_max_loss  |
+  v  mean_loss_is_consistent_with_proba.. |
+─────────────────────────────────────────────────────────────────────────
+  r run  .  h hint  .  d docs  .  c concepts  .  <- -> navigate  .  q quit
 ```
 
-Press **[n]** to move to crate 02 and repeat. Work in order -- later crates import earlier ones.
+Press **n** to move to crate 02 and repeat. Work in order -- later crates import earlier ones.
 
 ## Tiers
 
