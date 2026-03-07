@@ -48,6 +48,51 @@ Each numbered crate under `crates/` is:
 29-skip-list ───────────────────────────── standalone
 ```
 
+## Playing the game
+
+Each crate is a challenge. The tests are the spec -- they tell you exactly what to build. The README gives you the context and theory. Your job is to make the tests pass.
+
+**1. Pick a crate and read its README**
+
+```bash
+cat crates/01-risk-sampler/README.md
+```
+
+**2. Look at the tests -- this is the spec**
+
+The bottom of every `src/lib.rs` has a `#[cfg(test)]` block. Each test is a precise requirement: function name, input, expected output. Read them before writing a single line.
+
+```bash
+cargo test -p risk-sampler -- --list   # see all test names
+```
+
+**3. Clear the implementation and watch it fail**
+
+Delete everything in `src/lib.rs` *above* the `#[cfg(test)]` block -- the function signatures, structs, and implementations. Leave the tests untouched. Then run:
+
+```bash
+cargo test -p risk-sampler
+```
+
+The compiler errors and test failures are now your todo list.
+
+**4. Implement until green**
+
+Write the implementation. Run the tests repeatedly. When all pass:
+
+```bash
+cargo test -p risk-sampler   # all green
+cargo run  -p risk-sampler   # see it in action
+```
+
+**5. Move to the next crate**
+
+Work through them in order. Later crates import earlier ones -- if `07-linear-regression` depends on `05-statistics-core`, you need `statistics-core` working first.
+
+```bash
+cargo test --workspace   # run every crate at once
+```
+
 ## Running a crate
 
 ```bash
