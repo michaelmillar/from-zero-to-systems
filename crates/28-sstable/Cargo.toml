@@ -1,0 +1,15 @@
+[package]
+name = "sstable"
+version = "0.1.0"
+edition = "2021"
+description = "SSTable -- sorted, immutable string table for log-structured storage"
+
+[lib]
+name = "sstable"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sstable"
+path = "src/main.rs"
+
+[dependencies]
