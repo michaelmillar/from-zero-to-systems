@@ -24,10 +24,10 @@ Each numbered crate under `crates/` is:
 05-statistics-core ─────── depends on ──► 03
 06-matrix-math ────────────────────────────────────────────────── standalone
 07-linear-regression ───── depends on ──► 05, 06
-08-signal-processing ───── depends on ──► 06
+08-graph ───────────────────────────────── standalone
 09-bit-manipulator ────────────────────────────────────────────── standalone
 10-memory-arena ───────────────────────────────────────────────── standalone
-11-float-inspector ─────── depends on ──► 07
+11-hash-table ──────────────────────────── standalone
 12-mini-vm ─────────────── depends on ──► 09, 10
 13-consistent-hashing ─────────────────────────────────────────── standalone
 14-bloom-filter ───────────────────────────────────────────────── standalone
@@ -41,6 +41,11 @@ Each numbered crate under `crates/` is:
 22-k-means ─────────────── depends on ──► 05, 06
 23-attention-mechanism ─── depends on ──► 06, 19
 24-bpe-tokeniser ───────── depends on ──► 09
+25-slotted-page ────────────────────────── standalone
+26-b-tree ──────── depends on ──► 25
+27-buffer-pool ─── depends on ──► 25
+28-sstable ────────────────────────────── standalone
+29-skip-list ───────────────────────────── standalone
 ```
 
 ## Running a crate
@@ -60,6 +65,7 @@ cargo run -p monte-carlo -- --trials 1000000
 | 3 | 09-12 | Low-Level Systems |
 | 4 | 13-18 | Distributed Systems |
 | 5 | 19-24 | AI & Machine Learning |
+| 6 | 25-29 | Storage Internals |
 
 ## Licence
 
