@@ -1,0 +1,16 @@
+[package]
+name = "b-tree"
+version = "0.1.0"
+edition = "2021"
+description = "B-tree index -- insert, lookup, delete, range scan"
+
+[lib]
+name = "b_tree"
+path = "src/lib.rs"
+
+[[bin]]
+name = "b-tree"
+path = "src/main.rs"
+
+[dependencies]
+slotted-page = { path = "../25-slotted-page" }
