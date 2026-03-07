@@ -1,0 +1,16 @@
+[package]
+name = "buffer-pool"
+version = "0.1.0"
+edition = "2021"
+description = "Database buffer pool -- LRU-clock eviction, pin/unpin, dirty page tracking"
+
+[lib]
+name = "buffer_pool"
+path = "src/lib.rs"
+
+[[bin]]
+name = "buffer-pool"
+path = "src/main.rs"
+
+[dependencies]
+slotted-page = { path = "../25-slotted-page" }
