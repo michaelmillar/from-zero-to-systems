@@ -1,18 +1,18 @@
 // ============================================================
-//  YOUR CHALLENGE — implement scaled dot-product attention.
+//  YOUR CHALLENGE - implement scaled dot-product attention.
 //
-//  This is the computational core of every Transformer model —
+//  This is the computational core of every Transformer model -
 //  GPT, BERT, LLaMA, ViT, Whisper, Claude.
 //
-//  Attention(Q, K, V) = softmax(Q Kᵀ / √dₖ) · V
+//  Attention(Q, K, V) = softmax(Q K^T / sqrt(d_k)) * V
 //
 //  Where:
-//    Q — queries:  [seq_len × d_k]
-//    K — keys:     [seq_len × d_k]
-//    V — values:   [seq_len × d_v]
-//    dₖ — key dimension (used for scaling to prevent vanishing gradients)
+//    Q - queries:  [seq_len x d_k]
+//    K - keys:     [seq_len x d_k]
+//    V - values:   [seq_len x d_v]
+//    d_k - key dimension (used for scaling to prevent vanishing gradients)
 //
-//  Causal masking: set future positions to −∞ before softmax
+//  Causal masking: set future positions to -infinity before softmax
 //  so position i can only attend to positions 0..i.
 //
 //  Depends on: matrix-math (crate 06) for matrix multiplication.
@@ -23,53 +23,26 @@ use matrix_math::Matrix;
 /// Row-wise softmax: each row sums to 1.
 /// Subtracts max for numerical stability.
 pub fn softmax(x: &[f64]) -> Vec<f64> {
-    let max = x.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let exps: Vec<f64> = x.iter().map(|&xi| (xi - max).exp()).collect();
-    let sum: f64 = exps.iter().sum();
-    exps.iter().map(|&e| e / sum).collect()
+    todo!()
 }
 
 /// Scaled dot-product attention.
 ///
-/// - `q`, `k`: `[seq_len × d_k]`
-/// - `v`:      `[seq_len × d_v]`
-/// - `causal_mask`: if true, upper-triangular positions are masked to −∞
+/// - `q`, `k`: `[seq_len x d_k]`
+/// - `v`:      `[seq_len x d_v]`
+/// - `causal_mask`: if true, upper-triangular positions are masked to -infinity
 ///
-/// Returns output of shape `[seq_len × d_v]`.
+/// Returns output of shape `[seq_len x d_v]`.
 pub fn scaled_dot_product_attention(
     q: &[Vec<f64>],
     k: &[Vec<f64>],
     v: &[Vec<f64>],
     causal_mask: bool,
 ) -> Vec<Vec<f64>> {
-    let seq_len = q.len();
-    let d_k = q[0].len() as f64;
-    let scale = d_k.sqrt();
-
-    // scores = Q @ Kᵀ / √dₖ
-    let k_t = transpose_2d(k);
-    let qk  = matmul_2d(q, &k_t);
-    let mut scores: Vec<Vec<f64>> = qk.iter()
-        .map(|row| row.iter().map(|&s| s / scale).collect())
-        .collect();
-
-    // Causal mask: position i cannot attend to positions j > i
-    if causal_mask {
-        for i in 0..seq_len {
-            for j in (i + 1)..seq_len {
-                scores[i][j] = f64::NEG_INFINITY;
-            }
-        }
-    }
-
-    // Apply softmax row-wise to get attention weights
-    let weights: Vec<Vec<f64>> = scores.iter().map(|row| softmax(row)).collect();
-
-    // Output = weights @ V
-    matmul_2d(&weights, v)
+    todo!()
 }
 
-// ── matrix helpers using crate 06 ─────────────────────────────────────────
+// -- matrix helpers using crate 06 ─────────────────────────────────────────
 
 fn to_matrix(rows: &[Vec<f64>]) -> Matrix {
     let r = rows.len();

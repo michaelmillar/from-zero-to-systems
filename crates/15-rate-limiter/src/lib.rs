@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — implement a token bucket rate limiter.
+//  YOUR CHALLENGE - implement a token bucket rate limiter.
 //
 //  The token bucket algorithm:
 //    - A bucket holds up to `capacity` tokens
@@ -16,13 +16,13 @@
 //  number of requests in a rolling time window.
 //
 //  Hint: use std::time::Instant for timestamps.
-//        Do NOT use threads or async — simulate time in tests.
+//        Do NOT use threads or async - simulate time in tests.
 // ============================================================
 
 use std::time::{Duration, Instant};
 use std::collections::VecDeque;
 
-// ── Token Bucket ─────────────────────────────────────────────
+// -- Token Bucket ─────────────────────────────────────────────
 
 pub struct TokenBucket {
     capacity: f64,
@@ -39,24 +39,20 @@ impl TokenBucket {
 
     /// Try to consume `cost` tokens. Returns true if allowed.
     pub fn try_acquire(&mut self, cost: f64) -> bool {
-        self.refill();
-        if self.tokens >= cost { self.tokens -= cost; true } else { false }
+        todo!()
     }
 
     /// Current token count (after refilling based on elapsed time).
     pub fn available_tokens(&mut self) -> f64 {
-        self.refill();
-        self.tokens
+        todo!()
     }
 
     fn refill(&mut self) {
-        let elapsed = self.last_refill.elapsed().as_secs_f64();
-        self.tokens = (self.tokens + elapsed * self.rate).min(self.capacity);
-        self.last_refill = Instant::now();
+        todo!()
     }
 }
 
-// ── Sliding Window ───────────────────────────────────────────
+// -- Sliding Window ───────────────────────────────────────────
 
 pub struct SlidingWindowLimiter {
     max_requests: usize,
@@ -71,21 +67,12 @@ impl SlidingWindowLimiter {
 
     /// Record a request attempt. Returns true if within the limit.
     pub fn try_acquire(&mut self) -> bool {
-        let now = Instant::now();
-        let cutoff = now - self.window;
-        self.timestamps.retain(|&t| t > cutoff);
-        if self.timestamps.len() < self.max_requests {
-            self.timestamps.push_back(now);
-            true
-        } else {
-            false
-        }
+        todo!()
     }
 
     /// Number of requests in the current window.
     pub fn current_count(&self) -> usize {
-        let cutoff = Instant::now() - self.window;
-        self.timestamps.iter().filter(|&&t| t > cutoff).count()
+        todo!()
     }
 }
 

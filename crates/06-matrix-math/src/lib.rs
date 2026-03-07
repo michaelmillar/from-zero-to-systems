@@ -1,3 +1,20 @@
+// ============================================================
+//  YOUR CHALLENGE - implement a Matrix type with linear algebra.
+//
+//  The Matrix struct stores data in row-major order (Vec<f64>).
+//  Element (r, c) lives at index r * cols + c.
+//
+//  Implement:
+//    - transpose: swap rows and columns
+//    - matmul: matrix multiplication (return None if incompatible)
+//    - mul_vec: multiply matrix by column vector
+//    - inverse: Gaussian elimination with partial pivoting
+//    - determinant: via inverse
+//
+//  The constructors (new, from_vec, identity) and index operators
+//  are already provided - use self[(r, c)] in your implementations.
+// ============================================================
+
 use std::fmt;
 use std::ops::{Add, Index, IndexMut, Mul};
 
@@ -20,87 +37,32 @@ impl Matrix {
     }
 
     pub fn from_vec(rows: usize, cols: usize, data: Vec<f64>) -> Self {
-        assert_eq!(data.len(), rows * cols, "data length must equal rows × cols");
+        assert_eq!(data.len(), rows * cols, "data length must equal rows x cols");
         Self { rows, cols, data }
     }
 
     pub fn transpose(&self) -> Self {
-        let mut out = Self::new(self.cols, self.rows);
-        for r in 0..self.rows {
-            for c in 0..self.cols {
-                out[(c, r)] = self[(r, c)];
-            }
-        }
-        out
+        todo!()
     }
 
     /// Matrix multiplication. Returns None if dimensions are incompatible.
     pub fn matmul(&self, rhs: &Matrix) -> Option<Matrix> {
-        if self.cols != rhs.rows { return None; }
-        let mut out = Matrix::new(self.rows, rhs.cols);
-        for i in 0..self.rows {
-            for j in 0..rhs.cols {
-                let mut sum = 0.0;
-                for k in 0..self.cols {
-                    sum += self[(i, k)] * rhs[(k, j)];
-                }
-                out[(i, j)] = sum;
-            }
-        }
-        Some(out)
+        todo!()
     }
 
     /// Multiply matrix by column vector. Returns None if dimensions incompatible.
     pub fn mul_vec(&self, v: &[f64]) -> Option<Vec<f64>> {
-        if self.cols != v.len() { return None; }
-        Some((0..self.rows).map(|r| {
-            (0..self.cols).map(|c| self[(r, c)] * v[c]).sum()
-        }).collect())
+        todo!()
     }
 
-    /// Gaussian elimination with partial pivoting — returns (inverse, determinant).
+    /// Gaussian elimination with partial pivoting - returns (inverse, determinant).
     /// Returns None if matrix is singular or non-square.
     pub fn inverse(&self) -> Option<(Matrix, f64)> {
-        if self.rows != self.cols { return None; }
-        let n = self.rows;
-        let mut a = self.clone();
-        let mut inv = Matrix::identity(n);
-        let mut det = 1.0_f64;
-        let mut sign = 1.0_f64;
-
-        for col in 0..n {
-            // Partial pivoting
-            let pivot_row = (col..n)
-                .max_by(|&r1, &r2| a[(r1, col)].abs().partial_cmp(&a[(r2, col)].abs()).unwrap())?;
-
-            if a[(pivot_row, col)].abs() < 1e-12 { return None; } // singular
-
-            if pivot_row != col {
-                for j in 0..n {
-                    let tmp = a[(col, j)]; a[(col, j)] = a[(pivot_row, j)]; a[(pivot_row, j)] = tmp;
-                    let tmp = inv[(col, j)]; inv[(col, j)] = inv[(pivot_row, j)]; inv[(pivot_row, j)] = tmp;
-                }
-                sign *= -1.0;
-            }
-
-            det *= a[(col, col)];
-            let pivot = a[(col, col)];
-            for j in 0..n { a[(col, j)] /= pivot; inv[(col, j)] /= pivot; }
-
-            for row in 0..n {
-                if row == col { continue; }
-                let factor = a[(row, col)];
-                for j in 0..n {
-                    let av = a[(col, j)]; a[(row, j)] -= factor * av;
-                    let iv = inv[(col, j)]; inv[(row, j)] -= factor * iv;
-                }
-            }
-        }
-        Some((inv, sign * det))
+        todo!()
     }
 
     pub fn determinant(&self) -> Option<f64> {
-        self.inverse().map(|(_, d)| d)
+        todo!()
     }
 }
 

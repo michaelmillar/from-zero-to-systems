@@ -1,6 +1,16 @@
-const ORDER: usize = 5; // max children per internal node
+// ============================================================
+//  YOUR CHALLENGE - implement an order-5 B-tree.
+//
+//  Nodes: Leaf { keys, values } or Internal { keys, children }.
+//  insert: binary-search for position, insert, then split if len > MAX_KEYS.
+//  split_leaf: mid = len/2; median = right_keys[0] (copy up to parent).
+//  split_internal: mid = len/2; median = keys.remove(mid) (pushed up).
+//  range: recurse into children whose separator key range overlaps [from, to].
+// ============================================================
+
+const ORDER: usize = 5;
 const MAX_KEYS: usize = ORDER - 1; // 4
-const MIN_KEYS: usize = ORDER / 2; // 2 (min keys in non-root node)
+const MIN_KEYS: usize = ORDER / 2; // 2
 
 #[derive(Debug, Clone)]
 enum Node<K, V> {
@@ -9,7 +19,7 @@ enum Node<K, V> {
         values: Vec<V>,
     },
     Internal {
-        keys: Vec<K>,        // separator keys; len = children.len() - 1
+        keys: Vec<K>,
         children: Vec<Box<Node<K, V>>>,
     },
 }
@@ -20,153 +30,38 @@ pub struct BTree<K: Ord + Clone, V: Clone> {
 }
 
 impl<K: Ord + Clone, V: Clone> BTree<K, V> {
-    pub fn new() -> Self {
-        Self {
-            root: Box::new(Node::Leaf { keys: vec![], values: vec![] }),
-            len: 0,
-        }
-    }
+    pub fn new() -> Self { todo!() }
 
-    pub fn len(&self) -> usize { self.len }
-    pub fn is_empty(&self) -> bool { self.len == 0 }
+    pub fn len(&self) -> usize { todo!() }
+    pub fn is_empty(&self) -> bool { todo!() }
 
-    pub fn get(&self, key: &K) -> Option<&V> {
-        Self::get_node(&self.root, key)
-    }
+    pub fn get(&self, key: &K) -> Option<&V> { todo!() }
 
-    fn get_node<'a>(node: &'a Node<K, V>, key: &K) -> Option<&'a V> {
-        match node {
-            Node::Leaf { keys, values } => {
-                keys.binary_search(key).ok().map(|i| &values[i])
-            }
-            Node::Internal { keys, children } => {
-                let idx = keys.partition_point(|k| k <= key);
-                // If exact match on separator, go right child
-                let child_idx = if idx < keys.len() && &keys[idx] == key {
-                    idx + 1
-                } else {
-                    idx
-                };
-                Self::get_node(&children[child_idx], key)
-            }
-        }
-    }
+    fn get_node<'a>(node: &'a Node<K, V>, key: &K) -> Option<&'a V> { todo!() }
 
-    pub fn insert(&mut self, key: K, value: V) {
-        if let Some(median) = Self::insert_node(&mut self.root, key, value) {
-            // Root split -- create new root
-            let old_root = std::mem::replace(
-                &mut self.root,
-                Box::new(Node::Internal { keys: vec![], children: vec![] }),
-            );
-            if let Node::Internal { keys, children } = self.root.as_mut() {
-                keys.push(median.0);
-                children.push(old_root);
-                children.push(median.1);
-            }
-        }
-        self.len += 1;
-    }
+    pub fn insert(&mut self, key: K, value: V) { todo!() }
 
     /// Returns Some((median_key, right_child)) if the node was split, None otherwise.
-    fn insert_node(node: &mut Node<K, V>, key: K, value: V) -> Option<(K, Box<Node<K, V>>)> {
-        match node {
-            Node::Leaf { keys, values } => {
-                let pos = keys.partition_point(|k| k < &key);
-                keys.insert(pos, key);
-                values.insert(pos, value);
-                if keys.len() > MAX_KEYS {
-                    Some(Self::split_leaf(keys, values))
-                } else {
-                    None
-                }
-            }
-            Node::Internal { keys, children } => {
-                let idx = keys.partition_point(|k| k <= &key);
-                let child_idx = if idx < keys.len() && &keys[idx] == &key { idx + 1 } else { idx };
-                if let Some((med_key, right)) = Self::insert_node(&mut children[child_idx], key, value) {
-                    keys.insert(child_idx, med_key);
-                    children.insert(child_idx + 1, right);
-                    if keys.len() > MAX_KEYS {
-                        Some(Self::split_internal(keys, children))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-        }
-    }
+    fn insert_node(node: &mut Node<K, V>, key: K, value: V) -> Option<(K, Box<Node<K, V>>)> { todo!() }
 
-    fn split_leaf(keys: &mut Vec<K>, values: &mut Vec<V>) -> (K, Box<Node<K, V>>) {
-        let mid = keys.len() / 2;
-        let right_keys = keys.split_off(mid);
-        let right_vals = values.split_off(mid);
-        let median = right_keys[0].clone();
-        (median, Box::new(Node::Leaf { keys: right_keys, values: right_vals }))
-    }
+    fn split_leaf(keys: &mut Vec<K>, values: &mut Vec<V>) -> (K, Box<Node<K, V>>) { todo!() }
 
     fn split_internal(
         keys: &mut Vec<K>,
         children: &mut Vec<Box<Node<K, V>>>,
-    ) -> (K, Box<Node<K, V>>) {
-        let mid = keys.len() / 2;
-        let median = keys.remove(mid);
-        let right_keys = keys.split_off(mid);
-        let right_children = children.split_off(mid + 1);
-        (median, Box::new(Node::Internal { keys: right_keys, children: right_children }))
-    }
+    ) -> (K, Box<Node<K, V>>) { todo!() }
 
     /// Range scan: returns all (key, value) pairs where from <= key <= to.
-    pub fn range(&self, from: &K, to: &K) -> Vec<(K, V)> {
-        let mut out = Vec::new();
-        Self::range_node(&self.root, from, to, &mut out);
-        out
-    }
+    pub fn range(&self, from: &K, to: &K) -> Vec<(K, V)> { todo!() }
 
-    fn range_node(node: &Node<K, V>, from: &K, to: &K, out: &mut Vec<(K, V)>) {
-        match node {
-            Node::Leaf { keys, values } => {
-                for (k, v) in keys.iter().zip(values.iter()) {
-                    if k >= from && k <= to {
-                        out.push((k.clone(), v.clone()));
-                    }
-                }
-            }
-            Node::Internal { keys, children } => {
-                for (i, child) in children.iter().enumerate() {
-                    // Prune: skip children whose key range can't overlap [from, to]
-                    let lower_ok = i == 0 || &keys[i - 1] <= to;
-                    let upper_ok = i == keys.len() || &keys[i] >= from;
-                    if lower_ok && upper_ok {
-                        Self::range_node(child, from, to, out);
-                    }
-                }
-            }
-        }
-    }
+    fn range_node(node: &Node<K, V>, from: &K, to: &K, out: &mut Vec<(K, V)>) { todo!() }
 
     /// Returns all keys in sorted order (in-order traversal).
-    pub fn keys(&self) -> Vec<K> {
-        let mut out = Vec::new();
-        Self::collect_keys(&self.root, &mut out);
-        out
-    }
+    pub fn keys(&self) -> Vec<K> { todo!() }
 
-    fn collect_keys(node: &Node<K, V>, out: &mut Vec<K>) {
-        match node {
-            Node::Leaf { keys, .. } => out.extend(keys.iter().cloned()),
-            Node::Internal { children, .. } => {
-                for child in children {
-                    Self::collect_keys(child, out);
-                }
-            }
-        }
-    }
+    fn collect_keys(node: &Node<K, V>, out: &mut Vec<K>) { todo!() }
 }
 
-// Suppress dead_code warning for MIN_KEYS which documents the invariant
 const _: () = assert!(MIN_KEYS == 2);
 
 impl<K: Ord + Clone, V: Clone> Default for BTree<K, V> {

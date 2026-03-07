@@ -1,20 +1,23 @@
 // ============================================================
-//  YOUR CHALLENGE — implement SGD and Adam optimisers.
+//  YOUR CHALLENGE - implement SGD and Adam optimisers.
 //
 //  Gradient descent is the engine behind all of ML.
-//  Given a loss function L(θ) and its gradient ∇L(θ),
-//  each step moves θ in the direction that decreases L.
+//  Given a loss function L(theta) and its gradient dL/dtheta,
+//  each step moves theta in the direction that decreases L.
 //
 //  SGD with momentum:
-//    v  ← β·v + (1-β)·g           (velocity)
-//    θ  ← θ - lr·v
+//    v  <- beta*v + (1-beta)*g           (velocity)
+//    theta  <- theta - lr*v
 //
 //  Adam (Adaptive Moment Estimation):
-//    m  ← β₁·m + (1-β₁)·g        (first moment)
-//    v  ← β₂·v + (1-β₂)·g²       (second moment)
-//    m̂  = m / (1 - β₁ᵗ)          (bias correction)
-//    v̂  = v / (1 - β₂ᵗ)
-//    θ  ← θ - lr · m̂ / (√v̂ + ε)
+//    m  <- beta1*m + (1-beta1)*g        (first moment)
+//    v  <- beta2*v + (1-beta2)*g^2       (second moment)
+//    m_hat  = m / (1 - beta1^t)          (bias correction)
+//    v_hat  = v / (1 - beta2^t)
+//    theta  <- theta - lr * m_hat / (sqrt(v_hat) + epsilon)
+//
+//  numerical_gradient: estimate gradient via central differences
+//    grad[i] = (f(x + h*e_i) - f(x - h*e_i)) / (2*h)
 //
 //  Used in: PyTorch, TensorFlow, every neural network trainer.
 // ============================================================
@@ -33,18 +36,11 @@ impl Sgd {
 
     /// Move `params` one step in the negative gradient direction.
     pub fn step(&mut self, params: &mut Vec<f64>, grads: &[f64]) {
-        if self.velocity.len() != params.len() {
-            self.velocity = vec![0.0; params.len()];
-        }
-        for i in 0..params.len() {
-            self.velocity[i] = self.momentum * self.velocity[i]
-                + (1.0 - self.momentum) * grads[i];
-            params[i] -= self.lr * self.velocity[i];
-        }
+        todo!()
     }
 }
 
-/// Adam — Adaptive Moment Estimation.
+/// Adam - Adaptive Moment Estimation.
 pub struct Adam {
     pub lr: f64,
     pub beta1: f64,
@@ -61,36 +57,13 @@ impl Adam {
     }
 
     pub fn step(&mut self, params: &mut Vec<f64>, grads: &[f64]) {
-        if self.m.len() != params.len() {
-            self.m = vec![0.0; params.len()];
-            self.v = vec![0.0; params.len()];
-        }
-        self.t += 1;
-        let bc1 = 1.0 - self.beta1.powi(self.t as i32);
-        let bc2 = 1.0 - self.beta2.powi(self.t as i32);
-        for i in 0..params.len() {
-            self.m[i] = self.beta1 * self.m[i] + (1.0 - self.beta1) * grads[i];
-            self.v[i] = self.beta2 * self.v[i] + (1.0 - self.beta2) * grads[i].powi(2);
-            let m_hat = self.m[i] / bc1;
-            let v_hat = self.v[i] / bc2;
-            params[i] -= self.lr * m_hat / (v_hat.sqrt() + self.epsilon);
-        }
+        todo!()
     }
 }
 
 /// Estimate the gradient of f at x via central finite differences.
 pub fn numerical_gradient<F: Fn(&[f64]) -> f64>(f: &F, x: &[f64], h: f64) -> Vec<f64> {
-    let mut grad = vec![0.0; x.len()];
-    let mut x_fwd = x.to_vec();
-    let mut x_bwd = x.to_vec();
-    for i in 0..x.len() {
-        x_fwd[i] = x[i] + h;
-        x_bwd[i] = x[i] - h;
-        grad[i] = (f(&x_fwd) - f(&x_bwd)) / (2.0 * h);
-        x_fwd[i] = x[i];
-        x_bwd[i] = x[i];
-    }
-    grad
+    todo!()
 }
 
 #[cfg(test)]
@@ -112,13 +85,13 @@ mod tests {
         fn step_moves_in_negative_gradient_direction() {
             let mut opt = Sgd::new(0.1, 0.0);
             let mut params = vec![2.0];
-            opt.step(&mut params, &[4.0]); // positive grad → decrease
+            opt.step(&mut params, &[4.0]); // positive grad -> decrease
             assert!(params[0] < 2.0, "should move left when grad is positive");
         }
 
         #[test]
         fn converges_to_minimum_of_x_squared() {
-            // f(x) = x²  →  grad = 2x  →  min at x = 0
+            // f(x) = x^2  ->  grad = 2x  ->  min at x = 0
             let mut opt = Sgd::new(0.1, 0.0);
             let mut x = vec![10.0_f64];
             for _ in 0..200 {
@@ -137,7 +110,7 @@ mod tests {
             opt.step(&mut params, &[1.0]);
             let step2 = (params[0].abs() - step1).abs();
             assert!(step2 > step1 * 0.9,
-                "momentum should increase effective step size: {step1} → {step2}");
+                "momentum should increase effective step size: {step1} -> {step2}");
         }
     }
 
@@ -164,7 +137,7 @@ mod tests {
 
         #[test]
         fn converges_to_minimum_of_quadratic() {
-            // f(x,y) = x² + y²  →  min at (0, 0)
+            // f(x,y) = x^2 + y^2  ->  min at (0, 0)
             let mut opt = Adam::new(0.1, 0.9, 0.999, 1e-8);
             let mut params = vec![5.0, -4.0];
             for _ in 0..500 {
@@ -183,7 +156,7 @@ mod tests {
         fn numerical_gradient_of_x_squared_is_2x() {
             let f = |x: &[f64]| x[0] * x[0];
             let g = numerical_gradient(&f, &[3.0], 1e-5);
-            assert!((g[0] - 6.0).abs() < 1e-4, "expected ≈6.0, got {}", g[0]);
+            assert!((g[0] - 6.0).abs() < 1e-4, "expected approximately 6.0, got {}", g[0]);
         }
 
         #[test]

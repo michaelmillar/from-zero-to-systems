@@ -1,3 +1,17 @@
+// ============================================================
+//  YOUR CHALLENGE - implement a skip list with raw Rust pointers.
+//
+//  Ownership model: the level-0 chain owns all nodes.
+//  Higher-level pointers are non-owning aliases (valid while owner lives).
+//
+//  insert: collect update[i] = last node at level i with key < target.
+//          Generate random_level(). Link new node into levels 0..new_level.
+//  remove: collect update[]. Find target at update[0].next[0].
+//          Unlink from all levels. drop(Box::from_raw(target)).
+//  Drop:   walk level-0 chain, Box::from_raw each node exactly once.
+//  PRNG:   use rand_bool() (xorshift64 via thread_local -- already provided).
+// ============================================================
+
 const MAX_LEVEL: usize = 16;
 
 struct Node<K, V> {
@@ -9,219 +23,46 @@ struct Node<K, V> {
 }
 
 pub struct SkipList<K: Ord, V> {
-    /// Sentinel head; its key/value are never accessed.
     head: Box<Node<K, V>>,
     level: usize,
     len: usize,
 }
 
-// SAFETY: SkipList owns all nodes exclusively via the level-0 chain.
-// Raw pointers at higher levels never outlive the node they point to.
 unsafe impl<K: Ord + Send, V: Send> Send for SkipList<K, V> {}
 
 /// Safely produce a `&Node` from a non-null raw pointer.
-/// The caller must ensure the pointer is valid and no mutable alias exists.
 #[inline(always)]
 unsafe fn node_ref<'a, K, V>(ptr: *mut Node<K, V>) -> &'a Node<K, V> {
-    // SAFETY: caller guarantees ptr is non-null and valid for shared access.
-    // Using &*ptr is explicit, not implicit autoref.
     &*ptr
 }
 
 impl<K: Ord + Clone + Default, V: Clone + Default> SkipList<K, V> {
-    pub fn new() -> Self {
-        let head = Box::new(Node {
-            key: K::default(),
-            value: V::default(),
-            next: vec![std::ptr::null_mut(); MAX_LEVEL],
-        });
-        Self { head, level: 1, len: 0 }
-    }
+    pub fn new() -> Self { todo!() }
 
-    pub fn len(&self) -> usize { self.len }
-    pub fn is_empty(&self) -> bool { self.len == 0 }
+    pub fn len(&self) -> usize { todo!() }
+    pub fn is_empty(&self) -> bool { todo!() }
 
-    fn random_level() -> usize {
-        let mut lvl = 1;
-        while lvl < MAX_LEVEL && rand_bool() { lvl += 1; }
-        lvl
-    }
+    fn random_level() -> usize { todo!() }
 
-    pub fn get(&self, key: &K) -> Option<&V> {
-        // SAFETY: head is always valid; next pointers are valid while SkipList is alive.
-        unsafe {
-            let mut curr: *const Node<K, V> = &*self.head;
-            for i in (0..self.level).rev() {
-                loop {
-                    let next_ptr = node_ref(curr as *mut Node<K, V>).next[i];
-                    if next_ptr.is_null() { break; }
-                    let next = node_ref(next_ptr);
-                    if &next.key < key {
-                        curr = next_ptr;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            let next_ptr = node_ref(curr as *mut Node<K, V>).next[0];
-            if !next_ptr.is_null() {
-                let next = node_ref(next_ptr);
-                if &next.key == key {
-                    return Some(&next.value);
-                }
-            }
-            None
-        }
-    }
+    pub fn get(&self, key: &K) -> Option<&V> { todo!() }
 
-    pub fn insert(&mut self, key: K, value: V) {
-        let mut update: Vec<*mut Node<K, V>> = vec![std::ptr::null_mut(); MAX_LEVEL];
-        // SAFETY: head is always valid; we hold &mut self so no other references exist.
-        unsafe {
-            let mut curr: *mut Node<K, V> = &mut *self.head;
-            for i in (0..self.level).rev() {
-                loop {
-                    let next_ptr = node_ref(curr).next[i];
-                    if next_ptr.is_null() { break; }
-                    let next = node_ref(next_ptr);
-                    if next.key < key {
-                        curr = next_ptr;
-                    } else {
-                        break;
-                    }
-                }
-                update[i] = curr;
-            }
+    pub fn insert(&mut self, key: K, value: V) { todo!() }
 
-            // Check for existing key
-            let next_ptr = node_ref(curr).next[0];
-            if !next_ptr.is_null() {
-                let next = &mut *next_ptr;
-                if next.key == key {
-                    next.value = value;
-                    return;
-                }
-            }
-
-            let new_level = Self::random_level();
-            if new_level > self.level {
-                for i in self.level..new_level {
-                    update[i] = &mut *self.head;
-                }
-                self.level = new_level;
-            }
-
-            let new_node = Box::into_raw(Box::new(Node {
-                key,
-                value,
-                next: vec![std::ptr::null_mut(); new_level],
-            }));
-
-            for i in 0..new_level {
-                let new = &mut *new_node;
-                let pred = &mut *update[i];
-                new.next[i] = pred.next[i];
-                pred.next[i] = new_node;
-            }
-        }
-        self.len += 1;
-    }
-
-    pub fn remove(&mut self, key: &K) -> bool {
-        let mut update: Vec<*mut Node<K, V>> = vec![std::ptr::null_mut(); MAX_LEVEL];
-        // SAFETY: head is always valid; we hold &mut self.
-        unsafe {
-            let mut curr: *mut Node<K, V> = &mut *self.head;
-            for i in (0..self.level).rev() {
-                loop {
-                    let next_ptr = node_ref(curr).next[i];
-                    if next_ptr.is_null() { break; }
-                    let next = node_ref(next_ptr);
-                    if &next.key < key {
-                        curr = next_ptr;
-                    } else {
-                        break;
-                    }
-                }
-                update[i] = curr;
-            }
-
-            let target = node_ref(curr).next[0];
-            if target.is_null() || &node_ref(target).key != key {
-                return false;
-            }
-
-            for i in 0..self.level {
-                let pred = &mut *update[i];
-                if pred.next[i] != target { break; }
-                pred.next[i] = node_ref(target).next[i];
-            }
-
-            // Reclaim node -- ownership flows through the level-0 chain
-            drop(Box::from_raw(target));
-        }
-        self.len -= 1;
-
-        // Shrink level if top levels are empty
-        while self.level > 1 && self.head.next[self.level - 1].is_null() {
-            self.level -= 1;
-        }
-        true
-    }
+    pub fn remove(&mut self, key: &K) -> bool { todo!() }
 
     /// Range scan: returns all (key, value) pairs where from <= key <= to.
-    pub fn range(&self, from: &K, to: &K) -> Vec<(K, V)> {
-        // SAFETY: all pointers are valid while SkipList is alive.
-        unsafe {
-            let mut curr: *const Node<K, V> = &*self.head;
-            for i in (0..self.level).rev() {
-                loop {
-                    let next_ptr = node_ref(curr as *mut Node<K, V>).next[i];
-                    if next_ptr.is_null() { break; }
-                    let next = node_ref(next_ptr);
-                    if &next.key < from {
-                        curr = next_ptr;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            let mut out = Vec::new();
-            let mut ptr = node_ref(curr as *mut Node<K, V>).next[0];
-            while !ptr.is_null() {
-                let node = node_ref(ptr);
-                if &node.key > to { break; }
-                out.push((node.key.clone(), node.value.clone()));
-                ptr = node.next[0];
-            }
-            out
-        }
-    }
+    pub fn range(&self, from: &K, to: &K) -> Vec<(K, V)> { todo!() }
 }
 
 impl<K: Ord, V> Drop for SkipList<K, V> {
-    fn drop(&mut self) {
-        // SAFETY: we walk the level-0 chain and reclaim each node exactly once.
-        unsafe {
-            let mut curr = self.head.next[0];
-            while !curr.is_null() {
-                let next = node_ref(curr).next[0];
-                drop(Box::from_raw(curr));
-                curr = next;
-            }
-            // Null out head's pointers so Box<Node> drop doesn't attempt to free them
-            for p in &mut self.head.next {
-                *p = std::ptr::null_mut();
-            }
-        }
-    }
+    fn drop(&mut self) { todo!() }
 }
 
 impl<K: Ord + Clone + Default, V: Clone + Default> Default for SkipList<K, V> {
     fn default() -> Self { Self::new() }
 }
 
-/// Xorshift64 PRNG coin flip -- avoids thread_rng dependency; deterministic under test.
+/// Xorshift64 PRNG coin flip. Use this in random_level().
 fn rand_bool() -> bool {
     use std::cell::Cell;
     thread_local!(static STATE: Cell<u64> = Cell::new(0x517cc1b727220a95));

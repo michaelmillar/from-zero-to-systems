@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — implement Byte-Pair Encoding (BPE) tokenisation.
+//  YOUR CHALLENGE - implement Byte-Pair Encoding (BPE) tokenisation.
 //
 //  BPE is the tokenisation algorithm behind GPT, LLaMA, and Claude.
 //  It starts from individual characters, then greedily merges the
@@ -34,67 +34,21 @@ impl BpeTokeniser {
     /// Learn merge rules from `corpus` until vocab reaches `target_vocab_size`.
     /// Always starts fresh from character-level base tokens.
     pub fn train(&mut self, corpus: &str, target_vocab_size: usize) {
-        self.vocab.clear();
-        self.merges.clear();
-        self.id_to_token.clear();
-
-        // Build character-level base vocabulary from the corpus
-        for ch in corpus.chars() {
-            let s = ch.to_string();
-            if !self.vocab.contains_key(&s) {
-                self.vocab.insert(s.clone(), self.id_to_token.len() as u32);
-                self.id_to_token.push(s);
-            }
-        }
-
-        // Represent corpus as token sequences (split on whitespace, char-level)
-        let mut token_seqs: Vec<Vec<String>> = corpus
-            .split_whitespace()
-            .map(|w| w.chars().map(|c| c.to_string()).collect())
-            .collect();
-
-        // Greedily merge until target vocab size is reached
-        while self.id_to_token.len() < target_vocab_size {
-            let freqs = pair_frequencies(&token_seqs);
-            if freqs.is_empty() { break; }
-
-            let best = freqs.into_iter().max_by_key(|(_, f)| *f).unwrap().0;
-            let merged = format!("{}{}", best.0, best.1);
-
-            // Skip if this merged token already exists in vocab
-            if self.vocab.contains_key(&merged) { break; }
-
-            self.vocab.insert(merged.clone(), self.id_to_token.len() as u32);
-            self.id_to_token.push(merged.clone());
-            self.merges.push(best.clone());
-
-            token_seqs = token_seqs.into_iter()
-                .map(|seq| merge_pair(&seq, &best))
-                .collect();
-        }
+        todo!()
     }
 
     /// Encode `text` by applying learned merge rules, returning token IDs.
     pub fn encode(&self, text: &str) -> Vec<u32> {
-        let mut tokens: Vec<String> = text.chars().map(|c| c.to_string()).collect();
-        for merge in &self.merges {
-            tokens = merge_pair(&tokens, merge);
-        }
-        tokens.iter()
-            .map(|t| self.vocab.get(t).copied().unwrap_or(0))
-            .collect()
+        todo!()
     }
 
     /// Decode token IDs back to a string.
     pub fn decode(&self, ids: &[u32]) -> String {
-        ids.iter()
-            .filter_map(|&id| self.id_to_token.get(id as usize))
-            .cloned()
-            .collect()
+        todo!()
     }
 
     pub fn vocab_size(&self) -> usize {
-        self.id_to_token.len()
+        todo!()
     }
 }
 
@@ -104,29 +58,12 @@ impl Default for BpeTokeniser {
 
 /// Count frequencies of all adjacent pairs across all token sequences.
 pub fn pair_frequencies(seqs: &[Vec<String>]) -> HashMap<(String, String), usize> {
-    let mut freqs: HashMap<(String, String), usize> = HashMap::new();
-    for seq in seqs {
-        for pair in seq.windows(2) {
-            *freqs.entry((pair[0].clone(), pair[1].clone())).or_insert(0) += 1;
-        }
-    }
-    freqs
+    todo!()
 }
 
 /// Replace all occurrences of `pair` with its merged token in `tokens`.
 pub fn merge_pair(tokens: &[String], pair: &(String, String)) -> Vec<String> {
-    let mut result = Vec::with_capacity(tokens.len());
-    let mut i = 0;
-    while i < tokens.len() {
-        if i + 1 < tokens.len() && tokens[i] == pair.0 && tokens[i + 1] == pair.1 {
-            result.push(format!("{}{}", pair.0, pair.1));
-            i += 2;
-        } else {
-            result.push(tokens[i].clone());
-            i += 1;
-        }
-    }
-    result
+    todo!()
 }
 
 #[cfg(test)]
@@ -186,7 +123,7 @@ mod tests {
 
         #[test]
         fn trained_tokeniser_produces_fewer_tokens_for_repeated_text() {
-            // "aaaa" — after training "aa" is merged, so we need fewer tokens
+            // "aaaa" - after training "aa" is merged, so we need fewer tokens
             let text = "aaaa";
             let mut t = BpeTokeniser::new();
             let untrained_count = text.chars().count(); // 4 tokens without merges
@@ -202,12 +139,12 @@ mod tests {
             t.train("hello", 10);
             let ids    = t.encode("hello");
             let decoded = t.decode(&ids);
-            assert_eq!(decoded, "hello", "encode→decode should round-trip");
+            assert_eq!(decoded, "hello", "encode->decode should round-trip");
         }
 
         #[test]
         fn most_frequent_pair_is_merged_first() {
-            // "ababab" → most frequent pair is ("a","b") with freq 3
+            // "ababab" -> most frequent pair is ("a","b") with freq 3
             let mut t = BpeTokeniser::new();
             t.train("ababab", 5);
             assert!(!t.merges.is_empty(), "should have learned at least one merge");

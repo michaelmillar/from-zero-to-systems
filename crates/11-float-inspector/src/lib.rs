@@ -1,3 +1,14 @@
+// ============================================================
+//  YOUR CHALLENGE - implement a Robin Hood open-addressing
+//  hash table with backward-shift deletion.
+//
+//  insert: probe from ideal slot, use Robin Hood displacement
+//          (steal from entries with shorter probe distances).
+//  get:    probe until Empty or dist > occupant dist (not found).
+//  remove: find the entry, then backward-shift subsequent entries.
+//  resize: double capacity when load factor exceeds MAX_LOAD.
+// ============================================================
+
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
@@ -7,7 +18,7 @@ const MAX_LOAD: f64 = 0.70;
 #[derive(Clone)]
 enum Slot<K, V> {
     Empty,
-    Occupied { key: K, value: V, dist: usize }, // dist = probe distance from ideal slot
+    Occupied { key: K, value: V, dist: usize },
 }
 
 pub struct HashMap<K, V> {
@@ -16,152 +27,28 @@ pub struct HashMap<K, V> {
 }
 
 impl<K: Eq + Hash + Clone, V: Clone> HashMap<K, V> {
-    pub fn new() -> Self {
-        Self { slots: vec![Slot::Empty; INITIAL_CAP], len: 0 }
-    }
+    pub fn new() -> Self { todo!() }
 
-    pub fn len(&self) -> usize { self.len }
-    pub fn is_empty(&self) -> bool { self.len == 0 }
+    pub fn len(&self) -> usize { todo!() }
+    pub fn is_empty(&self) -> bool { todo!() }
 
-    pub fn load_factor(&self) -> f64 {
-        self.len as f64 / self.slots.len() as f64
-    }
+    pub fn load_factor(&self) -> f64 { todo!() }
 
-    fn hash_index(&self, key: &K) -> usize {
-        let mut h = DefaultHasher::new();
-        key.hash(&mut h);
-        h.finish() as usize % self.slots.len()
-    }
+    fn hash_index(&self, key: &K) -> usize { todo!() }
 
     /// Insert or update. Returns the old value if the key already existed.
-    pub fn insert(&mut self, key: K, value: V) -> Option<V> {
-        if self.load_factor() >= MAX_LOAD {
-            self.resize();
-        }
-        self.insert_inner(key, value)
-    }
+    pub fn insert(&mut self, key: K, value: V) -> Option<V> { todo!() }
 
-    fn insert_inner(&mut self, mut key: K, mut value: V) -> Option<V> {
-        let cap = self.slots.len();
-        let mut idx = self.hash_index(&key);
-        let mut dist = 0usize;
+    fn insert_inner(&mut self, key: K, value: V) -> Option<V> { todo!() }
 
-        loop {
-            // Take ownership of the current slot to avoid borrow conflicts
-            let current = std::mem::replace(&mut self.slots[idx], Slot::Empty);
+    pub fn get(&self, key: &K) -> Option<&V> { todo!() }
 
-            // Destructure in a guard-free match, then decide what to do with the data
-            let (k, v, d) = match current {
-                Slot::Empty => {
-                    self.slots[idx] = Slot::Occupied { key, value, dist };
-                    self.len += 1;
-                    return None;
-                }
-                Slot::Occupied { key: k, value: v, dist: d } => (k, v, d),
-            };
-
-            if k == key {
-                // Update existing key
-                self.slots[idx] = Slot::Occupied { key: k, value, dist: d };
-                return Some(v);
-            } else if dist > d {
-                // Robin Hood: place our entry here, continue inserting the displaced entry
-                self.slots[idx] = Slot::Occupied { key, value, dist };
-                key = k;
-                value = v;
-                dist = d + 1;
-            } else {
-                // Keep the existing entry and advance
-                self.slots[idx] = Slot::Occupied { key: k, value: v, dist: d };
-                dist += 1;
-            }
-
-            idx = (idx + 1) % cap;
-        }
-    }
-
-    pub fn get(&self, key: &K) -> Option<&V> {
-        let cap = self.slots.len();
-        let mut idx = self.hash_index(key);
-        let mut dist = 0;
-        loop {
-            match &self.slots[idx] {
-                Slot::Empty => return None,
-                Slot::Occupied { dist: occ_dist, .. } if dist > *occ_dist => {
-                    // Robin Hood invariant: if we've probed further than the occupant,
-                    // the key cannot be here
-                    return None;
-                }
-                Slot::Occupied { key: k, value: v, .. } if k == key => return Some(v),
-                _ => {}
-            }
-            dist += 1;
-            idx = (idx + 1) % cap;
-        }
-    }
-
-    pub fn contains_key(&self, key: &K) -> bool {
-        self.get(key).is_some()
-    }
+    pub fn contains_key(&self, key: &K) -> bool { todo!() }
 
     /// Remove a key, using backward-shift deletion to maintain Robin Hood invariant.
-    pub fn remove(&mut self, key: &K) -> Option<V> {
-        let cap = self.slots.len();
-        let mut idx = self.hash_index(key);
-        let mut dist = 0;
+    pub fn remove(&mut self, key: &K) -> Option<V> { todo!() }
 
-        // Find the slot
-        let found_idx = loop {
-            match &self.slots[idx] {
-                Slot::Empty => return None,
-                Slot::Occupied { dist: occ_dist, .. } if dist > *occ_dist => return None,
-                Slot::Occupied { key: k, .. } if k == key => break idx,
-                _ => {}
-            }
-            dist += 1;
-            idx = (idx + 1) % cap;
-        };
-
-        let removed = if let Slot::Occupied { value, .. } =
-            std::mem::replace(&mut self.slots[found_idx], Slot::Empty)
-        {
-            value
-        } else {
-            unreachable!()
-        };
-        self.len -= 1;
-
-        // Backward shift: pull subsequent entries one position back
-        let mut current = found_idx;
-        loop {
-            let next = (current + 1) % cap;
-            match &self.slots[next] {
-                Slot::Empty => break,
-                Slot::Occupied { dist: 0, .. } => break, // at ideal slot, can't move back
-                _ => {}
-            }
-            // Move next into current, update its dist
-            let mut entry = std::mem::replace(&mut self.slots[next], Slot::Empty);
-            if let Slot::Occupied { dist, .. } = &mut entry {
-                *dist -= 1;
-            }
-            self.slots[current] = entry;
-            current = next;
-        }
-
-        Some(removed)
-    }
-
-    fn resize(&mut self) {
-        let new_cap = self.slots.len() * 2;
-        let old_slots = std::mem::replace(&mut self.slots, vec![Slot::Empty; new_cap]);
-        self.len = 0;
-        for slot in old_slots {
-            if let Slot::Occupied { key, value, .. } = slot {
-                self.insert_inner(key, value);
-            }
-        }
-    }
+    fn resize(&mut self) { todo!() }
 }
 
 impl<K: Eq + Hash + Clone, V: Clone> Default for HashMap<K, V> {
@@ -276,7 +163,6 @@ mod tests {
 
         #[test]
         fn many_colliding_keys_all_retrievable() {
-            // Insert many numeric keys which will have different hash slots
             let mut m: HashMap<u64, u64> = HashMap::new();
             for i in 0..200u64 {
                 m.insert(i, i * 2);

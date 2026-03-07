@@ -1,5 +1,5 @@
 // ============================================================
-//  YOUR CHALLENGE — implement a Merkle tree.
+//  YOUR CHALLENGE - implement a Merkle tree.
 //
 //  A Merkle tree is a binary tree where every leaf contains
 //  the hash of a data block, and every internal node contains
@@ -9,13 +9,14 @@
 //  Properties:
 //    - The root hash summarises ALL data
 //    - Changing any leaf changes every ancestor up to the root
-//    - Membership proofs are O(log n) — you only need the siblings
+//    - Membership proofs are O(log n) - you only need the siblings
 //
 //  Implementation notes:
-//    - Use FNV-1a for hashing (no external deps)
+//    - Use fnv1a for hashing (already implemented below)
 //    - If there's an odd number of leaves, duplicate the last one
-//    - A "proof" is a Vec<(u64, Side)> — sibling hash + which side it's on
+//    - A "proof" is a Vec<(u64, Side)> - sibling hash + which side it's on
 //    - Verification: hash the leaf, then combine with each proof element
+//    - combine(left, right) is already implemented below
 // ============================================================
 
 #[derive(Debug, Clone, PartialEq)]
@@ -30,66 +31,23 @@ pub struct MerkleTree {
 impl MerkleTree {
     /// Build a Merkle tree from raw data blocks.
     pub fn build(data: &[&str]) -> Self {
-        if data.is_empty() {
-            return Self { levels: vec![] };
-        }
-        let leaves: Vec<u64> = data.iter().map(|s| fnv1a(s)).collect();
-        let mut levels = vec![leaves];
-        while levels.last().unwrap().len() > 1 {
-            let current = levels.last().unwrap();
-            let mut next = Vec::new();
-            let mut i = 0;
-            while i < current.len() {
-                let left = current[i];
-                let right = if i + 1 < current.len() { current[i + 1] } else { left };
-                next.push(combine(left, right));
-                i += 2;
-            }
-            levels.push(next);
-        }
-        Self { levels }
+        todo!()
     }
 
     /// Root hash of the tree.
     pub fn root(&self) -> Option<u64> {
-        self.levels.last().and_then(|l| l.first()).copied()
+        todo!()
     }
 
     /// Generate an inclusion proof for the leaf at `index`.
     /// Returns None if index is out of range.
     pub fn proof(&self, index: usize) -> Option<Vec<(u64, Side)>> {
-        if self.levels.is_empty() { return None; }
-        let leaf_count = self.levels[0].len();
-        if index >= leaf_count { return None; }
-
-        let mut proof = Vec::new();
-        let mut idx = index;
-        for level in &self.levels[..self.levels.len() - 1] {
-            let sibling_idx = if idx % 2 == 0 {
-                // we are left child; sibling is right
-                (idx + 1).min(level.len() - 1)
-            } else {
-                idx - 1
-            };
-            let side = if idx % 2 == 0 { Side::Right } else { Side::Left };
-            proof.push((level[sibling_idx], side));
-            idx /= 2;
-        }
-        Some(proof)
+        todo!()
     }
 
     /// Verify that `data` is at position `index` using the given proof and root.
     pub fn verify(data: &str, index: usize, proof: &[(u64, Side)], root: u64) -> bool {
-        let mut hash = fnv1a(data);
-        let mut idx = index;
-        for (sibling, side) in proof {
-            hash = match side {
-                Side::Left  => combine(*sibling, hash),
-                Side::Right => combine(hash, *sibling),
-            };
-            idx /= 2;
-        }
-        hash == root
+        todo!()
     }
 }
 
@@ -132,7 +90,7 @@ mod tests {
 
         #[test]
         fn odd_number_of_leaves_is_handled() {
-            // Should not panic — odd leaf is duplicated
+            // Should not panic - odd leaf is duplicated
             let tree = MerkleTree::build(&["a", "b", "c"]);
             assert!(tree.root().is_some());
         }

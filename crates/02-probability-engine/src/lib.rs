@@ -1,3 +1,18 @@
+// ============================================================
+//  YOUR CHALLENGE - implement probability distributions.
+//
+//  Bernoulli(p): a single yes/no trial with probability p.
+//  Beta(alpha, beta): conjugate prior for Bernoulli; models
+//  uncertainty about p itself.
+//
+//  For Beta sampling, use sample_gamma (already implemented):
+//    let x = sample_gamma(alpha, rng);
+//    let y = sample_gamma(beta, rng);
+//    Beta sample = x / (x + y)
+//
+//  Hint: use rng.gen::<f64>() for a uniform [0,1) sample.
+// ============================================================
+
 use rand::Rng;
 
 pub trait Distribution {
@@ -6,12 +21,12 @@ pub trait Distribution {
     fn variance(&self) -> f64;
 }
 
-/// Bernoulli(p) — a single yes/no event with probability p
+/// Bernoulli(p) - a single yes/no event with probability p
 pub struct Bernoulli {
     pub p: f64,
 }
 
-/// Beta(alpha, beta) — the conjugate prior for Bernoulli; models uncertainty about p
+/// Beta(alpha, beta) - the conjugate prior for Bernoulli; models uncertainty about p
 pub struct Beta {
     pub alpha: f64,
     pub beta: f64,
@@ -19,31 +34,23 @@ pub struct Beta {
 
 /// Update a Beta prior given observed successes and failures (Bayesian update rule)
 pub fn bayesian_update(prior: Beta, successes: u64, failures: u64) -> Beta {
-    Beta {
-        alpha: prior.alpha + successes as f64,
-        beta: prior.beta + failures as f64,
-    }
+    todo!()
 }
 
 impl Distribution for Bernoulli {
     fn sample(&self, rng: &mut impl Rng) -> f64 {
-        if rng.gen::<f64>() < self.p { 1.0 } else { 0.0 }
+        todo!()
     }
-    fn mean(&self) -> f64 { self.p }
-    fn variance(&self) -> f64 { self.p * (1.0 - self.p) }
+    fn mean(&self) -> f64 { todo!() }
+    fn variance(&self) -> f64 { todo!() }
 }
 
 impl Distribution for Beta {
     fn sample(&self, rng: &mut impl Rng) -> f64 {
-        let x = sample_gamma(self.alpha, rng);
-        let y = sample_gamma(self.beta, rng);
-        x / (x + y)
+        todo!()
     }
-    fn mean(&self) -> f64 { self.alpha / (self.alpha + self.beta) }
-    fn variance(&self) -> f64 {
-        let s = self.alpha + self.beta;
-        (self.alpha * self.beta) / (s * s * (s + 1.0))
-    }
+    fn mean(&self) -> f64 { todo!() }
+    fn variance(&self) -> f64 { todo!() }
 }
 
 /// Marsaglia-Tsang method for Gamma(shape, 1) sampling. Requires shape >= 1.
