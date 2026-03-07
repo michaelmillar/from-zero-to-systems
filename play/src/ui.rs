@@ -150,6 +150,11 @@ fn render_tests(frame: &mut Frame, app: &App, area: Rect) {
                     colored(Color::Yellow),
                 ),
             ])
+        } else if state.build_failed {
+            Line::from(vec![
+                Span::raw("  "),
+                Span::styled("build failed  —  fix the compile error and press r", colored(Color::Red)),
+            ])
         } else {
             Line::from(vec![
                 Span::raw("  "),

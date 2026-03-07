@@ -24,6 +24,9 @@ pub enum TestStatus {
 
 pub enum RunnerMsg {
     TestResult { name: String, status: TestStatus },
+    /// Cargo exited with non-zero status before any test results were emitted.
+    /// Almost always means a compile error.
+    BuildFailed,
     Done,
 }
 
@@ -69,6 +72,7 @@ pub fn spawn(pkg: &str, workspace: &Path, tx: Sender<RunnerMsg>) -> CancelToken 
         let stdout = child.stdout.take().expect("stdout piped");
         let deadline = Instant::now() + TIMEOUT;
         let mut lines_read = 0usize;
+        let mut results_sent = 0usize;
 
         'read: for line in BufReader::new(stdout).lines() {
             // Check abort conditions before processing each line.
@@ -88,12 +92,16 @@ pub fn spawn(pkg: &str, workspace: &Path, tx: Sender<RunnerMsg>) -> CancelToken 
                         let _ = child.kill();
                         break 'read;
                     }
+                    results_sent += 1;
                 }
             }
         }
 
-        // Reap the child so it does not become a zombie.
-        let _ = child.wait();
+        // Non-zero exit with no test output means compile error, not test failure.
+        let exit_ok = child.wait().map(|s| s.success()).unwrap_or(false);
+        if !exit_ok && results_sent == 0 {
+            let _ = tx.send(RunnerMsg::BuildFailed);
+        }
         let _ = tx.send(RunnerMsg::Done);
     });
 
