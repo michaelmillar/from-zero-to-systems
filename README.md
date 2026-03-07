@@ -52,33 +52,37 @@ Each numbered crate under `crates/` is:
 
 Each crate is a challenge. The tests are the spec -- they tell you exactly what to build. The README gives you the context and theory. Your job is to make the tests pass.
 
+The full reference implementations live in this repo. To actually play, work in your own private fork or solutions worktree where you can clear each crate and rebuild it from scratch.
+
 **1. Pick a crate and read its README**
 
 ```bash
+glow crates/01-risk-sampler/README.md   # rendered (install: sudo apt install glow)
+# or
 cat crates/01-risk-sampler/README.md
 ```
 
-**2. Look at the tests -- this is the spec**
+**2. Read the tests -- this is the spec**
 
-The bottom of every `src/lib.rs` has a `#[cfg(test)]` block. Each test is a precise requirement: function name, input, expected output. Read them before writing a single line.
+The bottom of every `src/lib.rs` has a `#[cfg(test)]` block. Each test is a precise requirement: function name, inputs, expected output. Read them before writing a single line.
 
 ```bash
 cargo test -p risk-sampler -- --list   # see all test names
 ```
 
-**3. Clear the implementation and watch it fail**
+**3. Clear the implementation -- leave the tests**
 
-Delete everything in `src/lib.rs` *above* the `#[cfg(test)]` block -- the function signatures, structs, and implementations. Leave the tests untouched. Then run:
+Open `crates/01-risk-sampler/src/lib.rs`. Delete everything *above* the `#[cfg(test)]` block: the structs, function signatures, and bodies. Leave the tests completely untouched. Then:
 
 ```bash
 cargo test -p risk-sampler
 ```
 
-The compiler errors and test failures are now your todo list.
+The compiler errors and failing tests are now your todo list.
 
 **4. Implement until green**
 
-Write the implementation. Run the tests repeatedly. When all pass:
+Write the implementation. Run tests repeatedly. When all pass:
 
 ```bash
 cargo test -p risk-sampler   # all green
@@ -87,10 +91,10 @@ cargo run  -p risk-sampler   # see it in action
 
 **5. Move to the next crate**
 
-Work through them in order. Later crates import earlier ones -- if `07-linear-regression` depends on `05-statistics-core`, you need `statistics-core` working first.
+Work in order -- later crates import earlier ones. If `07-linear-regression` depends on `05-statistics-core`, you need a working `statistics-core` first.
 
 ```bash
-cargo test --workspace   # run every crate at once
+cargo test --workspace   # run every crate at once to check your progress
 ```
 
 ## Running a crate
