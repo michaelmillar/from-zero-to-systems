@@ -1,5 +1,7 @@
 # from-zero-to-systems
 
+![crate map](map.svg)
+
 > Build increasingly complex Rust applications, from probability engines to distributed consensus, grounded in real-world use cases across finance, science, infrastructure, AI, and security.
 
 ## Who this is for
