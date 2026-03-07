@@ -96,7 +96,7 @@ fn render_strip(frame: &mut Frame, app: &App, area: Rect) {
             (spin, colored(Color::Yellow))
         } else if state.is_all_pass() {
             ("✓", colored(Color::Green))
-        } else if state.has_failures() {
+        } else if state.has_failures() || state.build_error.is_some() {
             ("✗", colored(Color::Red))
         } else {
             ("·", dim())
@@ -150,10 +150,10 @@ fn render_tests(frame: &mut Frame, app: &App, area: Rect) {
                     colored(Color::Yellow),
                 ),
             ])
-        } else if state.build_failed {
+        } else if state.build_error.is_some() {
             Line::from(vec![
                 Span::raw("  "),
-                Span::styled("build failed  —  fix the compile error and press r", colored(Color::Red)),
+                Span::styled("build failed  —  see error in panel  →", colored(Color::Red)),
             ])
         } else {
             Line::from(vec![
@@ -214,15 +214,21 @@ fn render_context(frame: &mut Frame, app: &App, area: Rect) {
     let (label_a, body_a) = (parts[0], parts[1]);
 
     let (label, body): (&str, String) = match &app.panel {
-        PanelMode::Idle => (
-            "info",
-            format!(
-                "{}\n\nCompleted  {} / {}",
-                meta.intro,
-                app.progress.completed.len(),
-                CRATES.len(),
-            ),
-        ),
+        PanelMode::Idle => {
+            if let Some(err) = &state.build_error {
+                ("error", err.clone())
+            } else {
+                (
+                    "info",
+                    format!(
+                        "{}\n\nCompleted  {} / {}",
+                        meta.intro,
+                        app.progress.completed.len(),
+                        CRATES.len(),
+                    ),
+                )
+            }
+        }
         PanelMode::Hint(idx) => {
             let test_name = state
                 .tests

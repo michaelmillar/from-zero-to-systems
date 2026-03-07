@@ -29,14 +29,14 @@ pub struct TestEntry {
 }
 
 pub struct CrateState {
-    pub tests:        Vec<TestEntry>,
-    pub running:      bool,
-    pub build_failed: bool,
+    pub tests:       Vec<TestEntry>,
+    pub running:     bool,
+    pub build_error: Option<String>,
 }
 
 impl CrateState {
     pub fn new() -> Self {
-        Self { tests: Vec::new(), running: false, build_failed: false }
+        Self { tests: Vec::new(), running: false, build_error: None }
     }
 
     pub fn is_all_pass(&self) -> bool {
@@ -101,8 +101,8 @@ impl App {
                             state.tests.push(TestEntry { name, status });
                         }
                     }
-                    Ok(RunnerMsg::BuildFailed) => {
-                        self.states[crate_idx].build_failed = true;
+                    Ok(RunnerMsg::BuildFailed(msg)) => {
+                        self.states[crate_idx].build_error = Some(msg);
                     }
                     Ok(RunnerMsg::Done) => { done = true; break; }
                     Err(_) => break,
@@ -127,8 +127,8 @@ impl App {
         if self.running_crate.is_some() { return; }
 
         let state = &mut self.states[self.current];
-        state.running      = true;
-        state.build_failed = false;
+        state.running     = true;
+        state.build_error = None;
         state.tests.clear();
 
         self.panel         = PanelMode::Idle;
