@@ -52,60 +52,95 @@ Each numbered crate under `crates/` is:
 
 ## Playing the game
 
-Each crate is a challenge. The tests are the spec -- they tell you exactly what to build. The README gives you the context and theory. Your job is to make the tests pass.
+The tests are the spec. Your job is to make them pass.
 
-The full reference implementations live in this repo. To actually play, work in your own private fork or solutions worktree where you can clear each crate and rebuild it from scratch.
+The reference implementations live in this repo. Fork it or create a solutions worktree, clear each crate's implementation, and rebuild it from scratch.
 
-**1. Pick a crate and read its README**
-
-```bash
-glow crates/01-risk-sampler/README.md   # rendered (install: sudo apt install glow)
-# or
-cat crates/01-risk-sampler/README.md
-```
-
-**2. Read the tests -- this is the spec**
-
-The bottom of every `src/lib.rs` has a `#[cfg(test)]` block. Each test is a precise requirement: function name, inputs, expected output. Read them before writing a single line.
+**Start the game runner**
 
 ```bash
-cargo test -p risk-sampler -- --list   # see all test names
+cargo run -p play
 ```
 
-**3. Clear the implementation -- leave the tests**
-
-Open `crates/01-risk-sampler/src/lib.rs`. Delete everything *above* the `#[cfg(test)]` block: the structs, function signatures, and bodies. Leave the tests completely untouched. Then:
-
-```bash
-cargo test -p risk-sampler
+```
+┌─ from-zero-to-systems ──────────────────────────────────────────────────────┐
+│ 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 ...  │
+│ ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   │
+├─────────────────────────────────────────┬───────────────────────────────────┤
+│ 01 · risk-sampler                       │ Info                              │
+│                                         │                                   │
+│   Press [r] to run tests                │ Simulate risk events across       │
+│                                         │ thousands of trials to calculate  │
+│                                         │ Value at Risk (VaR).              │
+│                                         │                                   │
+│                                         │ Completed: 0/29                   │
+│                                         │                                   │
+│                                         │ Press [r] to run tests, [h] for   │
+│                                         │ hints, [d] for docs, [c] for      │
+│                                         │ concepts.                         │
+└─────────────────────────────────────────┴───────────────────────────────────┘
+ [r]un  [h]int  [d]ocs  [c]oncepts  [←/p]prev  [→/n]next  [q]uit
 ```
 
-The compiler errors and failing tests are now your todo list.
+**1. Clear the implementation**
 
-**4. Implement until green**
+Open `crates/01-risk-sampler/src/lib.rs`. Delete everything *above* the `#[cfg(test)]` block -- the structs, function, all of it. Leave the tests completely untouched. Press **[r]** in the runner:
 
-Write the implementation. Run tests repeatedly. When all pass:
-
-```bash
-cargo test -p risk-sampler   # all green
-cargo run  -p risk-sampler   # see it in action
+```
+┌─ from-zero-to-systems ──────────────────────────────────────────────────────┐
+│ 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 ...  │
+│ ✗  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   │
+├─────────────────────────────────────────┬───────────────────────────────────┤
+│ 01 · risk-sampler                       │ Info                              │
+│                                         │                                   │
+│  ✗  zero_probability_event_never_occurs │ Completed: 0/29                   │
+│  ✗  certain_event_always_occurs         │                                   │
+│  ✗  var_95_is_not_greater_than_max_...  │ Press [r] to run tests, [h] for   │
+│  ✗  mean_loss_is_consistent_with_...   │ hints, [d] for docs, [c] for      │
+│                                         │ concepts.                         │
+└─────────────────────────────────────────┴───────────────────────────────────┘
+ [r]un  [h]int  [d]ocs  [c]oncepts  [←/p]prev  [→/n]next  [q]uit
 ```
 
-**5. Move to the next crate**
+Four red tests. That is your todo list.
 
-Work in order -- later crates import earlier ones. If `07-linear-regression` depends on `05-statistics-core`, you need a working `statistics-core` first.
+**2. Read the first test -- it tells you exactly what to build**
 
-```bash
-cargo test --workspace   # run every crate at once to check your progress
+```rust
+#[test]
+fn zero_probability_event_never_occurs() {
+    let events = vec![RiskEvent {
+        name: "never".into(),
+        probability: 0.0,
+        max_loss: 1_000_000.0,
+    }];
+    let result = simulate(&events, 10_000, 42);
+    assert_eq!(result.occurrences, 0);
+    assert_eq!(result.total_loss, 0.0);
+}
 ```
 
-## Running a crate
+It needs a `RiskEvent` struct, a `SimulationResult` struct, and a `simulate` function. Add the minimum to make this compile and pass. Press **[h]** for a nudge if you are stuck.
 
-```bash
-cargo run -p risk-sampler
-cargo run -p probability-engine
-cargo run -p monte-carlo -- --trials 1000000
+**3. Press [r] -- watch it go green**
+
 ```
+┌─ from-zero-to-systems ──────────────────────────────────────────────────────┐
+│ 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 ...  │
+│ ✓  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   │
+├─────────────────────────────────────────┬───────────────────────────────────┤
+│ 01 · risk-sampler                       │ Info                              │
+│                                         │                                   │
+│  ✓  zero_probability_event_never_occurs │ Completed: 1/29                   │
+│  ✓  certain_event_always_occurs         │                                   │
+│  ✓  var_95_is_not_greater_than_max_...  │ Press [r] to run tests, [h] for   │
+│  ✓  mean_loss_is_consistent_with_...   │ hints, [d] for docs, [c] for      │
+│                                         │ concepts.                         │
+└─────────────────────────────────────────┴───────────────────────────────────┘
+ [r]un  [h]int  [d]ocs  [c]oncepts  [←/p]prev  [→/n]next  [q]uit
+```
+
+Press **[n]** to move to crate 02 and repeat. Work in order -- later crates import earlier ones.
 
 ## Tiers
 
