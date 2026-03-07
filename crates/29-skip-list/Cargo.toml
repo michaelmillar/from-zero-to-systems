@@ -1,0 +1,16 @@
+[package]
+name = "skip-list"
+version = "0.1.0"
+edition = "2021"
+description = "Skip list -- probabilistic sorted structure, the canonical LSM MemTable"
+
+[lib]
+name = "skip_list"
+path = "src/lib.rs"
+
+[[bin]]
+name = "skip-list"
+path = "src/main.rs"
+
+[dependencies]
+rand = "0.8"
