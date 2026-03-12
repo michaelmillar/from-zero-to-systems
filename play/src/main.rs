@@ -1,10 +1,15 @@
 mod app;
+mod host_launcher;
+mod launch;
 mod meta;
 mod progress;
 mod runner;
 mod ui;
 
-use std::{io, time::{Duration, Instant}};
+use std::{
+    io,
+    time::{Duration, Instant},
+};
 
 use app::{App, PanelMode};
 use crossterm::{
@@ -12,6 +17,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use launch::Command as LaunchCommand;
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 // Tick at 10 Hz for smooth spinner animation without hammering the CPU.
@@ -19,17 +25,31 @@ const TICK_RATE: Duration = Duration::from_millis(100);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = std::env::current_dir()?;
-    let prog      = progress::load(&workspace);
+    let program_name = std::env::args()
+        .next()
+        .unwrap_or_else(|| "play".to_string());
+    let args: Vec<String> = std::env::args().skip(1).collect();
+
+    match launch::parse_invocation(&program_name, &args)? {
+        LaunchCommand::Tui => run_tui(workspace),
+        LaunchCommand::Web { local, passthrough } => {
+            host_launcher::run_host_web(&workspace, local, &passthrough)
+        }
+    }
+}
+
+fn run_tui(workspace: std::path::PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let prog = progress::load(&workspace);
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
 
-    let backend  = CrosstermBackend::new(stdout);
+    let backend = CrosstermBackend::new(stdout);
     let mut term = Terminal::new(backend)?;
 
-    let mut app    = App::new(workspace, prog);
-    let result     = event_loop(&mut term, &mut app);
+    let mut app = App::new(workspace, prog);
+    let result = event_loop(&mut term, &mut app);
 
     // Kill any in-flight cargo process before tearing down the terminal.
     app.cancel();
@@ -43,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn event_loop<B: ratatui::backend::Backend>(
     term: &mut Terminal<B>,
-    app:  &mut App,
+    app: &mut App,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut last_tick = Instant::now();
 
@@ -60,12 +80,12 @@ fn event_loop<B: ratatui::backend::Backend>(
                         KeyCode::Char('h') | KeyCode::Char('H') => app.next_hint(),
                         KeyCode::Char('d') | KeyCode::Char('D') => app.panel = PanelMode::Docs,
                         KeyCode::Char('c') | KeyCode::Char('C') => app.panel = PanelMode::Concepts,
-                        KeyCode::Char('n') | KeyCode::Right      => app.go_next(),
-                        KeyCode::Char('p') | KeyCode::Left       => app.go_prev(),
-                        KeyCode::Char('j') | KeyCode::Down       => app.select_down(),
-                        KeyCode::Char('k') | KeyCode::Up         => app.select_up(),
-                        KeyCode::Esc                             => app.panel = PanelMode::Idle,
-                        _                                        => {}
+                        KeyCode::Char('n') | KeyCode::Right => app.go_next(),
+                        KeyCode::Char('p') | KeyCode::Left => app.go_prev(),
+                        KeyCode::Char('j') | KeyCode::Down => app.select_down(),
+                        KeyCode::Char('k') | KeyCode::Up => app.select_up(),
+                        KeyCode::Esc => app.panel = PanelMode::Idle,
+                        _ => {}
                     }
                 }
             }

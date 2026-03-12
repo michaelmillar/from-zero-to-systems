@@ -1,4 +1,6 @@
 /target
+/challenge-host/target
+.fzts/
 
 # secrets and credentials
 .env

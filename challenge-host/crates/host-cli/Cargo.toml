@@ -1,0 +1,8 @@
+[package]
+name = "host-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+host-web = { path = "../host-web" }
+host-runtime = { path = "../host-runtime" }

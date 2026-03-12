@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "crates/host-cli",
+    "crates/host-protocol",
+    "crates/host-runtime",
+    "crates/host-web",
+]
+resolver = "2"

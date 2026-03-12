@@ -25,7 +25,10 @@ pub enum TestStatus {
 }
 
 pub enum RunnerMsg {
-    TestResult { name: String, status: TestStatus },
+    TestResult {
+        name: String,
+        status: TestStatus,
+    },
     /// Cargo exited non-zero before any test results — compile error.
     /// Carries the first few lines of compiler output for display.
     BuildFailed(String),
@@ -68,13 +71,18 @@ pub fn spawn(pkg: &str, workspace: &Path, tx: Sender<RunnerMsg>) -> CancelToken 
         thread::spawn(move || {
             let mut lines = BufReader::new(stderr).lines();
             let mut collected = String::new();
-            for line in lines.by_ref().take(MAX_STDERR_DISPLAY_LINES) {
+            let mut display_count = 0;
+            for line in lines.by_ref() {
                 if let Ok(line) = line {
-                    collected.push_str(&line);
-                    collected.push('\n');
+                    if !is_cargo_noise(&line) {
+                        if display_count < MAX_STDERR_DISPLAY_LINES {
+                            collected.push_str(&line);
+                            collected.push('\n');
+                            display_count += 1;
+                        }
+                    }
                 }
             }
-            for _ in lines {} // drain remainder
             let _ = stderr_tx.send(collected);
         });
 
@@ -125,10 +133,16 @@ fn parse_line(line: &str) -> Option<(String, TestStatus)> {
         return None;
     }
     if let Some(rest) = line.strip_suffix(" ... ok") {
-        return Some((leaf(rest.strip_prefix("test ").unwrap_or(rest).trim()), TestStatus::Pass));
+        return Some((
+            leaf(rest.strip_prefix("test ").unwrap_or(rest).trim()),
+            TestStatus::Pass,
+        ));
     }
     if let Some(rest) = line.strip_suffix(" ... FAILED") {
-        return Some((leaf(rest.strip_prefix("test ").unwrap_or(rest).trim()), TestStatus::Fail));
+        return Some((
+            leaf(rest.strip_prefix("test ").unwrap_or(rest).trim()),
+            TestStatus::Fail,
+        ));
     }
     if let Some(rest) = line.strip_suffix(" ... ignored") {
         return Some((
@@ -141,4 +155,20 @@ fn parse_line(line: &str) -> Option<(String, TestStatus)> {
 
 fn leaf(full: &str) -> String {
     full.split("::").last().unwrap_or(full).to_string()
+}
+
+/// Returns true for cargo status lines that are not useful to the user
+/// (compilation progress, manifest key warnings, etc.).
+fn is_cargo_noise(line: &str) -> bool {
+    let t = line.trim_start();
+    // "   Compiling foo v0.1.0 ...", "   Finished ...", etc.
+    matches!(
+        t.split_whitespace().next(),
+        Some(
+            "Compiling" | "Checking" | "Finished" | "Blocking"
+            | "Downloading" | "Updating" | "Fresh" | "Running" | "Locking"
+        )
+    )
+    // "warning: /path/Cargo.toml: unused manifest key: ..."
+    || (t.starts_with("warning:") && line.contains("Cargo.toml"))
 }

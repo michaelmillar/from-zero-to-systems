@@ -139,6 +139,31 @@ It needs a `RiskEvent` struct, a `SimulationResult` struct, and a `simulate` fun
 
 Press **n** to move to crate 02 and repeat. Work in order -- later crates import earlier ones.
 
+**Install the short command**
+
+```bash
+cargo install --path play --bin fzts --force
+```
+
+**Play on the web**
+
+```bash
+fzts
+```
+
+Equivalent explicit forms:
+
+```bash
+fzts play web
+cargo run -p play --bin fzts -- --print-only
+cargo run -p play -- web --local
+```
+
+This now launches the shared `challenge-host` three-pane UI on `http://127.0.0.1:7878/web/index.html`: left-hand crate context and hints, a central `src/lib.rs` editor, and raw `cargo test` output on the right. Shared editor behavior, including focus handling and draft retention, now lives in `challenge-host` instead of a separate `fzts`-only frontend.
+
+On first launch, `fzts` creates a local-only `.fzts/workspace` inside this repo, seeded from the sibling `from-zero-to-systems-challenges` worktree when it exists. `.fzts/` is gitignored, so your local attempts and progress do not get pushed to the remote repository.
+If that sibling challenges worktree is missing, use `cargo run -p play -- web --workspace /path/to/from-zero-to-systems-challenges` or create the worktree first.
+
 ## Tiers
 
 | Tier | Crates | Domain |

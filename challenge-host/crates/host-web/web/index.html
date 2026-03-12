@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>challenge-host</title>
+    <link rel="icon" id="favicon-svg" href="icons/hazptr-favicon.svg">
+    <link rel="mask-icon" id="favicon-mask" href="icons/hazptr-mask.svg" color="#f56c3e">
+    <meta name="theme-color" content="#171614">
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="masthead">
+        <p class="kicker" id="game-kicker">~ challenge-host web</p>
+        <h1 id="game-title">challenge-host</h1>
+        <p class="subtitle" id="game-subtitle">adapter-driven local challenge host.</p>
+      </header>
+
+      <section class="workspace-shell">
+        <aside class="intro-panel section">
+          <section class="meta-block intro-block">
+            <h2>Workspace</h2>
+            <p class="lede">
+              Keep the shell shared and let the adapter define the content. Edit code
+              in the middle, read the challenge on the left, and watch the raw output
+              on the right.
+            </p>
+            <p class="server-note" id="server-note">
+              Start this interface with <code>challenge-host web --adapter ...</code>.
+            </p>
+            <ul class="symbol-list">
+              <li><span>~</span> the adapter owns challenge state and runner semantics</li>
+              <li><span>:</span> visible hints stay hidden until you reveal them</li>
+              <li><span>&gt;</span> save, reset, and test without leaving the page</li>
+            </ul>
+          </section>
+
+          <section class="meta-block progress-panel">
+            <div class="progress-head">
+              <h3>Progress</h3>
+              <p class="meta-copy">Local activity in this repo, via the active adapter.</p>
+            </div>
+            <p id="progress-summary" class="meta-copy">Loading progress…</p>
+            <div class="progress-map-block">
+              <h4>By Language</h4>
+              <div
+                id="language-completion-map"
+                class="language-map"
+                aria-label="Per-language completion map"
+              ></div>
+            </div>
+            <div class="progress-map-block">
+              <h4>Year Activity</h4>
+              <div class="heatmap-scroll">
+                <div
+                  id="activity-heatmap"
+                  class="year-heatmap-grid"
+                  aria-label="Repository activity heatmap"
+                ></div>
+              </div>
+            </div>
+            <div class="heatmap-scroll">
+              <p class="progress-legend">
+                <span>Less</span>
+                <span class="heatmap-key is-level-0" aria-hidden="true"></span>
+                <span class="heatmap-key is-level-1" aria-hidden="true"></span>
+                <span class="heatmap-key is-level-2" aria-hidden="true"></span>
+                <span class="heatmap-key is-level-3" aria-hidden="true"></span>
+                <span class="heatmap-key is-level-4" aria-hidden="true"></span>
+                <span>More</span>
+              </p>
+            </div>
+          </section>
+
+          <section class="meta-block challenge-nav-block">
+            <h3>Challenges</h3>
+            <p class="meta-copy">
+              Move with arrow keys, press Enter to open, then keep typing in the editor.
+            </p>
+            <ol class="challenge-list challenge-nav-list" id="challenge-list"></ol>
+          </section>
+
+          <section class="meta-block">
+            <h3>Challenge Notes</h3>
+            <pre id="challenge-notes-copy" class="challenge-notes-copy">Loading starter notes…</pre>
+          </section>
+
+          <section class="meta-block">
+            <h3>Intro</h3>
+            <p id="intro-copy" class="meta-copy">Loading challenge context…</p>
+          </section>
+
+          <section class="meta-block">
+            <h3>Guide</h3>
+            <p id="guide-copy" class="meta-copy">Loading challenge notes…</p>
+          </section>
+
+          <section class="meta-block">
+            <h3>Concepts</h3>
+            <ul id="concept-list" class="copy-list"></ul>
+          </section>
+
+          <section class="meta-block">
+            <h3>Docs</h3>
+            <ul id="doc-list" class="copy-list"></ul>
+          </section>
+
+          <section class="meta-block">
+            <div class="hint-head">
+              <h3>Hints</h3>
+              <button type="button" id="reveal-hint-button">Reveal next</button>
+            </div>
+            <p id="hint-status" class="meta-copy">Loading hint state…</p>
+            <ul id="hint-list" class="hint-list"></ul>
+          </section>
+        </aside>
+
+        <section class="editor-panel section">
+          <div class="toolbar">
+            <div class="current-workspace">
+              <p class="workspace-label" id="workspace-label">loading workspace…</p>
+              <p class="workspace-status" id="workspace-status">waiting for adapter</p>
+            </div>
+
+            <div class="language-picker">
+              <label for="language-select">Language</label>
+              <select id="language-select"></select>
+            </div>
+
+            <div class="actions">
+              <button type="button" id="save-button">Save</button>
+              <button type="button" id="test-button">Run tests</button>
+              <button type="button" id="reset-button">Reset</button>
+            </div>
+          </div>
+
+          <p class="file-label" id="file-label">tracks/.../solution</p>
+
+          <textarea
+            id="editor"
+            class="editor"
+            spellcheck="false"
+            aria-label="Challenge editor"
+          ></textarea>
+        </section>
+
+        <aside class="output-panel section">
+          <div class="output-head">
+            <h2>Test Output</h2>
+            <p class="output-status" id="output-status">No test run yet.</p>
+          </div>
+          <pre id="output" class="output"></pre>
+        </aside>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
