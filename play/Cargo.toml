@@ -7,8 +7,17 @@ edition = "2021"
 name = "play"
 path = "src/main.rs"
 
+[[bin]]
+name = "fzts"
+path = "src/fzts.rs"
+
+[[bin]]
+name = "fzts-adapter"
+path = "src/adapter_main.rs"
+
 [dependencies]
 ratatui    = "0.28"
 crossterm  = "0.27"
 serde      = { version = "1", features = ["derive"] }
 serde_json = "1"
+host-protocol = { path = "../challenge-host/crates/host-protocol" }

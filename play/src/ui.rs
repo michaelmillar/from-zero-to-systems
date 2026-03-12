@@ -21,7 +21,9 @@ fn dim() -> Style {
 }
 
 fn white_bold() -> Style {
-    Style::default().fg(Color::White).add_modifier(Modifier::BOLD)
+    Style::default()
+        .fg(Color::White)
+        .add_modifier(Modifier::BOLD)
 }
 
 fn colored(c: Color) -> Style {
@@ -64,14 +66,14 @@ fn render_sep(frame: &mut Frame, area: Rect) {
 }
 
 fn render_header(frame: &mut Frame, app: &App, area: Rect) {
-    let left  = "  from-zero-to-systems".to_string();
+    let left = "  from-zero-to-systems".to_string();
     let right = format!("{:02} / {}  ", app.current + 1, CRATES.len());
-    let pad   = (area.width as usize).saturating_sub(left.len() + right.len());
+    let pad = (area.width as usize).saturating_sub(left.len() + right.len());
     frame.render_widget(
         Paragraph::new(Line::from(vec![
-            Span::styled(left,            white_bold()),
+            Span::styled(left, white_bold()),
             Span::raw(" ".repeat(pad)),
-            Span::styled(right,           dim()),
+            Span::styled(right, dim()),
         ])),
         area,
     );
@@ -79,15 +81,17 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
 
 fn render_strip(frame: &mut Frame, app: &App, area: Rect) {
     let spin = spinner(app);
-    let mut nums:  Vec<Span> = vec![Span::raw("  ")];
+    let mut nums: Vec<Span> = vec![Span::raw("  ")];
     let mut icons: Vec<Span> = vec![Span::raw("  ")];
 
     for (i, _) in CRATES.iter().enumerate() {
         let is_cur = i == app.current;
-        let state  = &app.states[i];
+        let state = &app.states[i];
 
         let num_sty = if is_cur {
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD)
         } else {
             dim()
         };
@@ -115,22 +119,19 @@ fn render_strip(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_main(frame: &mut Frame, app: &App, area: Rect) {
-    let cols = Layout::horizontal([
-        Constraint::Percentage(58),
-        Constraint::Percentage(42),
-    ])
-    .split(area);
+    let cols =
+        Layout::horizontal([Constraint::Percentage(58), Constraint::Percentage(42)]).split(area);
 
     render_tests(frame, app, cols[0]);
     render_context(frame, app, cols[1]);
 }
 
 fn render_tests(frame: &mut Frame, app: &App, area: Rect) {
-    let meta   = &CRATES[app.current];
-    let state  = &app.states[app.current];
-    let spin   = spinner(app);
+    let meta = &CRATES[app.current];
+    let state = &app.states[app.current];
+    let spin = spinner(app);
 
-    let parts  = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(area);
+    let parts = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(area);
     let (title_a, body_a) = (parts[0], parts[1]);
 
     frame.render_widget(
@@ -153,7 +154,10 @@ fn render_tests(frame: &mut Frame, app: &App, area: Rect) {
         } else if state.build_error.is_some() {
             Line::from(vec![
                 Span::raw("  "),
-                Span::styled("build failed  —  see error in panel  →", colored(Color::Red)),
+                Span::styled(
+                    "build failed  —  see error in panel  →",
+                    colored(Color::Red),
+                ),
             ])
         } else {
             Line::from(vec![
@@ -170,9 +174,9 @@ fn render_tests(frame: &mut Frame, app: &App, area: Rect) {
         .iter()
         .map(|t| {
             let (icon, icon_sty, name_sty) = match t.status {
-                TestStatus::Pass    => ("✓", colored(Color::Green), colored(Color::White)),
-                TestStatus::Fail    => ("✗", colored(Color::Red),   colored(Color::White)),
-                TestStatus::Ignored => ("·", dim(),                  dim()),
+                TestStatus::Pass => ("✓", colored(Color::Green), colored(Color::White)),
+                TestStatus::Fail => ("✗", colored(Color::Red), colored(Color::White)),
+                TestStatus::Ignored => ("·", dim(), dim()),
             };
             ListItem::new(Line::from(vec![
                 Span::raw("  "),
@@ -189,28 +193,25 @@ fn render_tests(frame: &mut Frame, app: &App, area: Rect) {
     }
 
     frame.render_stateful_widget(
-        List::new(items)
-            .highlight_style(
-                Style::default()
-                    .bg(Color::Rgb(28, 32, 40))
-                    .add_modifier(Modifier::BOLD),
-            ),
+        List::new(items).highlight_style(
+            Style::default()
+                .bg(Color::Rgb(28, 32, 40))
+                .add_modifier(Modifier::BOLD),
+        ),
         body_a,
         &mut ls,
     );
 }
 
 fn render_context(frame: &mut Frame, app: &App, area: Rect) {
-    let meta  = &CRATES[app.current];
+    let meta = &CRATES[app.current];
     let state = &app.states[app.current];
 
-    let block = Block::new()
-        .borders(Borders::LEFT)
-        .border_style(dim());
+    let block = Block::new().borders(Borders::LEFT).border_style(dim());
     let inner = block.inner(area);
     frame.render_widget(block, area);
 
-    let parts  = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(inner);
+    let parts = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(inner);
     let (label_a, body_a) = (parts[0], parts[1]);
 
     let (label, body): (&str, String) = match &app.panel {
@@ -241,7 +242,7 @@ fn render_context(frame: &mut Frame, app: &App, area: Rect) {
                 .find(|th| test_name.contains(th.test_name))
                 .map(|th| th.hints)
                 .unwrap_or(&[]);
-            let text  = hints.get(*idx).copied().unwrap_or("No hint for this test.");
+            let text = hints.get(*idx).copied().unwrap_or("No hint for this test.");
             let total = hints.len().max(1);
             (
                 "hint",
@@ -275,17 +276,21 @@ fn render_context(frame: &mut Frame, app: &App, area: Rect) {
     };
 
     frame.render_widget(
-        Paragraph::new(Line::from(vec![
-            Span::raw(" "),
-            Span::styled(label, dim()),
-        ])),
+        Paragraph::new(Line::from(vec![Span::raw(" "), Span::styled(label, dim())])),
         label_a,
     );
 
     let body_padded = format!(" {body}");
+    let body_style = if label == "error" {
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        colored(Color::Gray)
+    };
     frame.render_widget(
         Paragraph::new(body_padded.as_str())
-            .style(colored(Color::Gray))
+            .style(body_style)
             .wrap(Wrap { trim: false }),
         body_a,
     );

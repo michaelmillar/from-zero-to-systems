@@ -24,56 +24,65 @@ pub enum PanelMode {
 }
 
 pub struct TestEntry {
-    pub name:   String,
+    pub name: String,
     pub status: TestStatus,
 }
 
 pub struct CrateState {
-    pub tests:       Vec<TestEntry>,
-    pub running:     bool,
+    pub tests: Vec<TestEntry>,
+    pub running: bool,
     pub build_error: Option<String>,
 }
 
 impl CrateState {
     pub fn new() -> Self {
-        Self { tests: Vec::new(), running: false, build_error: None }
+        Self {
+            tests: Vec::new(),
+            running: false,
+            build_error: None,
+        }
     }
 
     pub fn is_all_pass(&self) -> bool {
         !self.tests.is_empty()
-            && self.tests.iter().all(|t| matches!(t.status, TestStatus::Pass | TestStatus::Ignored))
+            && self
+                .tests
+                .iter()
+                .all(|t| matches!(t.status, TestStatus::Pass | TestStatus::Ignored))
     }
 
     pub fn has_failures(&self) -> bool {
-        self.tests.iter().any(|t| matches!(t.status, TestStatus::Fail))
+        self.tests
+            .iter()
+            .any(|t| matches!(t.status, TestStatus::Fail))
     }
 }
 
 pub struct App {
-    pub current:       usize,
+    pub current: usize,
     pub selected_test: usize,
-    pub panel:         PanelMode,
-    pub states:        Vec<CrateState>,
-    pub tick_count:    u64,
-    pub workspace:     PathBuf,
-    pub progress:      Progress,
-    rx:                Option<Receiver<RunnerMsg>>,
-    cancel_token:      Option<CancelToken>,
-    running_crate:     Option<usize>,
+    pub panel: PanelMode,
+    pub states: Vec<CrateState>,
+    pub tick_count: u64,
+    pub workspace: PathBuf,
+    pub progress: Progress,
+    rx: Option<Receiver<RunnerMsg>>,
+    cancel_token: Option<CancelToken>,
+    running_crate: Option<usize>,
 }
 
 impl App {
     pub fn new(workspace: PathBuf, progress: Progress) -> Self {
         Self {
-            current:       0,
+            current: 0,
             selected_test: 0,
-            panel:         PanelMode::Idle,
-            states:        (0..CRATES.len()).map(|_| CrateState::new()).collect(),
-            tick_count:    0,
+            panel: PanelMode::Idle,
+            states: (0..CRATES.len()).map(|_| CrateState::new()).collect(),
+            tick_count: 0,
             workspace,
             progress,
-            rx:            None,
-            cancel_token:  None,
+            rx: None,
+            cancel_token: None,
             running_crate: None,
         }
     }
@@ -86,7 +95,7 @@ impl App {
     fn poll_runner(&mut self) {
         let crate_idx = match self.running_crate {
             Some(i) => i,
-            None    => return,
+            None => return,
         };
 
         let mut done = false;
@@ -104,15 +113,18 @@ impl App {
                     Ok(RunnerMsg::BuildFailed(msg)) => {
                         self.states[crate_idx].build_error = Some(msg);
                     }
-                    Ok(RunnerMsg::Done) => { done = true; break; }
+                    Ok(RunnerMsg::Done) => {
+                        done = true;
+                        break;
+                    }
                     Err(_) => break,
                 }
             }
         }
 
         if done {
-            self.rx             = None;
-            self.running_crate  = None;
+            self.rx = None;
+            self.running_crate = None;
             self.states[crate_idx].running = false;
 
             if self.states[crate_idx].is_all_pass() {
@@ -124,18 +136,20 @@ impl App {
     }
 
     pub fn run_tests(&mut self) {
-        if self.running_crate.is_some() { return; }
+        if self.running_crate.is_some() {
+            return;
+        }
 
         let state = &mut self.states[self.current];
-        state.running     = true;
+        state.running = true;
         state.build_error = None;
         state.tests.clear();
 
-        self.panel         = PanelMode::Idle;
+        self.panel = PanelMode::Idle;
         self.selected_test = 0;
 
         let (tx, rx) = mpsc::channel();
-        self.rx            = Some(rx);
+        self.rx = Some(rx);
         self.running_crate = Some(self.current);
 
         let token = crate::runner::spawn(CRATES[self.current].package, &self.workspace, tx);
@@ -159,33 +173,37 @@ impl App {
             .map(|t| t.name.clone())
             .unwrap_or_default();
 
-        let hints = meta.tests.iter()
+        let hints = meta
+            .tests
+            .iter()
             .find(|th| test_name.contains(th.test_name))
             .map(|th| th.hints)
             .unwrap_or(&[]);
 
-        if hints.is_empty() { return; }
+        if hints.is_empty() {
+            return;
+        }
 
         let next_idx = match &self.panel {
             PanelMode::Hint(i) => (*i + 1).min(hints.len() - 1),
-            _                  => 0,
+            _ => 0,
         };
         self.panel = PanelMode::Hint(next_idx);
     }
 
     pub fn go_next(&mut self) {
         if self.current + 1 < CRATES.len() {
-            self.current       += 1;
-            self.selected_test  = 0;
-            self.panel          = PanelMode::Idle;
+            self.current += 1;
+            self.selected_test = 0;
+            self.panel = PanelMode::Idle;
         }
     }
 
     pub fn go_prev(&mut self) {
         if self.current > 0 {
-            self.current       -= 1;
-            self.selected_test  = 0;
-            self.panel          = PanelMode::Idle;
+            self.current -= 1;
+            self.selected_test = 0;
+            self.panel = PanelMode::Idle;
         }
     }
 

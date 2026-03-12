@@ -1,6 +1,6 @@
 pub struct DocLink {
     pub label: &'static str,
-    pub url:   &'static str,
+    pub url: &'static str,
 }
 
 pub struct TestHints {
@@ -11,12 +11,12 @@ pub struct TestHints {
 }
 
 pub struct CrateMeta {
-    pub package:  &'static str,
-    pub display:  &'static str,
-    pub intro:    &'static str,
+    pub package: &'static str,
+    pub display: &'static str,
+    pub intro: &'static str,
     pub concepts: &'static [&'static str],
-    pub docs:     &'static [DocLink],
-    pub tests:    &'static [TestHints],
+    pub docs: &'static [DocLink],
+    pub tests: &'static [TestHints],
 }
 
 pub const CRATES: &[CrateMeta] = &[
