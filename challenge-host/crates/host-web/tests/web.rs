@@ -7,7 +7,7 @@ use tempfile::tempdir;
 fn bootstrap_returns_handshake_challenges_and_workspace() {
     let dir = tempdir().unwrap();
     let script_path = dir.path().join("fake-adapter.sh");
-    write_fake_adapter(&script_path);
+    write_fake_adapter(&script_path, "hazptr", "hazptr");
 
     let mut app = WebApp::new(AdapterSpec {
         program: script_path.to_string_lossy().to_string(),
@@ -37,10 +37,57 @@ fn bootstrap_returns_handshake_challenges_and_workspace() {
 }
 
 #[test]
+fn html_shell_can_vary_by_game_id() {
+    let dir = tempdir().unwrap();
+    let script_path = dir.path().join("fake-fzts-adapter.sh");
+    write_fake_adapter(&script_path, "fzts", "from zero to systems");
+
+    let mut app = WebApp::new(AdapterSpec {
+        program: script_path.to_string_lossy().to_string(),
+        args: Vec::new(),
+        cwd: None,
+    })
+    .unwrap();
+
+    let response = app.handle("GET", "/", &[]).unwrap();
+    assert_eq!(response.status, "200 OK");
+
+    let body = String::from_utf8(response.body).unwrap();
+    assert!(body.contains("from zero to systems"));
+}
+
+#[test]
+fn fzts_bundle_serves_docs_and_concepts_client_assets() {
+    let dir = tempdir().unwrap();
+    let script_path = dir.path().join("fake-fzts-adapter.sh");
+    write_fake_adapter(&script_path, "fzts", "from zero to systems");
+
+    let mut app = WebApp::new(AdapterSpec {
+        program: script_path.to_string_lossy().to_string(),
+        args: Vec::new(),
+        cwd: None,
+    })
+    .unwrap();
+
+    let js_response = app.handle("GET", "/app.js", &[]).unwrap();
+    assert_eq!(js_response.status, "200 OK");
+    let js = String::from_utf8(js_response.body).unwrap();
+    assert!(js.contains("Concepts"));
+    assert!(js.contains("Docs"));
+    assert!(js.contains("/api/bootstrap"));
+
+    let css_response = app.handle("GET", "/styles.css", &[]).unwrap();
+    assert_eq!(css_response.status, "200 OK");
+    let css = String::from_utf8(css_response.body).unwrap();
+    assert!(css.contains("--accent:#2f8a5f"));
+    assert!(css.contains(".workspace-grid"));
+}
+
+#[test]
 fn reveal_hint_returns_updated_workspace_without_leaking_future_hints() {
     let dir = tempdir().unwrap();
     let script_path = dir.path().join("fake-adapter.sh");
-    write_fake_adapter(&script_path);
+    write_fake_adapter(&script_path, "hazptr", "hazptr");
 
     let mut app = WebApp::new(AdapterSpec {
         program: script_path.to_string_lossy().to_string(),
@@ -63,6 +110,35 @@ fn reveal_hint_returns_updated_workspace_without_leaking_future_hints() {
     assert_eq!(workspace.hints[0].label, "swap adjacent items");
     assert_eq!(workspace.hint_state.revealed_count, 1);
     assert_eq!(workspace.hint_state.total_count, 2);
+}
+
+#[test]
+fn benchmark_route_returns_language_results_for_the_selected_challenge() {
+    let dir = tempdir().unwrap();
+    let script_path = dir.path().join("fake-benchmark-adapter.sh");
+    write_fake_adapter(&script_path, "hazptr", "hazptr");
+
+    let mut app = WebApp::new(AdapterSpec {
+        program: script_path.to_string_lossy().to_string(),
+        args: Vec::new(),
+        cwd: None,
+    })
+    .unwrap();
+
+    let response = app
+        .handle(
+            "POST",
+            "/api/benchmark",
+            br#"{"challenge_id":"sorting/01_bubble_sort","language":"python","content":"def bubble_sort(arr):\n    return arr\n"}"#,
+        )
+        .unwrap();
+    assert_eq!(response.status, "200 OK");
+
+    let benchmark: host_protocol::BenchmarkRunResult =
+        serde_json::from_slice(&response.body).unwrap();
+    assert_eq!(benchmark.challenge_id, "sorting/01_bubble_sort");
+    assert_eq!(benchmark.results.len(), 2);
+    assert_eq!(benchmark.results[0].language, "python");
 }
 
 #[test]
@@ -255,10 +331,66 @@ fn web_assets_render_repo_specific_challenge_symbols() {
     );
 }
 
-fn write_fake_adapter(path: &std::path::Path) {
-    fs::write(
-        path,
-        r#"#!/usr/bin/env bash
+#[test]
+fn firefox_favicon_assets_use_a_dynamic_route_in_the_html_shell() {
+    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let index_html = manifest_dir.join("web").join("index.html");
+    let html = fs::read_to_string(&index_html).unwrap();
+
+    assert!(
+        html.contains(r#"<link rel="icon" id="favicon-svg" href="favicon.svg" type="image/svg+xml" sizes="any">"#),
+        "expected the shared host html shell to point Firefox at the dynamic favicon route"
+    );
+    assert!(
+        html.contains(r#"<link rel="mask-icon" id="favicon-mask" href="mask-icon.svg""#),
+        "expected the shared host html shell to point mask icons at the dynamic route"
+    );
+}
+
+#[test]
+fn firefox_favicon_serves_hazptr_svg_for_the_hazptr_host() {
+    let dir = tempdir().unwrap();
+    let script_path = dir.path().join("fake-hazptr-adapter.sh");
+    write_fake_adapter(&script_path, "hazptr", "hazptr");
+
+    let mut app = WebApp::new(AdapterSpec {
+        program: script_path.to_string_lossy().to_string(),
+        args: Vec::new(),
+        cwd: None,
+    })
+    .unwrap();
+
+    let response = app.handle("GET", "/web/favicon.svg", &[]).unwrap();
+    assert_eq!(response.status, "200 OK");
+    assert_eq!(response.content_type, "image/svg+xml; charset=utf-8");
+
+    let body = String::from_utf8(response.body).unwrap();
+    assert!(body.contains("hazptr-gradient"));
+}
+
+#[test]
+fn firefox_favicon_serves_fzts_svg_for_the_fzts_host() {
+    let dir = tempdir().unwrap();
+    let script_path = dir.path().join("fake-fzts-adapter.sh");
+    write_fake_adapter(&script_path, "fzts", "fzts");
+
+    let mut app = WebApp::new(AdapterSpec {
+        program: script_path.to_string_lossy().to_string(),
+        args: Vec::new(),
+        cwd: None,
+    })
+    .unwrap();
+
+    let response = app.handle("GET", "/web/favicon.svg", &[]).unwrap();
+    assert_eq!(response.status, "200 OK");
+    assert_eq!(response.content_type, "image/svg+xml; charset=utf-8");
+
+    let body = String::from_utf8(response.body).unwrap();
+    assert!(body.contains("fzts-gradient"));
+}
+
+fn write_fake_adapter(path: &std::path::Path, game_id: &str, title: &str) {
+    let script = r#"#!/usr/bin/env bash
 set -euo pipefail
 
 while IFS= read -r line; do
@@ -268,13 +400,15 @@ while IFS= read -r line; do
   fi
 
   if [[ "$line" == *'"method":"handshake"'* ]]; then
-    response='{"id":"__ID__","ok":true,"result":{"type":"handshake","value":{"game_id":"hazptr","title":"hazptr","capabilities":{"multi_language":true,"incremental_hints":true,"benchmark":true,"explain":true,"compare":false,"idea_tools":false,"synthesis":false}}}}'
+    response='{"id":"__ID__","ok":true,"result":{"type":"handshake","value":{"game_id":"__GAME_ID__","title":"__TITLE__","capabilities":{"multi_language":true,"incremental_hints":true,"benchmark":true,"explain":true,"compare":false,"idea_tools":false,"synthesis":false}}}}'
   elif [[ "$line" == *'"method":"list_challenges"'* ]]; then
     response='{"id":"__ID__","ok":true,"result":{"type":"challenge_list","value":{"current_challenge":"sorting/01_bubble_sort","current_language":"python","challenges":[{"id":"sorting/01_bubble_sort","title":"Bubble Sort","track":"sorting","difficulty":null,"status":"in_progress","available_languages":["python"],"badges":[]}]}}}'
   elif [[ "$line" == *'"method":"load_workspace"'* ]]; then
     response='{"id":"__ID__","ok":true,"result":{"type":"workspace","value":{"challenge_id":"sorting/01_bubble_sort","title":"Bubble Sort","language":"python","editor":{"file_path":"tracks/sorting/01_bubble_sort/python/solution.py","content":"def bubble_sort(arr):\n    return arr\n","can_reset":true},"intro":"A first pass.","guide":"Bubble Sort\nA first pass.","concepts":[],"docs":[],"hints":[],"hint_state":{"mode":"incremental","revealed_count":0,"total_count":2,"next_cost":5},"actions":{"can_save":true,"can_test":true,"can_reveal_hint":true,"can_benchmark":true,"can_compare":false}}}}'
   elif [[ "$line" == *'"method":"load_progress"'* ]]; then
     response='{"id":"__ID__","ok":true,"result":{"type":"progress","value":{"completed":3,"total":12,"streak_days":4,"score":120,"languages":[{"language":"python","completed":2,"total":6},{"language":"rust","completed":1,"total":6}],"activity":[{"date":"2026-03-10","check_ins":2,"completed":1,"commits":1},{"date":"2026-03-11","check_ins":1,"completed":0,"commits":0}]}}}'
+  elif [[ "$line" == *'"method":"benchmark"'* ]]; then
+    response='{"id":"__ID__","ok":true,"result":{"type":"benchmark","value":{"challenge_id":"sorting/01_bubble_sort","results":[{"language":"python","ok":true,"mean_ns":1200,"summary":"1.2 µs","output":"python benchmark ok"},{"language":"rust","ok":true,"mean_ns":900,"summary":"0.9 µs","output":"rust benchmark ok"}]}}}'
   elif [[ "$line" == *'"method":"reveal_hint"'* ]]; then
     response='{"id":"__ID__","ok":true,"result":{"type":"workspace","value":{"challenge_id":"sorting/01_bubble_sort","title":"Bubble Sort","language":"python","editor":{"file_path":"tracks/sorting/01_bubble_sort/python/solution.py","content":"def bubble_sort(arr):\n    return arr\n","can_reset":true},"intro":"A first pass.","guide":"Bubble Sort\nA first pass.","concepts":[],"docs":[],"hints":[{"label":"swap adjacent items","body":"Compare neighbors and swap them when they are out of order.","cost":5}],"hint_state":{"mode":"incremental","revealed_count":1,"total_count":2,"next_cost":8},"actions":{"can_save":true,"can_test":true,"can_reveal_hint":true,"can_benchmark":true,"can_compare":false}}}}'
   else
@@ -283,7 +417,13 @@ while IFS= read -r line; do
 
   printf '%s\n' "${response/__ID__/$id}"
 done
-"#,
+"#;
+
+    fs::write(
+        path,
+        script
+            .replace("__GAME_ID__", game_id)
+            .replace("__TITLE__", title),
     )
     .unwrap();
 

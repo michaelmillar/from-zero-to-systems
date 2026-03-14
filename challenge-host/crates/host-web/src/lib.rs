@@ -74,6 +74,12 @@ pub struct WebApp {
     session: HostSession,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BrandingAsset {
+    Favicon,
+    MaskIcon,
+}
+
 impl WebApp {
     pub fn new(adapter: AdapterSpec) -> Result<Self, DynError> {
         Self::with_asset_root(default_asset_root(), adapter)
@@ -126,16 +132,20 @@ impl WebApp {
 
         match (request.method.as_str(), path.as_str()) {
             ("GET", "/") | ("GET", "/web") | ("GET", "/web/") | ("GET", "/web/index.html") => {
-                serve_asset(&self.asset_root, "index.html", "text/html; charset=utf-8")
+                self.serve_game_asset("index.html", "text/html; charset=utf-8")
             }
-            ("GET", "/web/styles.css") => {
-                serve_asset(&self.asset_root, "styles.css", "text/css; charset=utf-8")
+            ("GET", "/styles.css") | ("GET", "/web/styles.css") => {
+                self.serve_game_asset("styles.css", "text/css; charset=utf-8")
             }
-            ("GET", "/web/app.js") => serve_asset(
-                &self.asset_root,
-                "app.js",
-                "application/javascript; charset=utf-8",
-            ),
+            ("GET", "/app.js") | ("GET", "/web/app.js") => {
+                self.serve_game_asset("app.js", "application/javascript; charset=utf-8")
+            }
+            ("GET", "/favicon.svg") | ("GET", "/web/favicon.svg") => {
+                self.serve_branding_asset(BrandingAsset::Favicon)
+            }
+            ("GET", "/mask-icon.svg") | ("GET", "/web/mask-icon.svg") => {
+                self.serve_branding_asset(BrandingAsset::MaskIcon)
+            }
             ("GET", "/api/bootstrap") => {
                 json_ok(&BootstrapResponse::from(self.session.load_overview()?))
             }
@@ -172,6 +182,14 @@ impl WebApp {
                         .run_tests(req.challenge_id, req.language, req.content)?,
                 )
             }
+            ("POST", "/api/benchmark") => {
+                let req: SaveRequest = serde_json::from_slice(&request.body)?;
+                json_ok(
+                    &self
+                        .session
+                        .benchmark(req.challenge_id, req.language, req.content)?,
+                )
+            }
             ("POST", "/api/reveal-hint") => {
                 let req: RevealHintRequest = serde_json::from_slice(&request.body)?;
                 json_ok(
@@ -186,6 +204,22 @@ impl WebApp {
                 body: json_error("route not found"),
             }),
         }
+    }
+
+    fn serve_branding_asset(&mut self, asset: BrandingAsset) -> Result<HttpResponse, DynError> {
+        let handshake = self.session.handshake()?;
+        let file_name = branding_asset_file(&handshake.game_id, asset);
+        serve_asset(&self.asset_root, file_name, "image/svg+xml; charset=utf-8")
+    }
+
+    fn serve_game_asset(
+        &mut self,
+        file_name: &str,
+        content_type: &'static str,
+    ) -> Result<HttpResponse, DynError> {
+        let handshake = self.session.handshake()?;
+        let scoped_name = game_asset_file(&handshake.game_id, file_name);
+        serve_asset(&self.asset_root, &scoped_name, content_type)
     }
 }
 
@@ -202,7 +236,9 @@ impl From<HostOverview> for BootstrapResponse {
 
 pub fn run(options: WebOptions) -> Result<(), DynError> {
     let asset_root = default_asset_root();
-    let index_path = asset_root.join("index.html");
+    let mut app = WebApp::new(options.adapter)?;
+    let handshake = app.session.handshake()?;
+    let index_path = asset_root.join(asset_prefix(&handshake.game_id)).join("index.html");
     if !index_path.exists() {
         return Err(format!("no web UI found at {}", index_path.display()).into());
     }
@@ -221,8 +257,6 @@ pub fn run(options: WebOptions) -> Result<(), DynError> {
             options.port
         )
     })?;
-
-    let mut app = WebApp::new(options.adapter)?;
 
     println!("Serving {url}");
     println!("Press Ctrl-C to stop.");
@@ -257,6 +291,28 @@ pub fn web_url(port: u16) -> String {
 
 fn default_asset_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("web")
+}
+
+fn branding_asset_file(game_id: &str, asset: BrandingAsset) -> &'static str {
+    match (game_id, asset) {
+        ("fzts", BrandingAsset::Favicon) => "icons/fzts-favicon.svg",
+        ("fzts", BrandingAsset::MaskIcon) => "icons/fzts-mask.svg",
+        _ => match asset {
+            BrandingAsset::Favicon => "icons/hazptr-favicon.svg",
+            BrandingAsset::MaskIcon => "icons/hazptr-mask.svg",
+        },
+    }
+}
+
+fn asset_prefix(game_id: &str) -> &'static str {
+    match game_id {
+        "fzts" => "from-zero-to-systems",
+        _ => "hazptr",
+    }
+}
+
+fn game_asset_file(game_id: &str, file_name: &str) -> String {
+    format!("{}/{}", asset_prefix(game_id), file_name)
 }
 
 fn serve_asset(

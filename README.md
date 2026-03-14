@@ -159,7 +159,19 @@ cargo run -p play --bin fzts -- --print-only
 cargo run -p play -- web --local
 ```
 
-This now launches the shared `challenge-host` three-pane UI on `http://127.0.0.1:7878/web/index.html`: left-hand crate context and hints, a central `src/lib.rs` editor, and raw `cargo test` output on the right. Shared editor behavior, including focus handling and draft retention, now lives in `challenge-host` instead of a separate `fzts`-only frontend.
+This now launches the shared `challenge-host` UI on `http://127.0.0.1:7878/web/index.html`, backed by the `from-zero-to-systems-web` Svelte bundle from `/home/markw/projects/studying/studying-ui`. The current layout is atlas-first: module navigation and progress on the left, a central `src/lib.rs` editor and module guide, and concepts, docs, hints, and test output on the right.
+
+For frontend-only iteration, run:
+
+```bash
+pnpm --dir /home/markw/projects/studying/studying-ui run dev:fzts
+```
+
+To sync the latest built bundle into `challenge-host`:
+
+```bash
+pnpm --dir /home/markw/projects/studying/studying-ui run build:all
+```
 
 On first launch, `fzts` creates a local-only `.fzts/workspace` inside this repo, seeded from the sibling `from-zero-to-systems-challenges` worktree when it exists. `.fzts/` is gitignored, so your local attempts and progress do not get pushed to the remote repository.
 If that sibling challenges worktree is missing, use `cargo run -p play -- web --workspace /path/to/from-zero-to-systems-challenges` or create the worktree first.
