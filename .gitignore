@@ -1,6 +1,18 @@
 /target
 /challenge-host/target
 .fzts/
+.play-progress.json
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# C build artefacts
+*.o
+*.gcda
+*.gcno
+*.gcov
 
 # secrets and credentials
 .env

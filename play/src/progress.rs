@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     path::Path,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -17,9 +17,79 @@ pub struct ActivityRecord {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Progress {
-    pub completed: HashSet<String>,
+    #[serde(
+        deserialize_with = "deserialize_completed",
+        serialize_with = "serialize_completed"
+    )]
+    pub completed: HashMap<String, HashSet<String>>,
     #[serde(default)]
     pub activity: BTreeMap<String, ActivityRecord>,
+}
+
+/// Backward-compatible deserialiser. Handles two formats:
+/// Legacy:     `["risk-sampler", "probability-engine"]`
+/// PerLanguage: `{"risk-sampler": ["rust", "c"], "probability-engine": ["rust"]}`
+fn deserialize_completed<'de, D>(deserializer: D) -> Result<HashMap<String, HashSet<String>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum CompletedField {
+        Legacy(HashSet<String>),
+        PerLanguage(HashMap<String, HashSet<String>>),
+    }
+
+    match CompletedField::deserialize(deserializer)? {
+        CompletedField::Legacy(set) => {
+            let mut map = HashMap::new();
+            for pkg in set {
+                map.entry(pkg)
+                    .or_insert_with(HashSet::new)
+                    .insert("rust".to_string());
+            }
+            Ok(map)
+        }
+        CompletedField::PerLanguage(map) => Ok(map),
+    }
+}
+
+fn serialize_completed<S>(
+    map: &HashMap<String, HashSet<String>>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    map.serialize(serializer)
+}
+
+impl Progress {
+    /// Number of unique challenges that have at least one language completed.
+    pub fn completed_count(&self) -> usize {
+        self.completed.len()
+    }
+
+    /// Check if a package has been completed in any language.
+    pub fn is_completed(&self, package: &str) -> bool {
+        self.completed.contains_key(package)
+    }
+
+    /// Check if a package has been completed in a specific language.
+    pub fn is_completed_in(&self, package: &str, language: &str) -> bool {
+        self.completed
+            .get(package)
+            .map(|langs| langs.contains(language))
+            .unwrap_or(false)
+    }
+
+    /// Count completions for a given language across all challenges.
+    pub fn completed_in_language(&self, language: &str) -> usize {
+        self.completed
+            .values()
+            .filter(|langs| langs.contains(language))
+            .count()
+    }
 }
 
 const FILE: &str = ".play-progress.json";
@@ -45,8 +115,12 @@ pub fn record_check_in(workspace: &Path) {
 }
 
 pub fn record_completion(workspace: &Path, package: &str) -> bool {
+    record_completion_for_language(workspace, package, "rust")
+}
+
+pub fn record_completion_for_language(workspace: &Path, package: &str, language: &str) -> bool {
     let today = today_key();
-    record_completion_for_day(workspace, package, &today)
+    record_completion_for_day(workspace, package, language, &today)
 }
 
 pub(crate) fn record_check_in_for_day(workspace: &Path, day: &str) {
@@ -59,10 +133,19 @@ pub(crate) fn record_check_in_for_day(workspace: &Path, day: &str) {
     });
 }
 
-pub(crate) fn record_completion_for_day(workspace: &Path, package: &str, day: &str) -> bool {
+pub(crate) fn record_completion_for_day(
+    workspace: &Path,
+    package: &str,
+    language: &str,
+    day: &str,
+) -> bool {
     let mut inserted = false;
     update(workspace, |progress| {
-        if progress.completed.insert(package.to_string()) {
+        let langs = progress
+            .completed
+            .entry(package.to_string())
+            .or_default();
+        if langs.insert(language.to_string()) {
             progress
                 .activity
                 .entry(day.to_string())
@@ -196,8 +279,8 @@ mod tests {
 
         record_check_in_for_day(&root, "2026-03-10");
         record_check_in_for_day(&root, "2026-03-10");
-        record_completion_for_day(&root, "alpha", "2026-03-10");
-        record_completion_for_day(&root, "alpha", "2026-03-10");
+        record_completion_for_day(&root, "alpha", "rust", "2026-03-10");
+        record_completion_for_day(&root, "alpha", "rust", "2026-03-10");
 
         let progress = load(&root);
         let day = progress
@@ -207,7 +290,44 @@ mod tests {
 
         assert_eq!(day.check_ins, 2);
         assert_eq!(day.completed, 1);
-        assert!(progress.completed.contains("alpha"));
+        assert!(progress.is_completed("alpha"));
+        assert!(progress.is_completed_in("alpha", "rust"));
+
+        fs::remove_dir_all(root).expect("temp dir should be removed");
+    }
+
+    #[test]
+    fn per_language_completions_tracked_independently() {
+        let root = temp_dir("per-lang");
+
+        record_completion_for_day(&root, "alpha", "rust", "2026-03-10");
+        record_completion_for_day(&root, "alpha", "python", "2026-03-10");
+
+        let progress = load(&root);
+        assert!(progress.is_completed_in("alpha", "rust"));
+        assert!(progress.is_completed_in("alpha", "python"));
+        assert!(!progress.is_completed_in("alpha", "c"));
+        assert_eq!(progress.completed_count(), 1);
+        assert_eq!(progress.completed_in_language("rust"), 1);
+        assert_eq!(progress.completed_in_language("python"), 1);
+
+        fs::remove_dir_all(root).expect("temp dir should be removed");
+    }
+
+    #[test]
+    fn legacy_progress_format_migrates_on_load() {
+        let root = temp_dir("legacy");
+        let path = root.join(".play-progress.json");
+        std::fs::write(
+            &path,
+            r#"{"completed": ["alpha", "beta"], "activity": {}}"#,
+        )
+        .expect("legacy file should be created");
+
+        let progress = load(&root);
+        assert!(progress.is_completed_in("alpha", "rust"));
+        assert!(progress.is_completed_in("beta", "rust"));
+        assert_eq!(progress.completed_count(), 2);
 
         fs::remove_dir_all(root).expect("temp dir should be removed");
     }
@@ -218,7 +338,7 @@ mod tests {
 
         record_check_in_for_day(&root, "2026-03-10");
         record_check_in_for_day(&root, "2026-03-11");
-        record_completion_for_day(&root, "alpha", "2026-03-12");
+        record_completion_for_day(&root, "alpha", "rust", "2026-03-12");
 
         let progress = load(&root);
         assert_eq!(streak_days_for(&progress, "2026-03-12"), 3);

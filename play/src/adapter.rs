@@ -1,13 +1,14 @@
 use std::path::{Path, PathBuf};
 
 use host_protocol::{
-    ActivityDay, Capabilities, ChallengeStatus, ChallengeSummary, DocLink, EditorState, HintMode,
-    HintState, LanguageNotesView, LanguageProgress, ListChallengesResult, ProgressView, Request,
-    ResponsePayload, StructuredTestResult, TestRunResult, VisibleHint, WorkspaceActions,
-    WorkspaceView,
+    ActivityDay, BenchmarkResultEntry, BenchmarkRunResult, Capabilities, ChallengeStatus,
+    ChallengeSummary, DocLink, EditorState, ExplainComparisonView, ExplainLevelView, ExplainView,
+    HintMode, HintState, LanguageNoteEntry, LanguageNotesView, LanguageProgress,
+    ListChallengesResult, ProgressView, Request, ResponsePayload, StructuredTestResult,
+    TestRunResult, VisibleHint, WorkspaceActions, WorkspaceView,
 };
 
-use crate::{progress, workspace};
+use crate::{lang_runner, meta, progress, workspace};
 
 type DynError = Box<dyn std::error::Error>;
 
@@ -51,71 +52,86 @@ pub(crate) fn handle_request(
     request: Request,
 ) -> Result<ResponsePayload, DynError> {
     match request {
-        Request::Handshake => Ok(handshake()),
+        Request::Handshake => Ok(handshake(workspace)),
         Request::ListChallenges => Ok(ResponsePayload::ChallengeList(list_challenges(workspace)?)),
         Request::LoadWorkspace {
             challenge_id,
-            language: _,
+            language,
         } => Ok(ResponsePayload::Workspace(load_workspace(
             workspace,
             &challenge_id,
+            language.as_deref().unwrap_or("rust"),
         )?)),
         Request::SaveWorkspace {
             challenge_id,
-            language: _,
+            language,
             content,
         } => Ok(ResponsePayload::Workspace(save_workspace(
             workspace,
             &challenge_id,
+            language.as_deref().unwrap_or("rust"),
             &content,
         )?)),
         Request::ResetWorkspace {
             challenge_id,
-            language: _,
+            language,
         } => Ok(ResponsePayload::Workspace(reset_workspace(
             workspace,
             &challenge_id,
+            language.as_deref().unwrap_or("rust"),
         )?)),
         Request::RunTests {
             challenge_id,
-            language: _,
+            language,
             content,
         } => Ok(ResponsePayload::TestRun(run_tests(
             workspace,
             &challenge_id,
+            language.as_deref().unwrap_or("rust"),
             &content,
         )?)),
         Request::LoadProgress => Ok(ResponsePayload::Progress(load_progress(workspace)?)),
         Request::RevealHint { .. } => Err("fzts does not support incremental hint reveals".into()),
-        Request::Benchmark { .. } => {
-            Err("benchmarking is not exposed through the shared host yet".into())
-        }
-        Request::LoadExplain { .. } => {
-            Err("explain is not exposed through the shared host yet".into())
+        Request::Benchmark {
+            challenge_id,
+            language,
+            content: _,
+        } => Ok(ResponsePayload::Benchmark(run_benchmarks(
+            workspace,
+            &challenge_id,
+            language.as_deref(),
+        )?)),
+        Request::LoadExplain { challenge_id } => {
+            Ok(ResponsePayload::Explain(load_explain(workspace, &challenge_id)?))
         }
         Request::CodeQuality { .. } => {
             Err("code quality is not exposed through the shared host yet".into())
         }
         Request::Grade { .. } => Err("grading is not exposed through the shared host yet".into()),
-        Request::LoadLanguageNotes { .. } => {
-            Ok(ResponsePayload::LanguageNotes(LanguageNotesView {
-                languages: Vec::new(),
-                facts: Vec::new(),
-            }))
+        Request::LoadLanguageNotes { challenge_id } => {
+            Ok(ResponsePayload::LanguageNotes(load_language_notes(
+                workspace,
+                &challenge_id,
+            )?))
         }
     }
 }
 
-fn handshake() -> ResponsePayload {
+fn handshake(workspace: &Path) -> ResponsePayload {
+    let has_multi_language = workspace::discover_challenges(workspace)
+        .unwrap_or_default()
+        .iter()
+        .any(|c| workspace::available_languages(workspace, &c.id).len() > 1);
+
     ResponsePayload::Handshake {
         game_id: "fzts".into(),
         title: "from-zero-to-systems".into(),
         capabilities: Capabilities {
-            multi_language: false,
+            multi_language: has_multi_language,
             incremental_hints: false,
-            benchmark: false,
-            explain: false,
-            compare: false,
+            benchmark: has_multi_language,
+            explain: has_multi_language,
+            compare: has_multi_language,
             idea_tools: false,
             synthesis: false,
         },
@@ -125,18 +141,21 @@ fn handshake() -> ResponsePayload {
 fn list_challenges(workspace: &Path) -> Result<ListChallengesResult, DynError> {
     let challenges = workspace::discover_challenges(workspace)?
         .into_iter()
-        .map(|challenge| ChallengeSummary {
-            id: challenge.id,
-            title: challenge.title,
-            track: None,
-            difficulty: None,
-            status: if challenge.completed {
-                ChallengeStatus::Complete
-            } else {
-                ChallengeStatus::NotStarted
-            },
-            available_languages: vec!["rust".into()],
-            badges: Vec::new(),
+        .map(|challenge| {
+            let langs = workspace::available_languages(workspace, &challenge.id);
+            ChallengeSummary {
+                id: challenge.id,
+                title: challenge.title,
+                track: None,
+                difficulty: None,
+                status: if challenge.completed {
+                    ChallengeStatus::Complete
+                } else {
+                    ChallengeStatus::NotStarted
+                },
+                available_languages: langs,
+                badges: Vec::new(),
+            }
         })
         .collect::<Vec<_>>();
 
@@ -153,38 +172,52 @@ fn list_challenges(workspace: &Path) -> Result<ListChallengesResult, DynError> {
     })
 }
 
-fn load_workspace(workspace: &Path, challenge_id: &str) -> Result<WorkspaceView, DynError> {
-    Ok(to_workspace_view(workspace::load_workspace(
-        workspace,
-        challenge_id,
-    )?))
+fn load_workspace(
+    workspace: &Path,
+    challenge_id: &str,
+    language: &str,
+) -> Result<WorkspaceView, DynError> {
+    Ok(to_workspace_view(
+        workspace::load_workspace_for_language(workspace, challenge_id, language)?,
+        language,
+    ))
 }
 
 fn save_workspace(
     workspace: &Path,
     challenge_id: &str,
+    language: &str,
     content: &str,
 ) -> Result<WorkspaceView, DynError> {
-    Ok(to_workspace_view(workspace::save_workspace(
-        workspace,
-        challenge_id,
-        content,
-    )?))
+    Ok(to_workspace_view(
+        workspace::save_workspace_for_language(workspace, challenge_id, language, content)?,
+        language,
+    ))
 }
 
-fn reset_workspace(workspace: &Path, challenge_id: &str) -> Result<WorkspaceView, DynError> {
-    Ok(to_workspace_view(workspace::reset_workspace(
-        workspace,
-        challenge_id,
-    )?))
+fn reset_workspace(
+    workspace: &Path,
+    challenge_id: &str,
+    language: &str,
+) -> Result<WorkspaceView, DynError> {
+    Ok(to_workspace_view(
+        workspace::reset_workspace_for_language(workspace, challenge_id, language)?,
+        language,
+    ))
 }
 
 fn run_tests(
     workspace: &Path,
     challenge_id: &str,
+    language: &str,
     content: &str,
 ) -> Result<TestRunResult, DynError> {
-    let result = workspace::run_workspace_tests(workspace, challenge_id, content)?;
+    let result = workspace::run_workspace_tests_for_language(
+        workspace,
+        challenge_id,
+        language,
+        content,
+    )?;
     Ok(TestRunResult {
         passed: result.passed,
         output: result.output,
@@ -196,8 +229,25 @@ fn load_progress(workspace: &Path) -> Result<ProgressView, DynError> {
     let progress = progress::load(workspace);
     let total = workspace::discover_challenges(workspace)?.len();
 
+    let mut languages = vec![LanguageProgress {
+        language: "rust".into(),
+        completed: progress.completed_in_language("rust"),
+        total,
+    }];
+
+    for lang in &["c", "python", "haskell"] {
+        let count = progress.completed_in_language(lang);
+        if count > 0 {
+            languages.push(LanguageProgress {
+                language: lang.to_string(),
+                completed: count,
+                total,
+            });
+        }
+    }
+
     Ok(ProgressView {
-        completed: progress.completed.len(),
+        completed: progress.completed_count(),
         total,
         streak_days: Some(progress::streak_days(&progress)),
         score: None,
@@ -211,21 +261,146 @@ fn load_progress(workspace: &Path) -> Result<ProgressView, DynError> {
                 commits: 0,
             })
             .collect(),
-        languages: vec![LanguageProgress {
-            language: "rust".into(),
-            completed: progress.completed.len(),
-            total,
-        }],
+        languages,
     })
 }
 
-fn to_workspace_view(workspace: workspace::WorkspaceRecord) -> WorkspaceView {
+fn run_benchmarks(
+    workspace: &Path,
+    challenge_id: &str,
+    language: Option<&str>,
+) -> Result<BenchmarkRunResult, DynError> {
+    let langs: Vec<String> = match language {
+        Some(l) => vec![l.to_string()],
+        None => workspace::available_languages(workspace, challenge_id),
+    };
+
+    let results = langs
+        .iter()
+        .map(|lang| {
+            let runner = lang_runner::runner_for(lang);
+            match runner.run_benchmark(workspace, challenge_id) {
+                Ok(result) => BenchmarkResultEntry {
+                    language: lang.clone(),
+                    ok: result.ok,
+                    mean_ns: result.mean_ns,
+                    summary: result.summary,
+                    output: result.output,
+                },
+                Err(err) => BenchmarkResultEntry {
+                    language: lang.clone(),
+                    ok: false,
+                    mean_ns: None,
+                    summary: err.to_string(),
+                    output: String::new(),
+                },
+            }
+        })
+        .collect();
+
+    Ok(BenchmarkRunResult {
+        challenge_id: challenge_id.to_string(),
+        results,
+    })
+}
+
+fn load_explain(workspace: &Path, challenge_id: &str) -> Result<ExplainView, DynError> {
+    let toml_meta = meta::load_challenge_meta(workspace, challenge_id)
+        .ok_or_else(|| format!("no metadata found for {challenge_id}"))?;
+
+    let levels = vec![
+        ExplainLevelView {
+            label: "ELI5".to_string(),
+            body: format!(
+                "Imagine you flip a biased coin thousands of times and write down how much you lose each flip. Then you sort your losses and find the number at the 95% mark. That number tells you \"in 95% of cases, you will not lose more than this.\" That is what this challenge builds."
+            ),
+        },
+        ExplainLevelView {
+            label: "Educated".to_string(),
+            body: toml_meta.shared.intro.clone(),
+        },
+    ];
+
+    let comparisons = if let Some(ref comp) = toml_meta.comparison {
+        comp.trade_offs
+            .iter()
+            .map(|t| ExplainComparisonView {
+                challenge_id: t.dimension.clone(),
+                body: format!(
+                    "Rust: {}\nC: {}\nPython: {}\nHaskell: {}",
+                    t.rust, t.c, t.python, t.haskell
+                ),
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    let use_cases = toml_meta
+        .comparison
+        .as_ref()
+        .map(|c| c.summary.clone())
+        .unwrap_or_default();
+
+    Ok(ExplainView {
+        levels,
+        use_cases,
+        comparisons,
+    })
+}
+
+fn load_language_notes(
+    workspace: &Path,
+    challenge_id: &str,
+) -> Result<LanguageNotesView, DynError> {
+    let toml_meta = meta::load_challenge_meta(workspace, challenge_id);
+
+    let mut languages = Vec::new();
+    let mut facts = Vec::new();
+
+    if let Some(ref tm) = toml_meta {
+        for (lang_key, lang_meta) in [
+            ("rust", &tm.rust),
+            ("c", &tm.c),
+            ("python", &tm.python),
+            ("haskell", &tm.haskell),
+        ] {
+            if let Some(lm) = lang_meta {
+                let mut body = String::new();
+                if !lm.concepts.is_empty() {
+                    body.push_str("Concepts:\n");
+                    for c in &lm.concepts {
+                        body.push_str(&format!("  - {c}\n"));
+                    }
+                }
+                if !lm.tools.is_empty() {
+                    body.push_str("\nTools:\n");
+                    for t in &lm.tools {
+                        body.push_str(&format!("  - {} ({}): {}\n", t.name, t.url, t.description));
+                    }
+                }
+                languages.push(LanguageNoteEntry {
+                    language: lang_key.to_string(),
+                    body,
+                });
+            }
+        }
+
+        if let Some(ref comp) = tm.comparison {
+            facts.push(comp.summary.clone());
+        }
+    }
+
+    Ok(LanguageNotesView { languages, facts })
+}
+
+fn to_workspace_view(workspace: workspace::WorkspaceRecord, language: &str) -> WorkspaceView {
     let hint_count = workspace.hints.len();
 
     WorkspaceView {
         challenge_id: workspace.challenge,
         title: workspace.title,
-        language: Some("rust".into()),
+        language: Some(language.to_string()),
         editor: EditorState {
             file_path: workspace.file_path,
             content: workspace.content,
@@ -387,7 +562,7 @@ mod tests {
 
         progress::record_check_in_for_day(&root, "2026-03-10");
         progress::record_check_in_for_day(&root, "2026-03-10");
-        progress::record_completion_for_day(&root, "alpha", "2026-03-10");
+        progress::record_completion_for_day(&root, "alpha", "rust", "2026-03-10");
 
         let response = handle_request(&root, Request::LoadProgress).expect("progress should load");
 

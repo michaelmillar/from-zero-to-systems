@@ -1,0 +1,36 @@
+cabal-version: 2.4
+name:          risk-sampler
+version:       0.1.0.0
+synopsis:      Monte Carlo risk simulation (from-zero-to-systems challenge 01)
+license:       MIT
+build-type:    Simple
+
+library
+  exposed-modules: RiskSampler
+  hs-source-dirs:  .
+  build-depends:
+    base   >= 4.14 && < 5,
+    random >= 1.2  && < 1.4
+  default-language: Haskell2010
+  ghc-options:      -Wall
+
+test-suite risk-sampler-test
+  type:             exitcode-stdio-1.0
+  main-is:          RiskSamplerSpec.hs
+  hs-source-dirs:   .
+  build-depends:
+    base          >= 4.14 && < 5,
+    risk-sampler,
+    hspec         >= 2.7  && < 2.12
+  default-language: Haskell2010
+  ghc-options:      -Wall
+
+executable bench-risk-sampler
+  main-is:          BenchRiskSampler.hs
+  hs-source-dirs:   .
+  build-depends:
+    base          >= 4.14 && < 5,
+    risk-sampler,
+    time          >= 1.9  && < 1.14
+  default-language: Haskell2010
+  ghc-options:      -O2

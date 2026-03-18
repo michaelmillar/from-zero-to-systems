@@ -4,9 +4,7 @@ use std::{
     process::Command,
 };
 
-use crate::{meta::CRATES, progress};
-
-const MAX_OUTPUT_BYTES: usize = 64 * 1024;
+use crate::{lang_runner, meta, meta::CRATES, progress};
 const LOCAL_WORKSPACE_REL: &str = ".fzts/workspace";
 const LOCAL_ORIGIN_FILE: &str = ".fzts-origin";
 const LOCAL_SEED_ENTRIES: &[&str] = &["Cargo.toml", "Cargo.lock", "crates", "play"];
@@ -47,11 +45,7 @@ pub(crate) struct WorkspaceRecord {
     pub(crate) can_reset: bool,
 }
 
-#[derive(Debug)]
-pub(crate) struct TestResponse {
-    pub(crate) passed: bool,
-    pub(crate) output: String,
-}
+pub(crate) use lang_runner::TestResponse;
 
 pub fn resolve_workspace_root(current_dir: &Path, explicit: Option<&Path>) -> PathBuf {
     if let Some(explicit) = explicit {
@@ -133,7 +127,7 @@ pub fn discover_challenges(workspace: &Path) -> io::Result<Vec<ChallengeRecord>>
             let id = entry.file_name().to_string_lossy().to_string();
             let package = package_from_id(&id);
             let title = title_for(&id, &package);
-            let completed = progress.completed.contains(package.as_str());
+            let completed = progress.is_completed(package.as_str());
 
             ChallengeRecord {
                 id,
@@ -145,67 +139,95 @@ pub fn discover_challenges(workspace: &Path) -> io::Result<Vec<ChallengeRecord>>
         .collect())
 }
 
-pub(crate) fn load_workspace(
+pub(crate) fn load_workspace_for_language(
     workspace: &Path,
     challenge: &str,
+    language: &str,
 ) -> Result<WorkspaceRecord, DynError> {
     let record = challenge_record(workspace, challenge)?
         .ok_or_else(|| format!("unknown challenge: {challenge}"))?;
-    let rel_path = challenge_source_rel_path(challenge);
+    let rel_path = challenge_source_rel_path_for_language(challenge, language);
     let file_path = workspace.join(&rel_path);
     let content = fs::read_to_string(&file_path)
         .map_err(|err| format!("failed to read {}: {err}", file_path.display()))?;
     let guide = read_guide(workspace, challenge)?;
     let can_reset = tracked_file_content(workspace, &rel_path).is_ok();
-    let meta = CRATES.iter().find(|meta| meta.package == record.package);
+
+    let (intro, concepts, docs, hints) =
+        if let Some(toml_meta) = meta::load_challenge_meta(workspace, challenge) {
+            (
+                toml_meta.shared.intro.clone(),
+                meta::merged_concepts(&toml_meta, language),
+                meta::merged_docs(&toml_meta, language)
+                    .into_iter()
+                    .map(|d| DocLinkRecord {
+                        label: d.label,
+                        url: d.url,
+                    })
+                    .collect(),
+                meta::merged_hints(&toml_meta, language)
+                    .into_iter()
+                    .map(|h| HintRecord {
+                        test_name: h.test_name,
+                        hints: h.hints,
+                    })
+                    .collect(),
+            )
+        } else {
+            let static_meta = CRATES.iter().find(|m| m.package == record.package);
+            (
+                static_meta
+                    .map(|m| m.intro.to_string())
+                    .unwrap_or_default(),
+                static_meta
+                    .map(|m| m.concepts.iter().map(|c| c.to_string()).collect())
+                    .unwrap_or_default(),
+                static_meta
+                    .map(|m| {
+                        m.docs
+                            .iter()
+                            .map(|d| DocLinkRecord {
+                                label: d.label.to_string(),
+                                url: d.url.to_string(),
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default(),
+                static_meta
+                    .map(|m| {
+                        m.tests
+                            .iter()
+                            .map(|h| HintRecord {
+                                test_name: h.test_name.to_string(),
+                                hints: h.hints.iter().map(|s| s.to_string()).collect(),
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default(),
+            )
+        };
 
     Ok(WorkspaceRecord {
         challenge: record.id,
         title: record.title,
         file_path: rel_path,
         content,
-        intro: meta.map(|item| item.intro.to_string()).unwrap_or_default(),
+        intro,
         guide,
-        concepts: meta
-            .map(|item| {
-                item.concepts
-                    .iter()
-                    .map(|concept| (*concept).to_string())
-                    .collect()
-            })
-            .unwrap_or_default(),
-        docs: meta
-            .map(|item| {
-                item.docs
-                    .iter()
-                    .map(|doc| DocLinkRecord {
-                        label: doc.label.to_string(),
-                        url: doc.url.to_string(),
-                    })
-                    .collect()
-            })
-            .unwrap_or_default(),
-        hints: meta
-            .map(|item| {
-                item.tests
-                    .iter()
-                    .map(|hint| HintRecord {
-                        test_name: hint.test_name.to_string(),
-                        hints: hint.hints.iter().map(|line| (*line).to_string()).collect(),
-                    })
-                    .collect()
-            })
-            .unwrap_or_default(),
+        concepts,
+        docs,
+        hints,
         can_reset,
     })
 }
 
-pub(crate) fn save_workspace(
+pub(crate) fn save_workspace_for_language(
     workspace: &Path,
     challenge: &str,
+    language: &str,
     content: &str,
 ) -> Result<WorkspaceRecord, DynError> {
-    let rel_path = challenge_source_rel_path(challenge);
+    let rel_path = challenge_source_rel_path_for_language(challenge, language);
     let path = workspace.join(&rel_path);
 
     if let Some(parent) = path.parent() {
@@ -214,44 +236,38 @@ pub(crate) fn save_workspace(
     fs::write(&path, content)
         .map_err(|err| format!("failed to write {}: {err}", path.display()))?;
 
-    load_workspace(workspace, challenge)
+    load_workspace_for_language(workspace, challenge, language)
 }
 
-pub(crate) fn reset_workspace(
+pub(crate) fn reset_workspace_for_language(
     workspace: &Path,
     challenge: &str,
+    language: &str,
 ) -> Result<WorkspaceRecord, DynError> {
-    let rel_path = challenge_source_rel_path(challenge);
+    let rel_path = challenge_source_rel_path_for_language(challenge, language);
     let tracked = tracked_file_content(workspace, &rel_path)?;
-    save_workspace(workspace, challenge, &tracked)
+    save_workspace_for_language(workspace, challenge, language, &tracked)
 }
 
-pub(crate) fn run_workspace_tests(
+pub(crate) fn run_workspace_tests_for_language(
     workspace: &Path,
     challenge: &str,
+    language: &str,
     content: &str,
 ) -> Result<TestResponse, DynError> {
     let record = challenge_record(workspace, challenge)?
         .ok_or_else(|| format!("unknown challenge: {challenge}"))?;
-    save_workspace(workspace, challenge, content)?;
+    save_workspace_for_language(workspace, challenge, language, content)?;
     progress::record_check_in(workspace);
 
-    let command_label = format!("$ cargo test -p {} --color never", record.package);
-    let output = Command::new("cargo")
-        .args(["test", "-p", &record.package, "--color", "never"])
-        .current_dir(workspace)
-        .output()
-        .map_err(|err| format!("failed to run cargo test: {err}"))?;
+    let runner = lang_runner::runner_for(language);
+    let result = runner.run_tests(workspace, challenge, &record.package)?;
 
-    let passed = output.status.success();
-    if passed {
-        mark_completed(workspace, &record.package);
+    if result.passed {
+        mark_completed_for_language(workspace, &record.package, language);
     }
 
-    Ok(TestResponse {
-        passed,
-        output: render_command_output(&command_label, &output),
-    })
+    Ok(result)
 }
 
 fn challenge_record(
@@ -263,12 +279,28 @@ fn challenge_record(
         .find(|record| record.id == challenge))
 }
 
-fn mark_completed(workspace: &Path, package: &str) {
-    let _ = progress::record_completion(workspace, package);
+fn mark_completed_for_language(workspace: &Path, package: &str, language: &str) {
+    let _ = progress::record_completion_for_language(workspace, package, language);
 }
 
-fn challenge_source_rel_path(challenge: &str) -> String {
-    format!("crates/{challenge}/src/lib.rs")
+fn challenge_source_rel_path_for_language(challenge: &str, language: &str) -> String {
+    lang_runner::runner_for(language).source_rel_path(challenge)
+}
+
+pub(crate) fn available_languages(workspace: &Path, challenge: &str) -> Vec<String> {
+    let challenge_dir = workspace.join("crates").join(challenge);
+    let runners: Vec<Box<dyn lang_runner::LanguageRunner>> = vec![
+        lang_runner::runner_for("rust"),
+        lang_runner::runner_for("c"),
+        lang_runner::runner_for("python"),
+        lang_runner::runner_for("haskell"),
+    ];
+
+    runners
+        .into_iter()
+        .filter(|r| r.is_available(&challenge_dir) && r.toolchain_present())
+        .map(|r| r.id().to_string())
+        .collect()
 }
 
 fn tracked_file_content(workspace: &Path, rel_path: &str) -> Result<String, DynError> {
@@ -320,35 +352,6 @@ fn strip_markdown(input: &str) -> String {
         .to_string()
 }
 
-fn render_command_output(command_label: &str, output: &std::process::Output) -> String {
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = if stderr.trim().is_empty() {
-        stdout.to_string()
-    } else if stdout.trim().is_empty() {
-        stderr.to_string()
-    } else {
-        format!("{stdout}\n{stderr}")
-    };
-    let body = truncate_output(if combined.trim().is_empty() {
-        "(no output)".to_string()
-    } else {
-        combined
-    });
-
-    format!("{command_label}\n\n{body}")
-}
-
-fn truncate_output(output: String) -> String {
-    if output.len() <= MAX_OUTPUT_BYTES {
-        return output;
-    }
-
-    let mut truncated = output;
-    truncated.truncate(MAX_OUTPUT_BYTES);
-    truncated.push_str("\n\n[output truncated]");
-    truncated
-}
 
 fn title_for(id: &str, package: &str) -> String {
     if let Some(meta) = CRATES.iter().find(|meta| meta.package == package) {

@@ -1,0 +1,241 @@
+[challenge]
+package = "risk-sampler"
+display = "01 · risk-sampler"
+
+[shared]
+intro = "Simulate risk events across thousands of trials to calculate Value at Risk (VaR). Each trial rolls random events and accumulates losses; the 95th-percentile trial loss is your VaR 95 -- the figure used by banks and insurers to size capital reserves."
+concepts = [
+    "Monte Carlo simulation",
+    "Loss distribution sampling",
+    "Value at Risk (VaR) -- 95th percentile",
+    "Seeded deterministic RNG",
+]
+
+[[shared.docs]]
+label = "Monte Carlo method"
+url   = "https://en.wikipedia.org/wiki/Monte_Carlo_method"
+
+[[shared.hints]]
+test_name = "zero_probability"
+hints = [
+    "Start with a seeded RNG and loop over trials. Inside each trial, iterate over events and check if each fires.",
+    "An event with probability 0.0 never fires, so occurrences and total_loss stay at zero.",
+    "Return a result struct with all zero loss fields and var_95 = 0.0.",
+]
+
+[[shared.hints]]
+test_name = "certain_event"
+hints = [
+    "Inside the event-fires branch: increment occurrences and sample a loss uniformly in [0, max_loss).",
+    "Accumulate the trial total and running total separately.",
+    "With probability=1.0, occurrences == trials and total_loss > 0.",
+]
+
+[[shared.hints]]
+test_name = "var_95"
+hints = [
+    "Collect each trial's total loss into a Vec.",
+    "Sort the Vec (f64 needs partial_cmp, not cmp).",
+    "VaR 95 = losses[(0.95 * trials) as usize]. It must be <= the max possible single-event loss.",
+]
+
+[[shared.hints]]
+test_name = "mean_loss"
+hints = [
+    "Track the max observed single-trial loss across all trials.",
+    "mean_loss_per_trial = total_loss / trials (divide by ALL trials, not just those where the event fired).",
+    "With 500k trials the mean converges to prob * max_loss / 2.0 within 5%.",
+]
+
+# ── Rust ────────────────────────────────────────────────────────────────────
+
+[rust]
+concepts = [
+    "rand::SeedableRng for deterministic seeding",
+    "Vec::sort_by with partial_cmp for f64 sorting",
+    "Iterator combinators vs explicit loops",
+]
+
+[[rust.docs]]
+label = "rand::SeedableRng"
+url   = "https://docs.rs/rand/latest/rand/trait.SeedableRng.html"
+
+[[rust.docs]]
+label = "Vec::sort_by"
+url   = "https://doc.rust-lang.org/std/vec/struct.Vec.html#method.sort_by"
+
+[[rust.hints]]
+test_name = "zero_probability"
+hints = [
+    "`let mut rng = StdRng::seed_from_u64(seed);` then `for _ in 0..trials { }`.",
+    "`if rng.gen::<f64>() < event.probability { /* fires */ }` -- with probability=0.0 this is never true.",
+]
+
+[[rust.hints]]
+test_name = "var_95"
+hints = [
+    "`trial_losses.sort_by(|a, b| a.partial_cmp(b).unwrap());` -- f64 does not implement Ord.",
+]
+
+[[rust.tools]]
+name = "cargo-flamegraph"
+url  = "https://github.com/flamegraph-rs/flamegraph"
+description = "Generate flamegraphs from cargo benchmarks to find hot loops."
+
+[[rust.tools]]
+name = "criterion"
+url  = "https://docs.rs/criterion/latest/criterion/"
+description = "Statistical benchmarking framework for Rust."
+
+# ── C ───────────────────────────────────────────────────────────────────────
+
+[c]
+concepts = [
+    "Manual malloc/free for dynamic arrays",
+    "Function pointers for qsort comparator",
+    "rand_r with seed state for thread-safe seeded RNG",
+    "No generics: concrete types everywhere",
+]
+
+[[c.docs]]
+label = "qsort(3)"
+url   = "https://man7.org/linux/man-pages/man3/qsort.3.html"
+
+[[c.docs]]
+label = "rand_r(3)"
+url   = "https://man7.org/linux/man-pages/man3/rand_r.3.html"
+
+[[c.hints]]
+test_name = "zero_probability"
+hints = [
+    "Use `unsigned int state = (unsigned int)seed;` and `rand_r(&state)` for repeatable randomness.",
+    "Cast `rand_r(&state) / (double)RAND_MAX` to get a uniform [0,1) value.",
+]
+
+[[c.tools]]
+name = "Valgrind"
+url  = "https://valgrind.org"
+description = "Detect memory leaks, use-after-free, and uninitialised reads."
+
+[[c.tools]]
+name = "AddressSanitiser"
+url  = "https://clang.llvm.org/docs/AddressSanitizer.html"
+description = "Compile with -fsanitize=address for fast memory error detection."
+
+[[c.tools]]
+name = "gdb"
+url  = "https://sourceware.org/gdb/"
+description = "Step through C code, inspect memory, and set breakpoints."
+
+# ── Python ──────────────────────────────────────────────────────────────────
+
+[python]
+concepts = [
+    "dataclasses for structured data",
+    "random.Random(seed) for deterministic seeding",
+    "List comprehensions and sorted()",
+    "Type hints for documentation and mypy checking",
+]
+
+[[python.docs]]
+label = "random.Random"
+url   = "https://docs.python.org/3/library/random.html#random.Random"
+
+[[python.docs]]
+label = "dataclasses"
+url   = "https://docs.python.org/3/library/dataclasses.html"
+
+[[python.hints]]
+test_name = "zero_probability"
+hints = [
+    "`rng = random.Random(seed)` then `rng.random()` for each check.",
+    "With probability=0.0, `rng.random() < 0.0` is always False.",
+]
+
+[[python.tools]]
+name = "pytest"
+url  = "https://docs.pytest.org"
+description = "The standard Python testing framework with fixtures and parametrise."
+
+[[python.tools]]
+name = "mypy"
+url  = "https://mypy-lang.org"
+description = "Static type checker for Python type hints."
+
+[[python.tools]]
+name = "cProfile"
+url  = "https://docs.python.org/3/library/profile.html"
+description = "Built-in profiler for finding hot functions."
+
+# ── Haskell ─────────────────────────────────────────────────────────────────
+
+[haskell]
+concepts = [
+    "Threading RNG state through folds (no mutation)",
+    "Algebraic data types for RiskEvent and SimulationResult",
+    "Strict accumulation to avoid space leaks from laziness",
+    "Data.List.sort for the VaR percentile calculation",
+]
+
+[[haskell.docs]]
+label = "System.Random"
+url   = "https://hackage.haskell.org/package/random/docs/System-Random.html"
+
+[[haskell.docs]]
+label = "Data.List.sort"
+url   = "https://hackage.haskell.org/package/base/docs/Data-List.html#v:sort"
+
+[[haskell.hints]]
+test_name = "zero_probability"
+hints = [
+    "Use `mkStdGen seed` then thread the generator through a fold over trials.",
+    "Each `randomR (0.0, 1.0) gen` call returns (value, newGen). Chain the new generator.",
+]
+
+[[haskell.tools]]
+name = "hspec"
+url  = "https://hspec.github.io"
+description = "BDD-style testing framework for Haskell."
+
+[[haskell.tools]]
+name = "criterion"
+url  = "https://hackage.haskell.org/package/criterion"
+description = "Statistical benchmarking library for Haskell."
+
+[[haskell.tools]]
+name = "hlint"
+url  = "https://github.com/ndmitchell/hlint"
+description = "Linter suggesting idiomatic Haskell improvements."
+
+# ── Comparison ──────────────────────────────────────────────────────────────
+
+[comparison]
+summary = "Risk-sampler demonstrates how four languages handle the same Monte Carlo simulation with very different performance and safety trade-offs."
+
+[[comparison.trade_offs]]
+dimension = "Performance"
+rust    = "Compiled, zero-cost abstractions, ~10x faster than Python. Comparable to C with bounds checking."
+c       = "Fastest raw throughput, but no bounds checking means buffer overflows are silent."
+python  = "Interpreted, ~50-100x slower than compiled languages. NumPy can close the gap for vectorised work."
+haskell = "Compiled with -O2 comparable to Rust/C for numeric code, but lazy evaluation can cause unexpected allocations."
+
+[[comparison.trade_offs]]
+dimension = "Memory safety"
+rust    = "Ownership system prevents use-after-free, double-free, and data races at compile time."
+c       = "No safety net. Manual malloc/free. Valgrind and ASan catch errors at runtime, not compile time."
+python  = "Garbage collected. Memory safety is not a concern but reference cycles can leak."
+haskell = "Garbage collected with no mutable state by default. Thunk accumulation is the main footgun."
+
+[[comparison.trade_offs]]
+dimension = "Expressiveness"
+rust    = "Generics, traits, pattern matching, iterators. Verbose lifetime annotations for complex borrowing."
+c       = "Minimal abstraction. No generics, no closures, no pattern matching. Everything is explicit."
+python  = "Most concise. Dataclasses, list comprehensions, dynamic typing makes prototyping fast."
+haskell = "Algebraic types, pattern matching, higher-order functions. Steep learning curve but very expressive."
+
+[[comparison.trade_offs]]
+dimension = "Ecosystem"
+rust    = "cargo + crates.io. Strong testing, benchmarking (criterion), and profiling (flamegraph) tooling."
+c       = "Make + system packages. Mature but fragmented. Valgrind, gdb, and sanitisers for debugging."
+python  = "pip + PyPI. Largest ecosystem for data science. pytest, mypy, cProfile readily available."
+haskell = "cabal + Hackage. Smaller ecosystem but high-quality libraries. criterion, hspec, hlint."

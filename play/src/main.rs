@@ -1,6 +1,9 @@
 mod app;
 mod host_launcher;
+#[allow(dead_code)]
+mod lang_runner;
 mod launch;
+#[allow(dead_code)]
 mod meta;
 mod progress;
 mod runner;

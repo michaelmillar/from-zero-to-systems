@@ -1,4 +1,5 @@
 mod adapter;
+mod lang_runner;
 mod meta;
 mod progress;
 mod workspace;

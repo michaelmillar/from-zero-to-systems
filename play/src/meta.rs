@@ -1,4 +1,232 @@
-pub struct DocLink {
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::Mutex;
+
+use serde::Deserialize;
+
+// ---------------------------------------------------------------------------
+// TOML-backed metadata
+// ---------------------------------------------------------------------------
+// These structs are constructed by serde::Deserialize, which the compiler
+// cannot see. Suppress dead_code warnings for the deserialised types.
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct ChallengeMeta {
+    pub challenge: ChallengeHeader,
+    pub shared: SharedMeta,
+    #[serde(default)]
+    pub rust: Option<LanguageMeta>,
+    #[serde(default)]
+    pub c: Option<LanguageMeta>,
+    #[serde(default)]
+    pub python: Option<LanguageMeta>,
+    #[serde(default)]
+    pub haskell: Option<LanguageMeta>,
+    #[serde(default)]
+    pub comparison: Option<ComparisonMeta>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct ChallengeHeader {
+    pub package: String,
+    pub display: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct SharedMeta {
+    pub intro: String,
+    #[serde(default)]
+    pub concepts: Vec<String>,
+    #[serde(default)]
+    pub docs: Vec<TomlDocLink>,
+    #[serde(default)]
+    pub hints: Vec<TomlTestHints>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct LanguageMeta {
+    #[serde(default)]
+    pub concepts: Vec<String>,
+    #[serde(default)]
+    pub docs: Vec<TomlDocLink>,
+    #[serde(default)]
+    pub hints: Vec<TomlTestHints>,
+    #[serde(default)]
+    pub tools: Vec<ToolRec>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct TomlDocLink {
+    pub label: String,
+    pub url: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct TomlTestHints {
+    pub test_name: String,
+    pub hints: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct ComparisonMeta {
+    pub summary: String,
+    #[serde(default)]
+    pub trade_offs: Vec<TradeOff>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct TradeOff {
+    pub dimension: String,
+    pub rust: String,
+    #[serde(default)]
+    pub c: String,
+    #[serde(default)]
+    pub python: String,
+    #[serde(default)]
+    pub haskell: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+pub struct ToolRec {
+    pub name: String,
+    pub url: String,
+    pub description: String,
+}
+
+// ---------------------------------------------------------------------------
+// TOML cache + loader
+// ---------------------------------------------------------------------------
+
+static TOML_CACHE: Mutex<Option<HashMap<String, ChallengeMeta>>> = Mutex::new(None);
+
+/// Load challenge metadata from `challenge.toml` if present, else fall back
+/// to the static CRATES array.
+pub fn load_challenge_meta(workspace: &Path, challenge_id: &str) -> Option<ChallengeMeta> {
+    {
+        let cache = TOML_CACHE.lock().unwrap();
+        if let Some(ref map) = *cache {
+            if let Some(meta) = map.get(challenge_id) {
+                return Some(meta.clone());
+            }
+        }
+    }
+
+    let toml_path = workspace
+        .join("crates")
+        .join(challenge_id)
+        .join("challenge.toml");
+
+    let meta = if toml_path.exists() {
+        let raw = std::fs::read_to_string(&toml_path).ok()?;
+        toml::from_str::<ChallengeMeta>(&raw).ok()?
+    } else {
+        fallback_from_static(challenge_id)?
+    };
+
+    let mut cache = TOML_CACHE.lock().unwrap();
+    let map = cache.get_or_insert_with(HashMap::new);
+    map.insert(challenge_id.to_string(), meta.clone());
+    Some(meta)
+}
+
+/// Get the language-specific metadata block for a given language.
+pub fn language_meta<'a>(meta: &'a ChallengeMeta, language: &str) -> Option<&'a LanguageMeta> {
+    match language {
+        "rust" => meta.rust.as_ref(),
+        "c" => meta.c.as_ref(),
+        "python" => meta.python.as_ref(),
+        "haskell" => meta.haskell.as_ref(),
+        _ => None,
+    }
+}
+
+/// Merge shared + language-specific concepts for a workspace view.
+pub fn merged_concepts(meta: &ChallengeMeta, language: &str) -> Vec<String> {
+    let mut out = meta.shared.concepts.clone();
+    if let Some(lang) = language_meta(meta, language) {
+        out.extend(lang.concepts.iter().cloned());
+    }
+    out
+}
+
+/// Merge shared + language-specific docs for a workspace view.
+pub fn merged_docs(meta: &ChallengeMeta, language: &str) -> Vec<TomlDocLink> {
+    let mut out = meta.shared.docs.clone();
+    if let Some(lang) = language_meta(meta, language) {
+        out.extend(lang.docs.iter().cloned());
+    }
+    out
+}
+
+/// Merge shared + language-specific hints for a workspace view.
+pub fn merged_hints(meta: &ChallengeMeta, language: &str) -> Vec<TomlTestHints> {
+    let mut out = meta.shared.hints.clone();
+    if let Some(lang) = language_meta(meta, language) {
+        out.extend(lang.hints.iter().cloned());
+    }
+    out
+}
+
+fn fallback_from_static(challenge_id: &str) -> Option<ChallengeMeta> {
+    let package = challenge_id
+        .split_once('-')
+        .map(|(_, pkg)| pkg)
+        .unwrap_or(challenge_id);
+    let entry = CRATES.iter().find(|m| m.package == package)?;
+
+    Some(ChallengeMeta {
+        challenge: ChallengeHeader {
+            package: entry.package.to_string(),
+            display: entry.display.to_string(),
+        },
+        shared: SharedMeta {
+            intro: entry.intro.to_string(),
+            concepts: entry.concepts.iter().map(|s| s.to_string()).collect(),
+            docs: entry
+                .docs
+                .iter()
+                .map(|d| TomlDocLink {
+                    label: d.label.to_string(),
+                    url: d.url.to_string(),
+                })
+                .collect(),
+            hints: entry
+                .tests
+                .iter()
+                .map(|h| TomlTestHints {
+                    test_name: h.test_name.to_string(),
+                    hints: h.hints.iter().map(|s| s.to_string()).collect(),
+                })
+                .collect(),
+        },
+        rust: None,
+        c: None,
+        python: None,
+        haskell: None,
+        comparison: None,
+    })
+}
+
+/// Clear the TOML cache (useful for tests).
+#[cfg(test)]
+pub fn clear_cache() {
+    *TOML_CACHE.lock().unwrap() = None;
+}
+
+// ---------------------------------------------------------------------------
+// Static metadata (legacy fallback)
+// ---------------------------------------------------------------------------
+
+pub struct StaticDocLink {
     pub label: &'static str,
     pub url: &'static str,
 }
@@ -15,7 +243,7 @@ pub struct CrateMeta {
     pub display: &'static str,
     pub intro: &'static str,
     pub concepts: &'static [&'static str],
-    pub docs: &'static [DocLink],
+    pub docs: &'static [StaticDocLink],
     pub tests: &'static [TestHints],
 }
 
@@ -31,8 +259,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Seeded deterministic RNG",
         ],
         docs: &[
-            DocLink { label: "rand::SeedableRng", url: "https://docs.rs/rand/latest/rand/trait.SeedableRng.html" },
-            DocLink { label: "Monte Carlo method", url: "https://en.wikipedia.org/wiki/Monte_Carlo_method" },
+            StaticDocLink { label: "rand::SeedableRng", url: "https://docs.rs/rand/latest/rand/trait.SeedableRng.html" },
+            StaticDocLink { label: "Monte Carlo method", url: "https://en.wikipedia.org/wiki/Monte_Carlo_method" },
         ],
         tests: &[
             TestHints {
@@ -80,8 +308,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Gamma sampling (Marsaglia-Tsang method, already given)",
         ],
         docs: &[
-            DocLink { label: "Beta distribution", url: "https://en.wikipedia.org/wiki/Beta_distribution" },
-            DocLink { label: "Conjugate prior", url: "https://en.wikipedia.org/wiki/Conjugate_prior" },
+            StaticDocLink { label: "Beta distribution", url: "https://en.wikipedia.org/wiki/Beta_distribution" },
+            StaticDocLink { label: "Conjugate prior", url: "https://en.wikipedia.org/wiki/Conjugate_prior" },
         ],
         tests: &[
             TestHints {
@@ -126,8 +354,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Value at Risk: loss at given confidence percentile",
         ],
         docs: &[
-            DocLink { label: "Black-Scholes model", url: "https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model" },
-            DocLink { label: "Geometric Brownian motion", url: "https://en.wikipedia.org/wiki/Geometric_Brownian_motion" },
+            StaticDocLink { label: "Black-Scholes model", url: "https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model" },
+            StaticDocLink { label: "Geometric Brownian motion", url: "https://en.wikipedia.org/wiki/Geometric_Brownian_motion" },
         ],
         tests: &[
             TestHints {
@@ -176,8 +404,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Gamma function (Lanczos approx, already given)",
         ],
         docs: &[
-            DocLink { label: "Inverse transform sampling", url: "https://en.wikipedia.org/wiki/Inverse_transform_sampling" },
-            DocLink { label: "Poisson distribution", url: "https://en.wikipedia.org/wiki/Poisson_distribution" },
+            StaticDocLink { label: "Inverse transform sampling", url: "https://en.wikipedia.org/wiki/Inverse_transform_sampling" },
+            StaticDocLink { label: "Poisson distribution", url: "https://en.wikipedia.org/wiki/Poisson_distribution" },
         ],
         tests: &[
             TestHints {
@@ -220,8 +448,8 @@ pub const CRATES: &[CrateMeta] = &[
             "IQR outlier detection: [Q1 - 1.5*IQR, Q3 + 1.5*IQR]",
         ],
         docs: &[
-            DocLink { label: "Standard deviation", url: "https://en.wikipedia.org/wiki/Standard_deviation" },
-            DocLink { label: "Interquartile range", url: "https://en.wikipedia.org/wiki/Interquartile_range" },
+            StaticDocLink { label: "Standard deviation", url: "https://en.wikipedia.org/wiki/Standard_deviation" },
+            StaticDocLink { label: "Interquartile range", url: "https://en.wikipedia.org/wiki/Interquartile_range" },
         ],
         tests: &[
             TestHints {
@@ -280,8 +508,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Gaussian elimination with partial pivoting for inverse + determinant",
         ],
         docs: &[
-            DocLink { label: "Gaussian elimination", url: "https://en.wikipedia.org/wiki/Gaussian_elimination" },
-            DocLink { label: "Matrix multiplication", url: "https://en.wikipedia.org/wiki/Matrix_multiplication" },
+            StaticDocLink { label: "Gaussian elimination", url: "https://en.wikipedia.org/wiki/Gaussian_elimination" },
+            StaticDocLink { label: "Matrix multiplication", url: "https://en.wikipedia.org/wiki/Matrix_multiplication" },
         ],
         tests: &[
             TestHints {
@@ -331,8 +559,8 @@ pub const CRATES: &[CrateMeta] = &[
             "coefficients[0] = intercept, coefficients[1..] = slopes",
         ],
         docs: &[
-            DocLink { label: "OLS regression", url: "https://en.wikipedia.org/wiki/Ordinary_least_squares" },
-            DocLink { label: "Normal equations", url: "https://en.wikipedia.org/wiki/Ordinary_least_squares#Matrix/vector_formulation" },
+            StaticDocLink { label: "OLS regression", url: "https://en.wikipedia.org/wiki/Ordinary_least_squares" },
+            StaticDocLink { label: "Normal equations", url: "https://en.wikipedia.org/wiki/Ordinary_least_squares#Matrix/vector_formulation" },
         ],
         tests: &[
             TestHints {
@@ -370,8 +598,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Topological sort (Kahn): track in-degrees, process zero-in-degree nodes first",
         ],
         docs: &[
-            DocLink { label: "BFS Wikipedia", url: "https://en.wikipedia.org/wiki/Breadth-first_search" },
-            DocLink { label: "Dijkstra Wikipedia", url: "https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm" },
+            StaticDocLink { label: "BFS Wikipedia", url: "https://en.wikipedia.org/wiki/Breadth-first_search" },
+            StaticDocLink { label: "Dijkstra Wikipedia", url: "https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm" },
         ],
         tests: &[
             TestHints {
@@ -426,8 +654,8 @@ pub const CRATES: &[CrateMeta] = &[
             "IPv4 header: version in upper 4 bits, IHL in lower 4 bits of byte 0",
         ],
         docs: &[
-            DocLink { label: "Bit manipulation", url: "https://en.wikipedia.org/wiki/Bit_manipulation" },
-            DocLink { label: "IPv4 header format", url: "https://en.wikipedia.org/wiki/IPv4#Packet_structure" },
+            StaticDocLink { label: "Bit manipulation", url: "https://en.wikipedia.org/wiki/Bit_manipulation" },
+            StaticDocLink { label: "IPv4 header format", url: "https://en.wikipedia.org/wiki/IPv4#Packet_structure" },
         ],
         tests: &[
             TestHints {
@@ -476,8 +704,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Arena reset: just set offset back to 0 (no deallocation needed)",
         ],
         docs: &[
-            DocLink { label: "Arena allocation", url: "https://en.wikipedia.org/wiki/Region-based_memory_management" },
-            DocLink { label: "std::alloc::Layout", url: "https://doc.rust-lang.org/std/alloc/struct.Layout.html" },
+            StaticDocLink { label: "Arena allocation", url: "https://en.wikipedia.org/wiki/Region-based_memory_management" },
+            StaticDocLink { label: "std::alloc::Layout", url: "https://doc.rust-lang.org/std/alloc/struct.Layout.html" },
         ],
         tests: &[
             TestHints {
@@ -517,8 +745,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Backward-shift deletion: shift entries back instead of using tombstones",
         ],
         docs: &[
-            DocLink { label: "Robin Hood hashing", url: "https://en.wikipedia.org/wiki/Hash_table#Robin_Hood_hashing" },
-            DocLink { label: "Open addressing", url: "https://en.wikipedia.org/wiki/Open_addressing" },
+            StaticDocLink { label: "Robin Hood hashing", url: "https://en.wikipedia.org/wiki/Hash_table#Robin_Hood_hashing" },
+            StaticDocLink { label: "Open addressing", url: "https://en.wikipedia.org/wiki/Open_addressing" },
         ],
         tests: &[
             TestHints {
@@ -567,8 +795,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Halt returns top-of-stack; empty stack at Halt is an error",
         ],
         docs: &[
-            DocLink { label: "Stack machine", url: "https://en.wikipedia.org/wiki/Stack_machine" },
-            DocLink { label: "Forth language (stack-based)", url: "https://en.wikipedia.org/wiki/Forth_(programming_language)" },
+            StaticDocLink { label: "Stack machine", url: "https://en.wikipedia.org/wiki/Stack_machine" },
+            StaticDocLink { label: "Forth language (stack-based)", url: "https://en.wikipedia.org/wiki/Forth_(programming_language)" },
         ],
         tests: &[
             TestHints {
@@ -607,8 +835,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Minimal key disruption when nodes are added or removed",
         ],
         docs: &[
-            DocLink { label: "Consistent hashing", url: "https://en.wikipedia.org/wiki/Consistent_hashing" },
-            DocLink { label: "BTreeMap", url: "https://doc.rust-lang.org/std/collections/struct.BTreeMap.html" },
+            StaticDocLink { label: "Consistent hashing", url: "https://en.wikipedia.org/wiki/Consistent_hashing" },
+            StaticDocLink { label: "BTreeMap", url: "https://doc.rust-lang.org/std/collections/struct.BTreeMap.html" },
         ],
         tests: &[
             TestHints {
@@ -643,8 +871,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Larger m (bit array) or smaller n reduces false positives",
         ],
         docs: &[
-            DocLink { label: "Bloom filter", url: "https://en.wikipedia.org/wiki/Bloom_filter" },
-            DocLink { label: "FNV-1a hash", url: "https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function" },
+            StaticDocLink { label: "Bloom filter", url: "https://en.wikipedia.org/wiki/Bloom_filter" },
+            StaticDocLink { label: "FNV-1a hash", url: "https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function" },
         ],
         tests: &[
             TestHints {
@@ -673,8 +901,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Used by: AWS API Gateway, Nginx, Stripe, GitHub",
         ],
         docs: &[
-            DocLink { label: "Token bucket algorithm", url: "https://en.wikipedia.org/wiki/Token_bucket" },
-            DocLink { label: "std::time::Instant", url: "https://doc.rust-lang.org/std/time/struct.Instant.html" },
+            StaticDocLink { label: "Token bucket algorithm", url: "https://en.wikipedia.org/wiki/Token_bucket" },
+            StaticDocLink { label: "std::time::Instant", url: "https://doc.rust-lang.org/std/time/struct.Instant.html" },
         ],
         tests: &[
             TestHints {
@@ -712,8 +940,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Used in: Bitcoin, git, certificate transparency, AWS S3",
         ],
         docs: &[
-            DocLink { label: "Merkle tree", url: "https://en.wikipedia.org/wiki/Merkle_tree" },
-            DocLink { label: "Bitcoin Merkle trees", url: "https://en.bitcoin.it/wiki/Protocol_documentation#Merkle_Trees" },
+            StaticDocLink { label: "Merkle tree", url: "https://en.wikipedia.org/wiki/Merkle_tree" },
+            StaticDocLink { label: "Bitcoin Merkle trees", url: "https://en.bitcoin.it/wiki/Protocol_documentation#Merkle_Trees" },
         ],
         tests: &[
             TestHints {
@@ -754,8 +982,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Used in: Cassandra, Consul, blockchain peer discovery",
         ],
         docs: &[
-            DocLink { label: "Gossip protocol", url: "https://en.wikipedia.org/wiki/Gossip_protocol" },
-            DocLink { label: "Cassandra gossip", url: "https://cassandra.apache.org/doc/latest/cassandra/architecture/gossip.html" },
+            StaticDocLink { label: "Gossip protocol", url: "https://en.wikipedia.org/wiki/Gossip_protocol" },
+            StaticDocLink { label: "Cassandra gossip", url: "https://cassandra.apache.org/doc/latest/cassandra/architecture/gossip.html" },
         ],
         tests: &[
             TestHints {
@@ -790,8 +1018,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Log replication: leader appends, followers accept, majority = committed",
         ],
         docs: &[
-            DocLink { label: "Raft paper", url: "https://raft.github.io/raft.pdf" },
-            DocLink { label: "Raft visualisation", url: "https://raft.github.io" },
+            StaticDocLink { label: "Raft paper", url: "https://raft.github.io/raft.pdf" },
+            StaticDocLink { label: "Raft visualisation", url: "https://raft.github.io" },
         ],
         tests: &[
             TestHints {
@@ -826,8 +1054,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Numerical gradient: central differences (f(x+h) - f(x-h)) / 2h",
         ],
         docs: &[
-            DocLink { label: "Adam paper (Kingma & Ba 2014)", url: "https://arxiv.org/abs/1412.6980" },
-            DocLink { label: "Gradient descent", url: "https://en.wikipedia.org/wiki/Gradient_descent" },
+            StaticDocLink { label: "Adam paper (Kingma & Ba 2014)", url: "https://arxiv.org/abs/1412.6980" },
+            StaticDocLink { label: "Gradient descent", url: "https://en.wikipedia.org/wiki/Gradient_descent" },
         ],
         tests: &[
             TestHints {
@@ -867,8 +1095,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Weight update: W -= lr * delta × a_prev^T",
         ],
         docs: &[
-            DocLink { label: "Backpropagation", url: "https://en.wikipedia.org/wiki/Backpropagation" },
-            DocLink { label: "Neural networks and deep learning (free book)", url: "http://neuralnetworksanddeeplearning.com" },
+            StaticDocLink { label: "Backpropagation", url: "https://en.wikipedia.org/wiki/Backpropagation" },
+            StaticDocLink { label: "Neural networks and deep learning (free book)", url: "http://neuralnetworksanddeeplearning.com" },
         ],
         tests: &[
             TestHints {
@@ -902,8 +1130,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Stop conditions: all same class, max_depth reached, no gain",
         ],
         docs: &[
-            DocLink { label: "Decision tree learning", url: "https://en.wikipedia.org/wiki/Decision_tree_learning" },
-            DocLink { label: "Gini impurity", url: "https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity" },
+            StaticDocLink { label: "Decision tree learning", url: "https://en.wikipedia.org/wiki/Decision_tree_learning" },
+            StaticDocLink { label: "Gini impurity", url: "https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity" },
         ],
         tests: &[
             TestHints {
@@ -941,8 +1169,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Convergence: centroids stop moving (or max_iter reached)",
         ],
         docs: &[
-            DocLink { label: "K-means clustering", url: "https://en.wikipedia.org/wiki/K-means_clustering" },
-            DocLink { label: "Lloyd's algorithm", url: "https://en.wikipedia.org/wiki/Lloyd%27s_algorithm" },
+            StaticDocLink { label: "K-means clustering", url: "https://en.wikipedia.org/wiki/K-means_clustering" },
+            StaticDocLink { label: "Lloyd's algorithm", url: "https://en.wikipedia.org/wiki/Lloyd%27s_algorithm" },
         ],
         tests: &[
             TestHints {
@@ -980,8 +1208,8 @@ pub const CRATES: &[CrateMeta] = &[
             "The computational core of GPT, BERT, LLaMA, Whisper, Claude",
         ],
         docs: &[
-            DocLink { label: "Attention Is All You Need (2017)", url: "https://arxiv.org/abs/1706.03762" },
-            DocLink { label: "The Illustrated Transformer", url: "http://jalammar.github.io/illustrated-transformer/" },
+            StaticDocLink { label: "Attention Is All You Need (2017)", url: "https://arxiv.org/abs/1706.03762" },
+            StaticDocLink { label: "The Illustrated Transformer", url: "http://jalammar.github.io/illustrated-transformer/" },
         ],
         tests: &[
             TestHints {
@@ -1021,8 +1249,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Used in GPT-2/3/4, LLaMA, Whisper, Claude",
         ],
         docs: &[
-            DocLink { label: "BPE paper (Sennrich et al. 2015)", url: "https://arxiv.org/abs/1508.07909" },
-            DocLink { label: "tiktoken (OpenAI)", url: "https://github.com/openai/tiktoken" },
+            StaticDocLink { label: "BPE paper (Sennrich et al. 2015)", url: "https://arxiv.org/abs/1508.07909" },
+            StaticDocLink { label: "tiktoken (OpenAI)", url: "https://github.com/openai/tiktoken" },
         ],
         tests: &[
             TestHints {
@@ -1071,8 +1299,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Page header: num_slots (u16) + free_ptr (u16) in the first 4 bytes",
         ],
         docs: &[
-            DocLink { label: "CMU 15-445 Slotted Pages", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/03-storage1.pdf" },
-            DocLink { label: "PostgreSQL page layout", url: "https://www.postgresql.org/docs/current/storage-page-layout.html" },
+            StaticDocLink { label: "CMU 15-445 Slotted Pages", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/03-storage1.pdf" },
+            StaticDocLink { label: "PostgreSQL page layout", url: "https://www.postgresql.org/docs/current/storage-page-layout.html" },
         ],
         tests: &[
             TestHints {
@@ -1142,8 +1370,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Range scan: recurse into subtrees whose separator key range overlaps [from, to]",
         ],
         docs: &[
-            DocLink { label: "B-tree Wikipedia", url: "https://en.wikipedia.org/wiki/B-tree" },
-            DocLink { label: "CMU 15-445 B-Trees", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/07-trees.pdf" },
+            StaticDocLink { label: "B-tree Wikipedia", url: "https://en.wikipedia.org/wiki/B-tree" },
+            StaticDocLink { label: "CMU 15-445 B-Trees", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/07-trees.pdf" },
         ],
         tests: &[
             TestHints {
@@ -1188,8 +1416,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Dirty tracking: modified pages must be written back to disk before the frame is reused",
         ],
         docs: &[
-            DocLink { label: "CMU 15-445 Buffer Pools", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/05-bufferpool.pdf" },
-            DocLink { label: "PostgreSQL buffer manager", url: "https://www.postgresql.org/docs/current/storage-buffer.html" },
+            StaticDocLink { label: "CMU 15-445 Buffer Pools", url: "https://15445.courses.cs.cmu.edu/fall2022/slides/05-bufferpool.pdf" },
+            StaticDocLink { label: "PostgreSQL buffer manager", url: "https://www.postgresql.org/docs/current/storage-buffer.html" },
         ],
         tests: &[
             TestHints {
@@ -1243,8 +1471,8 @@ pub const CRATES: &[CrateMeta] = &[
             "Read + Seek trait bounds: SSTableReader works with File, Cursor, or memory-mapped files",
         ],
         docs: &[
-            DocLink { label: "LevelDB SSTable format", url: "https://github.com/google/leveldb/blob/main/doc/table_format.md" },
-            DocLink { label: "LSM-tree Wikipedia", url: "https://en.wikipedia.org/wiki/Log-structured_merge-tree" },
+            StaticDocLink { label: "LevelDB SSTable format", url: "https://github.com/google/leveldb/blob/main/doc/table_format.md" },
+            StaticDocLink { label: "LSM-tree Wikipedia", url: "https://en.wikipedia.org/wiki/Log-structured_merge-tree" },
         ],
         tests: &[
             TestHints {
@@ -1286,8 +1514,8 @@ pub const CRATES: &[CrateMeta] = &[
             "thread_local! with Cell<u64>: cheap per-thread PRNG for level generation without heap allocation",
         ],
         docs: &[
-            DocLink { label: "Skip list paper (Pugh 1990)", url: "https://15721.courses.cs.cmu.edu/spring2018/papers/08-oltpindexes1/pugh-skiplists-cacm1990.pdf" },
-            DocLink { label: "Box::into_raw", url: "https://doc.rust-lang.org/std/boxed/struct.Box.html#method.into_raw" },
+            StaticDocLink { label: "Skip list paper (Pugh 1990)", url: "https://15721.courses.cs.cmu.edu/spring2018/papers/08-oltpindexes1/pugh-skiplists-cacm1990.pdf" },
+            StaticDocLink { label: "Box::into_raw", url: "https://doc.rust-lang.org/std/boxed/struct.Box.html#method.into_raw" },
         ],
         tests: &[
             TestHints {

@@ -129,7 +129,11 @@ impl App {
 
             if self.states[crate_idx].is_all_pass() {
                 let pkg = CRATES[crate_idx].package.to_string();
-                self.progress.completed.insert(pkg);
+                self.progress
+                    .completed
+                    .entry(pkg)
+                    .or_default()
+                    .insert("rust".to_string());
                 let _ = crate::progress::save(&self.workspace, &self.progress);
             }
         }
