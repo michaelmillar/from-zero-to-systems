@@ -55,6 +55,6 @@ fn fzts_shared_web_bundle_exposes_concepts_and_docs_surfaces() {
     assert!(js.contains("Docs"));
     assert!(js.contains("/api/bootstrap"));
     assert!(js.contains("/api/test"));
-    assert!(css.contains("--accent:#2f8a5f"));
+    assert!(css.contains("--accent:#000"));
     assert!(css.contains(".workspace-grid"));
 }
