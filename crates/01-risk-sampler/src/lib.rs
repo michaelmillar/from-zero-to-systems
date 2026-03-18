@@ -1,50 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - simulate risk events and calculate
-//  Value at Risk (VaR) using Monte Carlo simulation.
-//
-//  WHAT YOU ARE BUILDING
-//  ---------------------
-//  A risk model used by insurance companies, banks, and trading
-//  desks to answer: "In the worst 5% of years, how much do we lose?"
-//  That figure is the 95th-percentile VaR.
-//
-//  THE ALGORITHM (plain English)
-//  ------------------------------
-//  Repeat `trials` times:
-//    For each RiskEvent:
-//      Roll a number between 0 and 1.
-//      If that number < event.probability -> the event fires.
-//      When it fires, pick a random loss between 0 and event.max_loss.
-//    Record the total loss for this trial.
-//
-//  After all trials:
-//    Sort the per-trial losses low -> high.
-//    The value 95% of the way through that sorted list is your VaR 95%.
-//
-//  RESULT FIELDS
-//  -------------
-//  trials            — same as the input, echoed back
-//  occurrences       — total number of times ANY event fired across ALL trials
-//  total_loss        — sum of every individual event loss across ALL trials
-//  mean_loss_per_trial — total_loss / trials  (average per run)
-//  max_observed_loss — highest single-trial total loss seen
-//  var_95            — the 95th-percentile trial loss (sorted_losses[0.95 * trials])
-//
-//  RUST SYNTAX NOTES
-//  -----------------
-//  Create the RNG:
-//    let mut rng = StdRng::seed_from_u64(seed);
-//
-//  Generate a random f64 in [0.0, 1.0):
-//    rng.gen::<f64>()      <- the ::<f64> "turbofish" picks the output type
-//
-//  Sort a Vec<f64> (f64 has no Ord, so you must use partial_cmp):
-//    losses.sort_by(|a, b| a.partial_cmp(b).unwrap());
-//
-//  Maximum of a Vec<f64>:
-//    losses.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
-// ============================================================
-
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 
@@ -70,7 +23,36 @@ pub struct SimulationResult {
 }
 
 pub fn simulate(events: &[RiskEvent], trials: u64, seed: u64) -> SimulationResult {
-    todo!()
+
+    let occurrences: u64 = 0;
+    let total_loss: u64 = 0 ;
+    let mut rng = StdRng::seed_from_u64(seed);
+    let mut losses = Vec::new();
+    let mut loss: f64 = 0.0;
+    for trial in 0..trials {
+    	for event in events {
+    		if rng.gen::<f64>() < event.probability {
+    			occurrences += 1;
+    			loss = rng.gen::<f64>() * event.max_loss;
+    			losses.append(loss);
+    			total_loss += loss;
+   
+    		}
+    	}
+    }
+    
+    let sorted_losses = losses.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let max_observed_loss = losses.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let result = SimulationResult {
+    trials: trials,
+    	occurrences: occurrences,
+    	total_loss: total_loss	,
+    	 mean_loss_per_trial: total_loss / trials,
+    	 max_observed_loss: max_observed_loss,
+    	var_95:sorted_losses[0.95 * trials]
+    		
+    }	;
+    result;
 }
 
 #[cfg(test)]

@@ -1,24 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - price options and calculate Value at Risk
-//  using Monte Carlo simulation.
-//
-//  European call option price via geometric Brownian motion:
-//    S_T = S_0 * exp((r - 0.5*sigma^2)*T + sigma*sqrt(T)*Z)
-//    payoff = max(S_T - K, 0)
-//    price  = e^(-rT) * mean(payoff)
-//
-//  Black-Scholes for validation:
-//    d1 = (ln(S/K) + (r + 0.5*sigma^2)*T) / (sigma*sqrt(T))
-//    d2 = d1 - sigma*sqrt(T)
-//    price = S*N(d1) - K*e^(-rT)*N(d2)
-//
-//  Value at Risk (VaR): sort losses, return the loss at
-//  the given confidence percentile.
-//
-//  Hint: use rayon's into_par_iter() for parallel chunks.
-//        normal_cdf is already implemented below.
-// ============================================================
-
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 use rand_distr::{Distribution, Normal};

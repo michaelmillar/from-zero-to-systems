@@ -1,28 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a simplified Raft consensus node.
-//
-//  Raft has three roles: Follower, Candidate, Leader.
-//  This simulation runs Raft in a single-threaded, in-memory
-//  cluster - no networking, no async.
-//
-//  Core concepts to implement:
-//    - Term: logical clock that monotonically increases
-//    - Leader election: the node with the most votes wins
-//    - Log replication: leader appends entries; followers accept
-//    - Commit: entry is committed when a majority acknowledges it
-//
-//  API (simplified):
-//    RaftCluster::new(n) - create n nodes, all start as followers
-//    cluster.tick() - run one election + replication round
-//    cluster.leader() -> Option<usize> - which node is leader?
-//    cluster.append(data: &str) -> bool - leader appends an entry
-//    cluster.committed_log() -> Vec<String> - entries committed by majority
-//
-//  Hint: in this deterministic simulation, node 0 always starts
-//  the election. It increments its term, votes for itself, then
-//  requests votes from all other nodes still on the old term.
-// ============================================================
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Role { Follower, Candidate, Leader }
 

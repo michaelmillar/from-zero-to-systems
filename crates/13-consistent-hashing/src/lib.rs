@@ -1,26 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a consistent hash ring.
-//
-//  A consistent hash ring places both nodes and keys on a
-//  circular hash space [0, 2^64). To find which node owns
-//  a key, hash the key and walk clockwise to the next node.
-//
-//  Virtual nodes: each physical node gets `vnodes` slots on
-//  the ring (e.g. "node-a#0", "node-a#1", ...). This spreads
-//  load more evenly when nodes are added or removed.
-//
-//  API:
-//    HashRing::new(vnodes: usize) -> Self
-//    ring.add_node(name: &str)
-//    ring.remove_node(name: &str)
-//    ring.get_node(key: &str) -> Option<&str>   // owner of `key`
-//    ring.node_count() -> usize                  // physical nodes
-//
-//  Hint: use a BTreeMap<u64, String> for the ring.
-//  Use fnv1a(name) as the base hash, then mmh3_mix(base ^ i)
-//  for each virtual node i.
-// ============================================================
-
 use std::collections::BTreeMap;
 
 pub struct HashRing {

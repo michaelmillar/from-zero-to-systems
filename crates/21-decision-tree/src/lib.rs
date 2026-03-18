@@ -1,21 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a CART decision tree classifier.
-//
-//  A decision tree recursively partitions the feature space.
-//  At each node, find the feature f and threshold t that best
-//  separates the classes - measured by information gain:
-//
-//    Gain = Gini(parent) - weighted_avg(Gini(left), Gini(right))
-//
-//  Gini impurity:
-//    Gini(S) = 1 - sum(p_i^2)   (p_i = fraction of class i)
-//    Pure node  -> 0.0
-//    50/50 split -> 0.5
-//
-//  Used in: credit scoring, fraud detection, clinical triage,
-//           churn prediction, scikit-learn's RandomForest.
-// ============================================================
-
 /// A node in the decision tree.
 #[derive(Debug)]
 pub enum Node {

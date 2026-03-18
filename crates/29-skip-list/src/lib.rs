@@ -1,17 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a skip list with raw Rust pointers.
-//
-//  Ownership model: the level-0 chain owns all nodes.
-//  Higher-level pointers are non-owning aliases (valid while owner lives).
-//
-//  insert: collect update[i] = last node at level i with key < target.
-//          Generate random_level(). Link new node into levels 0..new_level.
-//  remove: collect update[]. Find target at update[0].next[0].
-//          Unlink from all levels. drop(Box::from_raw(target)).
-//  Drop:   walk level-0 chain, Box::from_raw each node exactly once.
-//  PRNG:   use rand_bool() (xorshift64 via thread_local -- already provided).
-// ============================================================
-
 const MAX_LEVEL: usize = 16;
 
 struct Node<K, V> {

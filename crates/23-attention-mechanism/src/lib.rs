@@ -1,23 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement scaled dot-product attention.
-//
-//  This is the computational core of every Transformer model -
-//  GPT, BERT, LLaMA, ViT, Whisper, Claude.
-//
-//  Attention(Q, K, V) = softmax(Q K^T / sqrt(d_k)) * V
-//
-//  Where:
-//    Q - queries:  [seq_len x d_k]
-//    K - keys:     [seq_len x d_k]
-//    V - values:   [seq_len x d_v]
-//    d_k - key dimension (used for scaling to prevent vanishing gradients)
-//
-//  Causal masking: set future positions to -infinity before softmax
-//  so position i can only attend to positions 0..i.
-//
-//  Depends on: matrix-math (crate 06) for matrix multiplication.
-// ============================================================
-
 use matrix_math::Matrix;
 
 /// Row-wise softmax: each row sums to 1.

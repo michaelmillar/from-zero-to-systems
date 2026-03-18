@@ -1,15 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a buffer pool with clock eviction.
-//
-//  frames: fixed Vec<Frame> (capacity set at construction).
-//  page_table: HashMap<PageId, frame_index> -- fast lookup.
-//  clock_hand: sweeps frames; if ref_bit set, clear it (second chance);
-//              if pin_count > 0, skip; otherwise evict.
-//  pin: load from disk if not cached, increment pin_count, set ref_bit.
-//  unpin: decrement pin_count, set dirty flag if is_dirty.
-//  flush_dirty: write dirty unpinned pages to disk, clear dirty flag.
-// ============================================================
-
 use std::collections::HashMap;
 use slotted_page::PAGE_SIZE;
 

@@ -1,20 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a Matrix type with linear algebra.
-//
-//  The Matrix struct stores data in row-major order (Vec<f64>).
-//  Element (r, c) lives at index r * cols + c.
-//
-//  Implement:
-//    - transpose: swap rows and columns
-//    - matmul: matrix multiplication (return None if incompatible)
-//    - mul_vec: multiply matrix by column vector
-//    - inverse: Gaussian elimination with partial pivoting
-//    - determinant: via inverse
-//
-//  The constructors (new, from_vec, identity) and index operators
-//  are already provided - use self[(r, c)] in your implementations.
-// ============================================================
-
 use std::fmt;
 use std::ops::{Add, Index, IndexMut, Mul};
 

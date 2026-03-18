@@ -1,24 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a token bucket rate limiter.
-//
-//  The token bucket algorithm:
-//    - A bucket holds up to `capacity` tokens
-//    - Tokens refill at `rate` tokens per second
-//    - Each request costs 1 token (or N tokens for burst requests)
-//    - If there aren't enough tokens: reject the request
-//
-//  This is the algorithm behind:
-//    - AWS API Gateway throttling
-//    - Nginx `limit_req` module
-//    - Stripe's and GitHub's rate limiting
-//
-//  Also implement a SlidingWindowLimiter that tracks a fixed
-//  number of requests in a rolling time window.
-//
-//  Hint: use std::time::Instant for timestamps.
-//        Do NOT use threads or async - simulate time in tests.
-// ============================================================
-
 use std::time::{Duration, Instant};
 use std::collections::VecDeque;
 

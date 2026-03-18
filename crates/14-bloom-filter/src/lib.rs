@@ -1,23 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a Bloom filter.
-//
-//  A Bloom filter is a probabilistic data structure that:
-//    - NEVER has false negatives: if you inserted X, contains(X) = true
-//    - MAY have false positives: contains(Y) can be true even if Y was never inserted
-//
-//  Implementation:
-//    - A bit array of `m` bits
-//    - `k` independent hash functions (simulate with FNV-1a + different seeds)
-//    - insert: set bit[hash_i(item) % m] for each i in 0..k
-//    - contains: check bit[hash_i(item) % m] for each i; true iff ALL are set
-//
-//  The optimal false positive rate for n items in m bits with k hashes is:
-//    p approximately (1 - e^(-kn/m))^k
-//
-//  For this exercise, use k=3 hash functions with seeds 0, 1, 2.
-//  hash_with_seed is already implemented below - use it.
-// ============================================================
-
 pub struct BloomFilter {
     bits: Vec<bool>,
     k: usize,      // number of hash functions

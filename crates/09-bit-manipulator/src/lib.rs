@@ -1,10 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement the functions below.
-//  Run `cargo test -p bit-manipulator` to see what's failing.
-//  All functions have the correct signature; your job is to
-//  replace every `todo!()` with a working implementation.
-// ============================================================
-
 /// Extract `len` bits from `value` starting at bit position `offset` (0 = LSB).
 /// Example: extract_bits(0b10110110, offset=2, len=4) -> 0b1101 (bits 2..5)
 pub fn extract_bits(value: u32, offset: u8, len: u8) -> u32 {

@@ -1,14 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a slotted page: the fundamental
-//  on-disk storage unit of every relational database.
-//
-//  Layout: [num_slots u16][free_ptr u16][slot array...][gap][data grows down]
-//  - Slot array grows forward from offset 4.
-//  - Data region grows backward from free_ptr toward the slot array.
-//  - Each slot entry: (offset u16, length u16). length == 0 means deleted.
-//  - compact() rewrites live records contiguously to reclaim fragmented space.
-// ============================================================
-
 pub const PAGE_SIZE: usize = 4096;
 const HEADER: usize = 4;   // num_slots (u16) + free_ptr (u16)
 const SLOT_SZ: usize = 4;  // offset (u16) + length (u16)

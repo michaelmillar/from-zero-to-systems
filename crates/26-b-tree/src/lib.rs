@@ -1,13 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement an order-5 B-tree.
-//
-//  Nodes: Leaf { keys, values } or Internal { keys, children }.
-//  insert: binary-search for position, insert, then split if len > MAX_KEYS.
-//  split_leaf: mid = len/2; median = right_keys[0] (copy up to parent).
-//  split_internal: mid = len/2; median = keys.remove(mid) (pushed up).
-//  range: recurse into children whose separator key range overlaps [from, to].
-// ============================================================
-
 const ORDER: usize = 5;
 const MAX_KEYS: usize = ORDER - 1; // 4
 const MIN_KEYS: usize = ORDER / 2; // 2

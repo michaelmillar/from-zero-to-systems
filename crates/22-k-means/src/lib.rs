@@ -1,16 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement k-means clustering (Lloyd's algorithm).
-//
-//  Algorithm:
-//    1. Initialise k centroids by picking k random data points
-//    2. Assign every point to its nearest centroid (Euclidean)
-//    3. Recompute each centroid as the mean of its assigned points
-//    4. Repeat 2-3 until centroids stop moving (or max_iter reached)
-//
-//  Used in: customer segmentation, log anomaly detection,
-//           network traffic clustering, image colour quantisation.
-// ============================================================
-
 use rand::Rng;
 
 /// Euclidean distance between two equal-length vectors.

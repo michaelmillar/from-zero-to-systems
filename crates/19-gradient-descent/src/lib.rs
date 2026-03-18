@@ -1,27 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement SGD and Adam optimisers.
-//
-//  Gradient descent is the engine behind all of ML.
-//  Given a loss function L(theta) and its gradient dL/dtheta,
-//  each step moves theta in the direction that decreases L.
-//
-//  SGD with momentum:
-//    v  <- beta*v + (1-beta)*g           (velocity)
-//    theta  <- theta - lr*v
-//
-//  Adam (Adaptive Moment Estimation):
-//    m  <- beta1*m + (1-beta1)*g        (first moment)
-//    v  <- beta2*v + (1-beta2)*g^2       (second moment)
-//    m_hat  = m / (1 - beta1^t)          (bias correction)
-//    v_hat  = v / (1 - beta2^t)
-//    theta  <- theta - lr * m_hat / (sqrt(v_hat) + epsilon)
-//
-//  numerical_gradient: estimate gradient via central differences
-//    grad[i] = (f(x + h*e_i) - f(x - h*e_i)) / (2*h)
-//
-//  Used in: PyTorch, TensorFlow, every neural network trainer.
-// ============================================================
-
 /// Stochastic Gradient Descent with momentum.
 pub struct Sgd {
     pub lr: f64,

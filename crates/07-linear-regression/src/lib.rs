@@ -1,20 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement Ordinary Least Squares regression.
-//
-//  OLS via normal equations: beta = (X'X)^{-1} X'y
-//  where X is the design matrix with a bias column of 1s prepended.
-//
-//  Steps:
-//    1. Build design matrix: prepend a column of 1.0 to x
-//    2. Compute X'X and X'y
-//    3. Invert X'X (use matrix_math::Matrix)
-//    4. Compute beta = (X'X)^{-1} * X'y
-//    5. Compute residuals and R^2
-//
-//  Use matrix_math::Matrix for all matrix operations.
-//  coefficients[0] is the intercept, coefficients[1..] are slopes.
-// ============================================================
-
 use matrix_math::Matrix;
 use statistics_core::{mean, StatsError};
 

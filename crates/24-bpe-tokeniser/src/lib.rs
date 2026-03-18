@@ -1,22 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement Byte-Pair Encoding (BPE) tokenisation.
-//
-//  BPE is the tokenisation algorithm behind GPT, LLaMA, and Claude.
-//  It starts from individual characters, then greedily merges the
-//  most frequent adjacent pair until the vocab reaches the target size.
-//
-//  Algorithm:
-//    1. Initialise: each unique char in the corpus is a base token
-//    2. Count adjacent pair frequencies across all token sequences
-//    3. Merge the most frequent pair into a new token
-//    4. Repeat 2-3 until vocab_size == target
-//
-//  Encoding: apply merge rules in order to turn text into token IDs.
-//  Decoding: map IDs back to token strings and concatenate.
-//
-//  Used in: GPT-{2,3,4}, LLaMA, Whisper, T5, BART, Claude.
-// ============================================================
-
 use std::collections::HashMap;
 
 pub struct BpeTokeniser {

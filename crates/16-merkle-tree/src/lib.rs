@@ -1,24 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a Merkle tree.
-//
-//  A Merkle tree is a binary tree where every leaf contains
-//  the hash of a data block, and every internal node contains
-//  the hash of its children concatenated:
-//    parent_hash = hash(left_hash || right_hash)
-//
-//  Properties:
-//    - The root hash summarises ALL data
-//    - Changing any leaf changes every ancestor up to the root
-//    - Membership proofs are O(log n) - you only need the siblings
-//
-//  Implementation notes:
-//    - Use fnv1a for hashing (already implemented below)
-//    - If there's an odd number of leaves, duplicate the last one
-//    - A "proof" is a Vec<(u64, Side)> - sibling hash + which side it's on
-//    - Verification: hash the leaf, then combine with each proof element
-//    - combine(left, right) is already implemented below
-// ============================================================
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Side { Left, Right }
 

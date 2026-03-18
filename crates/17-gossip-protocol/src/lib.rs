@@ -1,23 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - simulate an epidemic (gossip) protocol.
-//
-//  Gossip works by infection: in each round, every infected
-//  node tells `fanout` randomly chosen neighbours its state.
-//  Over rounds, information spreads like a disease.
-//
-//  Key properties:
-//    - Convergence: eventually all nodes know the new state
-//    - Resilience: works even with node failures
-//    - O(log n) rounds to reach the whole cluster
-//
-//  Implement:
-//    - Cluster::new(n_nodes, fanout) - n nodes, each gossips to `fanout` peers
-//    - cluster.broadcast(origin, value) - node `origin` has new state `value`
-//    - cluster.step(rng) - one round of gossip
-//    - cluster.converged() - true if all nodes know the latest value
-//    - cluster.round_count() - how many rounds have elapsed
-// ============================================================
-
 use rand::Rng;
 
 #[derive(Clone, Debug)]

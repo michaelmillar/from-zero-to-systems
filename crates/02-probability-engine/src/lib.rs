@@ -1,18 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement probability distributions.
-//
-//  Bernoulli(p): a single yes/no trial with probability p.
-//  Beta(alpha, beta): conjugate prior for Bernoulli; models
-//  uncertainty about p itself.
-//
-//  For Beta sampling, use sample_gamma (already implemented):
-//    let x = sample_gamma(alpha, rng);
-//    let y = sample_gamma(beta, rng);
-//    Beta sample = x / (x + y)
-//
-//  Hint: use rng.gen::<f64>() for a uniform [0,1) sample.
-// ============================================================
-
 use rand::Rng;
 
 pub trait Distribution {

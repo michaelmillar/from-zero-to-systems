@@ -1,14 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a Robin Hood open-addressing
-//  hash table with backward-shift deletion.
-//
-//  insert: probe from ideal slot, use Robin Hood displacement
-//          (steal from entries with shorter probe distances).
-//  get:    probe until Empty or dist > occupant dist (not found).
-//  remove: find the entry, then backward-shift subsequent entries.
-//  resize: double capacity when load factor exceeds MAX_LOAD.
-// ============================================================
-
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 

@@ -1,24 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a bump allocator (arena).
-//  A bump allocator works by keeping a pointer into a block
-//  of memory and "bumping" it forward on each allocation.
-//  Deallocating individual objects is impossible - the whole
-//  arena is freed at once. This makes it extremely fast.
-//
-//  Rules:
-//  - Arena::new(capacity) allocates a Vec<u8> of that size
-//  - Arena::alloc::<T>() returns Option<&mut T>
-//      - Returns None if there isn't enough space remaining
-//      - The returned reference must not outlive the arena
-//  - Arena::reset() resets the bump pointer to 0 (reuses memory)
-//  - Arena::used() returns how many bytes have been allocated
-//  - Arena::remaining() returns how many bytes are still free
-//
-//  You will need `unsafe` to cast raw pointers.
-//  Hint: align the offset before allocating:
-//    let aligned = (self.offset + align - 1) & !(align - 1);
-// ============================================================
-
 pub struct Arena {
     buffer: Vec<u8>,
     offset: usize,

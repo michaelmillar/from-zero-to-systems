@@ -1,13 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement graph traversal and shortest-path
-//  algorithms used in route planners, compilers, and networks.
-//
-//  BFS: explore level by level using a queue (VecDeque).
-//  DFS: explore depth-first using recursion or a stack.
-//  Dijkstra: find minimum-cost paths using a min-heap (BinaryHeap<Reverse<_>>).
-//  Topological sort: order a DAG by in-degree (Kahn's algorithm).
-// ============================================================
-
 use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::cmp::Reverse;
 

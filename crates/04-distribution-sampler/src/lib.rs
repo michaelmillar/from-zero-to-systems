@@ -1,23 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement three probability distributions.
-//
-//  Exponential(lambda): models time between events.
-//    Sample via inverse CDF: -ln(U) / lambda
-//    Mean: 1 / lambda
-//
-//  Poisson(lambda): models event count in a fixed interval.
-//    Sample via Knuth's algorithm: count exponential
-//    inter-arrivals until cumulative product drops below e^(-lambda)
-//    Mean: lambda
-//
-//  Weibull(shape k, scale lambda): generalises Exponential.
-//    Sample via inverse CDF: lambda * (-ln(U))^(1/k)
-//    Mean: lambda * Gamma(1 + 1/k)  [use gamma() below]
-//
-//  Hint: use rng.gen::<f64>().max(1e-15) to avoid ln(0).
-//        gamma() is already implemented - use it for Weibull mean.
-// ============================================================
-
 use rand::Rng;
 
 /// A shared interface for continuous and discrete distributions.

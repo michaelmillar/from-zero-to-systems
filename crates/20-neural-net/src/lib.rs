@@ -1,24 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a feedforward neural network
-//  with backpropagation from scratch.
-//
-//  Architecture: [input_size, ...hidden_sizes..., output_size]
-//  Activation:   sigmoid (all layers)
-//  Loss:         binary cross-entropy (BCE) for classification
-//
-//  Forward pass:
-//    z^l = W^l * a^{l-1} + b^l
-//    a^l = sigmoid(z^l)
-//
-//  Backprop (BCE + sigmoid simplifies beautifully):
-//    delta^L = a^L - y                     (output layer)
-//    delta^l = (W^{l+1})^T * delta^{l+1} * sigmoid'(z^l)
-//    dW^l = delta^l x (a^{l-1})^T
-//    db^l = delta^l
-//
-//  Used in: image classifiers, fraud detection, recommendation.
-// ============================================================
-
 use rand::Rng;
 
 pub fn sigmoid(x: f64) -> f64 {

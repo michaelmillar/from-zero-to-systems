@@ -1,16 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement core descriptive statistics.
-//
-//  Functions to implement:
-//    mean, variance (population), sample_variance (N-1),
-//    std_dev, median, percentile (linear interpolation),
-//    kurtosis (excess), skewness, z_scores, iqr_outliers,
-//    summarise
-//
-//  Return Err(StatsError) for invalid inputs.
-//  Percentile uses linear interpolation (NumPy default).
-// ============================================================
-
 use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq)]

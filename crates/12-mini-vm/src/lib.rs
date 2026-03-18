@@ -1,24 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a stack-based bytecode VM.
-//
-//  The VM executes a sequence of `Instruction` values.
-//  It has a value stack (Vec<i64>) and a program counter.
-//
-//  Instructions:
-//    Push(n)  - push integer n onto the stack
-//    Pop      - discard the top of the stack
-//    Add      - pop two values, push their sum
-//    Sub      - pop two values, push (second - top)
-//    Mul      - pop two values, push their product
-//    Div      - pop two values, push (second / top); error if top is 0
-//    Dup      - duplicate the top of the stack
-//    Swap     - swap the top two values
-//    Halt     - stop execution, return the top of the stack
-//
-//  Execution stops at Halt or when instructions are exhausted.
-//  Return Err(VmError) for stack underflow or division by zero.
-// ============================================================
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Instruction {
     Push(i64),

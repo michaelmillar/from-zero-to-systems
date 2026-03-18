@@ -1,16 +1,3 @@
-// ============================================================
-//  YOUR CHALLENGE - implement a Sorted String Table (SSTable).
-//
-//  Binary format:
-//    [data section: sorted KV pairs, each: key_len u32, key, val_len u32, val]
-//    [index section: every 4th entry as (key_len u32, key, offset u64)]
-//    [footer: index_offset u64, index_len u64, num_entries u64]  <- 24 bytes
-//
-//  Writer: BTreeMap ensures sorted order. finish() writes data then index then footer.
-//  Reader: open() reads footer, then index into Vec. get() binary-searches index
-//          then linear-scans the block. scan() seeks to block start and collects range.
-// ============================================================
-
 use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::collections::BTreeMap;
 
