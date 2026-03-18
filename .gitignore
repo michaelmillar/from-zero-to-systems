@@ -2,6 +2,7 @@
 /challenge-host/target
 .fzts/
 .play-progress.json
+docs/
 
 # Python
 __pycache__/
