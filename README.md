@@ -1,22 +1,98 @@
-# from-zero-to-systems
+<h3 align="center">from-zero-to-systems</h3>
 
-![crate map](map.svg)
+<p align="center">
+  Learn Rust by building 29 real applications, from probability engines to distributed consensus.<br>
+  No toy exercises. Every crate is a working system with a genuine use case.
+</p>
 
-> Build increasingly complex Rust applications, from probability engines to distributed consensus, grounded in real-world use cases across finance, science, infrastructure, AI, and security.
+---
+
+<p align="center">
+  <img src="map.svg" alt="crate dependency map" width="920" />
+</p>
+
+## What it does
+
+29 numbered crates, each independently runnable, each a real application. Later crates import earlier ones as dependencies, so the complexity builds naturally. A TUI game runner and a browser-based workspace track your progress.
+
+```
+cargo run -p play
+```
+
+```
+  from-zero-to-systems                                          01 / 29
+─────────────────────────────────────────────────────────────────────────
+  01  02  03  04  05  06  07  08  09  10  11  12  13  14  ...
+  .   .   .   .   .   .   .   .   .   .   .   .   .   .   ...
+─────────────────────────────────────────────────────────────────────────
+  01 . risk-sampler                       | info
+                                          |
+  press r to run tests                    | Simulate risk events across
+                                          | thousands of trials to
+                                          | calculate Value at Risk.
+                                          |
+                                          | Completed  0 / 29
+─────────────────────────────────────────────────────────────────────────
+  r run  .  h hint  .  d docs  .  c concepts  .  <- -> navigate  .  q quit
+```
 
 ## Who this is for
 
-Developers coming from Python, Go, TypeScript, or another language who already understand programming fundamentals and want to learn Rust by building real things. No toy exercises. Every crate is a working application with a genuine use case.
+Developers coming from Python, Go, TypeScript, or another language who already understand programming fundamentals and want to learn Rust by building real things.
 
 ## How it works
 
-Each numbered crate under `crates/` is:
+1. Clear the implementation in `crates/01-risk-sampler/src/lib.rs`. Leave the tests untouched.
+2. Read the first test. It tells you exactly what to build:
 
-- **Independently runnable:** `cargo run -p <crate-name>`
-- **A reusable library:** later crates import earlier ones as dependencies
-- **Self-documenting:** each README has an ELI5, an educated-generalist explanation, real-world "used in the wild" callouts, and Rust concepts covered
+```rust
+#[test]
+fn zero_probability_event_never_occurs() {
+    let events = vec![RiskEvent {
+        name: "never".into(),
+        probability: 0.0,
+        max_loss: 1_000_000.0,
+    }];
+    let result = simulate(&events, 10_000, 42);
+    assert_eq!(result.occurrences, 0);
+    assert_eq!(result.total_loss, 0.0);
+}
+```
 
-## Dependency Graph
+3. Write the minimum to make it pass. Press `r` in the runner. Watch it go green.
+4. Move to the next crate. Later crates import earlier ones.
+
+## Web UI
+
+```
+cargo install --path play --bin fzts --force
+fzts
+```
+
+Opens `http://127.0.0.1:7878/web/index.html` with a three-column workspace. Challenge 01 ships in Rust, C, Python, and Haskell.
+
+![web ui](assets/web-ui.png)
+
+## Tiers
+
+| Tier | Crates | Domain |
+|------|--------|--------|
+| 1 | 01 to 05 | Probability and Statistics |
+| 2 | 06 to 08 | Linear Algebra |
+| 3 | 09 to 12 | Low-Level Systems |
+| 4 | 13 to 17 | Storage Internals |
+| 5 | 18 to 23 | Distributed Systems |
+| 6 | 24 to 29 | AI and Machine Learning |
+
+## How it compares
+
+Most learn-Rust resources are either reference documentation (the Rust Book), collections of small exercises (Rustlings, Exercism), or single large projects (Writing an OS in Rust). from-zero-to-systems is a graded sequence of 29 real applications that build on each other.
+
+**Where this is stronger.** Each crate has a genuine use case. The dependency graph means you learn ownership, lifetimes, and traits in context rather than isolation. The game runner gives immediate feedback. Six domains (probability, linear algebra, systems, storage, distributed, AI) cover more ground than any single-project course.
+
+**Where this is weaker.** It does not teach async Rust, web frameworks, or GUI development. It is not a reference. If you want to look up how iterators work, read the Rust Book. If you want to build 29 things and understand why Rust makes the choices it does, start here.
+
+## Dependency graph
 
 ```
 01-risk-sampler ──────────────────────────────────────────────── standalone
@@ -49,124 +125,6 @@ Each numbered crate under `crates/` is:
 28-attention-mechanism ─── depends on ──► 06, 24
 29-bpe-tokeniser ───────── depends on ──► 09
 ```
-
-## Playing the game
-
-The tests are the spec. Your job is to make them pass.
-
-The reference implementations live in this repo. Fork it or create a solutions worktree, clear each crate's implementation, and rebuild it from scratch.
-
-**Start the game runner**
-
-```bash
-cargo run -p play
-```
-
-```
-  from-zero-to-systems                                          01 / 29
-─────────────────────────────────────────────────────────────────────────
-  01  02  03  04  05  06  07  08  09  10  11  12  13  14  ...
-  .   .   .   .   .   .   .   .   .   .   .   .   .   .   ...
-─────────────────────────────────────────────────────────────────────────
-  01 . risk-sampler                       | info
-                                          |
-  press r to run tests                    | Simulate risk events across
-                                          | thousands of trials to
-                                          | calculate Value at Risk.
-                                          |
-                                          | Completed  0 / 29
-─────────────────────────────────────────────────────────────────────────
-  r run  .  h hint  .  d docs  .  c concepts  .  <- -> navigate  .  q quit
-```
-
-**1. Clear the implementation**
-
-Open `crates/01-risk-sampler/src/lib.rs`. Delete everything *above* the `#[cfg(test)]` block -- the structs, function, all of it. Leave the tests completely untouched. Press **r** in the runner:
-
-```
-  from-zero-to-systems                                          01 / 29
-─────────────────────────────────────────────────────────────────────────
-  01  02  03  04  05  06  07  08  09  10  11  12  13  14  ...
-  x   .   .   .   .   .   .   .   .   .   .   .   .   .   ...
-─────────────────────────────────────────────────────────────────────────
-  01 . risk-sampler                       | info
-                                          |
-  x  zero_probability_event_never_occurs  | Completed  0 / 29
-  x  certain_event_always_occurs          |
-  x  var_95_is_not_greater_than_max_loss  |
-  x  mean_loss_is_consistent_with_proba.. |
-─────────────────────────────────────────────────────────────────────────
-  r run  .  h hint  .  d docs  .  c concepts  .  <- -> navigate  .  q quit
-```
-
-Four failing tests. That is your todo list.
-
-**2. Read the first test -- it tells you exactly what to build**
-
-```rust
-#[test]
-fn zero_probability_event_never_occurs() {
-    let events = vec![RiskEvent {
-        name: "never".into(),
-        probability: 0.0,
-        max_loss: 1_000_000.0,
-    }];
-    let result = simulate(&events, 10_000, 42);
-    assert_eq!(result.occurrences, 0);
-    assert_eq!(result.total_loss, 0.0);
-}
-```
-
-It needs a `RiskEvent` struct, a `SimulationResult` struct, and a `simulate` function. Add the minimum to make this compile and pass. Press **h** for a nudge if you are stuck.
-
-**3. Press r -- watch it go green**
-
-```
-  from-zero-to-systems                                          01 / 29
-─────────────────────────────────────────────────────────────────────────
-  01  02  03  04  05  06  07  08  09  10  11  12  13  14  ...
-  v   .   .   .   .   .   .   .   .   .   .   .   .   .   ...
-─────────────────────────────────────────────────────────────────────────
-  01 . risk-sampler                       | info
-                                          |
-  v  zero_probability_event_never_occurs  | Completed  1 / 29
-  v  certain_event_always_occurs          |
-  v  var_95_is_not_greater_than_max_loss  |
-  v  mean_loss_is_consistent_with_proba.. |
-─────────────────────────────────────────────────────────────────────────
-  r run  .  h hint  .  d docs  .  c concepts  .  <- -> navigate  .  q quit
-```
-
-Press **n** to move to crate 02 and repeat. Work in order -- later crates import earlier ones.
-
-**Install the short command**
-
-```bash
-cargo install --path play --bin fzts --force
-```
-
-**Play on the web**
-
-```bash
-fzts
-```
-
-Opens `http://127.0.0.1:7878/web/index.html` with a three-column workspace: module navigation and briefing on the left, code editor in the centre, concepts and test output on the right. Challenge 01 ships in Rust, C, Python, and Haskell; switch languages from the toolbar dropdown.
-
-![web ui](assets/web-ui.png)
-
-On first launch `fzts` creates a local `.fzts/workspace` seeded from the sibling `from-zero-to-systems-challenges` worktree. Your progress and edits stay local (`.fzts/` is gitignored).
-
-## Tiers
-
-| Tier | Crates | Domain |
-|------|--------|--------|
-| 1 | 01-05 | Probability & Statistics |
-| 2 | 06-08 | Linear Algebra |
-| 3 | 09-12 | Low-Level Systems |
-| 4 | 13-17 | Storage Internals |
-| 5 | 18-23 | Distributed Systems |
-| 6 | 24-29 | AI & Machine Learning |
 
 ## Licence
 
