@@ -37,18 +37,18 @@
 
   <!-- title -->
   <text x="103" y="38" fill="#ffffff" font-family="'Courier New',monospace" font-size="23" font-weight="bold" letter-spacing="1.5">FROM ZERO TO SYSTEMS</text>
-  <text x="103" y="60" fill="#adbac7" font-family="'Courier New',monospace" font-size="11" font-weight="bold">29 crates  ·  Rust  ·  systems programming  ·  learn by building real things</text>
+  <text x="103" y="60" fill="#adbac7" font-family="'Courier New',monospace" font-size="11" font-weight="bold">Rust  ·  systems programming  ·  learn through codebase evolution</text>
 
   <line x1="15" y1="84" x2="905" y2="84" stroke="#30363d" stroke-width="1"/>
 
   <!-- ───────────────────────────────────────────────────── -->
-  <!-- T1  PROBABILITY &amp; STATISTICS  (01–05)             -->
+  <!-- ARC 1  CHANCE  (01-05)                               -->
   <!-- 5 cards · start_x=115 · dx=140                       -->
   <!-- ───────────────────────────────────────────────────── -->
   <rect x="15" y="92" width="890" height="22" fill="#4493f8" opacity="0.10"/>
   <rect x="15" y="92" width="5"   height="22" fill="#4493f8"/>
-  <text x="27" y="109" fill="#79b4ff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T1  PROBABILITY &amp; STATISTICS</text>
-  <text x="392" y="109" fill="#79b4ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  sampling  ·  Monte Carlo  ·  Bayesian inference  ·  descriptive stats</text>
+  <text x="27" y="109" fill="#79b4ff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">ARC 1  CHANCE</text>
+  <text x="195" y="109" fill="#79b4ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  sampling  ·  Monte Carlo  ·  Bayesian inference  ·  descriptive stats</text>
 
   <!-- 01 risk-sampler  Δ = change / risk exposure -->
   <rect x="115" y="120" width="130" height="74" fill="#0a1628" stroke="#4493f8" stroke-width="1" rx="5"/>
@@ -85,13 +85,13 @@
   <polygon points="904,204 908,210 912,204" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
-  <!-- T2  LINEAR ALGEBRA  (06–08)                           -->
+  <!-- ARC 2  SHAPE  (06-08)                                 -->
   <!-- 3 cards · start_x=255 · dx=140                       -->
   <!-- ───────────────────────────────────────────────────── -->
   <rect x="15" y="214" width="890" height="22" fill="#3fb950" opacity="0.10"/>
   <rect x="15" y="214" width="5"   height="22" fill="#3fb950"/>
-  <text x="27" y="231" fill="#56d364" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T2  LINEAR ALGEBRA</text>
-  <text x="231" y="231" fill="#56d364" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  matrix operations  ·  regression via normal equations  ·  signal &amp; graph algorithms</text>
+  <text x="27" y="231" fill="#56d364" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">ARC 2  SHAPE</text>
+  <text x="175" y="231" fill="#56d364" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  matrix operations  ·  regression via normal equations  ·  signal &amp; graph algorithms</text>
 
   <!-- 06 matrix-math  ⊠ = squared-times / matrix element -->
   <rect x="255" y="242" width="130" height="74" fill="#0a1e12" stroke="#3fb950" stroke-width="1" rx="5"/>
@@ -116,13 +116,13 @@
   <polygon points="904,326 908,332 912,326" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
-  <!-- T3  LOW-LEVEL SYSTEMS  (09–12)                        -->
+  <!-- ARC 3  METAL  (09-12)                                 -->
   <!-- 4 cards · start_x=185 · dx=140                       -->
   <!-- ───────────────────────────────────────────────────── -->
   <rect x="15" y="336" width="890" height="22" fill="#ff7b72" opacity="0.10"/>
   <rect x="15" y="336" width="5"   height="22" fill="#ff7b72"/>
-  <text x="27" y="353" fill="#ff9492" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T3  LOW-LEVEL SYSTEMS</text>
-  <text x="275" y="353" fill="#ff9492" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  bit manipulation  ·  arena allocation  ·  IEEE 754  ·  bytecode VM</text>
+  <text x="27" y="353" fill="#ff9492" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">ARC 3  METAL</text>
+  <text x="175" y="353" fill="#ff9492" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  bit manipulation  ·  arena allocation  ·  IEEE 754  ·  bytecode VM</text>
 
   <!-- 09 bit-manipulator  ⊕ = XOR / bit operation -->
   <rect x="185" y="364" width="130" height="74" fill="#200a08" stroke="#ff7b72" stroke-width="1" rx="5"/>
@@ -153,13 +153,13 @@
   <polygon points="904,448 908,454 912,448" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
-  <!-- T4  STORAGE INTERNALS  (13–17)                        -->
+  <!-- ARC 4  DURABILITY  (13-17)                             -->
   <!-- 5 cards · start_x=115 · dx=140                       -->
   <!-- ───────────────────────────────────────────────────── -->
   <rect x="15" y="458" width="890" height="22" fill="#79c0ff" opacity="0.10"/>
   <rect x="15" y="458" width="5"   height="22" fill="#79c0ff"/>
-  <text x="27" y="475" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T4  STORAGE INTERNALS</text>
-  <text x="265" y="475" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  slotted pages  ·  B-tree index  ·  buffer pool  ·  SSTable  ·  skip-list / LSM</text>
+  <text x="27" y="475" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">ARC 4  DURABILITY</text>
+  <text x="215" y="475" fill="#a5d6ff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  slotted pages  ·  B-tree index  ·  buffer pool  ·  SSTable  ·  skip-list / LSM</text>
 
   <!-- 13 slotted-page  ⊞ = squared-plus / slots in a page -->
   <rect x="115" y="486" width="130" height="74" fill="#071828" stroke="#79c0ff" stroke-width="1" rx="5"/>
@@ -196,13 +196,13 @@
   <polygon points="904,570 908,576 912,570" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
-  <!-- T5  DISTRIBUTED SYSTEMS  (18–23)                      -->
+  <!-- ARC 5  SCALE  (18-23)                                 -->
   <!-- 6 cards · start_x=45 · dx=140                        -->
   <!-- ───────────────────────────────────────────────────── -->
   <rect x="15" y="580" width="890" height="22" fill="#d2a8ff" opacity="0.10"/>
   <rect x="15" y="580" width="5"   height="22" fill="#d2a8ff"/>
-  <text x="27" y="597" fill="#e2baff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T5  DISTRIBUTED SYSTEMS</text>
-  <text x="303" y="597" fill="#e2baff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  consistent hashing  ·  bloom filters  ·  rate limiting  ·  gossip  ·  Raft</text>
+  <text x="27" y="597" fill="#e2baff" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">ARC 5  SCALE</text>
+  <text x="170" y="597" fill="#e2baff" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  consistent hashing  ·  bloom filters  ·  rate limiting  ·  gossip  ·  Raft</text>
 
   <!-- 18 consistent-hashing  ⊙ = circled dot / hash ring -->
   <rect x="45"  y="608" width="130" height="74" fill="#130a28" stroke="#d2a8ff" stroke-width="1" rx="5"/>
@@ -245,13 +245,13 @@
   <polygon points="904,692 908,698 912,692" fill="#444d56"/>
 
   <!-- ───────────────────────────────────────────────────── -->
-  <!-- T6  AI &amp; MACHINE LEARNING  (24–29)                -->
+  <!-- ARC 6  INTELLIGENCE  (24-29)                          -->
   <!-- 6 cards · start_x=45 · dx=140                        -->
   <!-- ───────────────────────────────────────────────────── -->
   <rect x="15" y="702" width="890" height="22" fill="#ffa657" opacity="0.10"/>
   <rect x="15" y="702" width="5"   height="22" fill="#ffa657"/>
-  <text x="27" y="719" fill="#ffb86c" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">T6  AI &amp; MACHINE LEARNING</text>
-  <text x="311" y="719" fill="#ffb86c" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  gradient descent  ·  neural nets  ·  clustering  ·  attention  ·  tokenisation</text>
+  <text x="27" y="719" fill="#ffb86c" font-family="'Courier New',monospace" font-size="12" font-weight="bold" letter-spacing="3">ARC 6  INTELLIGENCE</text>
+  <text x="225" y="719" fill="#ffb86c" font-family="'Courier New',monospace" font-size="11" font-weight="bold">  ·  gradient descent  ·  neural nets  ·  clustering  ·  attention  ·  tokenisation</text>
 
   <!-- 24 gradient-descent  ∇ = nabla / gradient vector -->
   <rect x="45"  y="730" width="130" height="74" fill="#221008" stroke="#ffa657" stroke-width="1" rx="5"/>
