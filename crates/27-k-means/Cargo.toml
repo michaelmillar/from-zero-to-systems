@@ -12,4 +12,4 @@ name = "k-means"
 path = "src/main.rs"
 
 [dependencies]
-rand = "0.8"
+rand = "0.9"

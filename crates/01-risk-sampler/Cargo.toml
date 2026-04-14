@@ -13,5 +13,5 @@ name = "risk-sampler"
 path = "src/main.rs"
 
 [dependencies]
-rand = "0.8"
+rand = "0.9"
 clap = { version = "4", features = ["derive"] }
