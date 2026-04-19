@@ -147,12 +147,12 @@ Arc 5  Scale
 
 Arc 6  Intelligence
 ───────────────────
-24-gradient-descent ────── depends on ──► 06
-25-neural-net ──────────── depends on ──► 06, 24
-26-decision-tree ───────── depends on ──► 05, 25
-27-k-means ─────────────── depends on ──► 05, 06
-28-attention-mechanism ─── depends on ──► 06, 24
-29-bpe-tokeniser ───────── depends on ──► 09
+24-gradient-descent       (standalone)
+25-neural-net             (standalone)
+26-decision-tree          (standalone)
+27-k-means                (standalone)
+28-attention-mechanism    (standalone)
+29-bpe-tokeniser          (standalone)
   >> EVOLVE  cross-crate performance audit, detect and fix regression
 ```
 
